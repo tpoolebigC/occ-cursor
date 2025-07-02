@@ -1,6 +1,7 @@
 {
-  "buildCommand": "cd core && pnpm install && pnpm run build",
-  "outputDirectory": "core/.next",
+  "buildCommand": "pnpm run build",
+  "outputDirectory": ".next",
   "installCommand": "pnpm install",
-  "framework": "nextjs"
+  "framework": "nextjs",
+  "rootDirectory": "core"
 } 
