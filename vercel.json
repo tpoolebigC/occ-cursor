@@ -1,6 +1,6 @@
 {
-  "buildCommand": "pnpm run build --filter=@bigcommerce/catalyst-core",
+  "buildCommand": "pnpm install && pnpm run build --filter=@bigcommerce/catalyst-core",
   "outputDirectory": "core/.next",
-  "installCommand": "pnpm install",
+  "installCommand": "echo 'Dependencies installed via buildCommand'",
   "framework": "nextjs"
 } 
