@@ -1,6 +1,7 @@
 import { setRequestLocale } from 'next-intl/server';
 import { PropsWithChildren } from 'react';
 
+import { B2BScript } from '~/components/b2b/b2b-script';
 import { Footer } from '~/components/footer/footer';
 import { Header } from '~/components/header';
 
@@ -15,6 +16,7 @@ export default async function DefaultLayout({ params, children }: Props) {
 
   return (
     <>
+      <B2BScript />
       <Header />
 
       <main>{children}</main>
