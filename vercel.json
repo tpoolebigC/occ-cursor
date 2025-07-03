@@ -1,6 +1,3 @@
 {
-  "buildCommand": "turbo run build",
-  "outputDirectory": "core/.next",
-  "installCommand": "pnpm install",
-  "framework": "nextjs"
+  "rootDirectory": "core"
 } 
