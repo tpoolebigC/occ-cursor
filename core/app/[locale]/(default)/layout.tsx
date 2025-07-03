@@ -16,7 +16,7 @@ export default async function DefaultLayout({ params, children }: Props) {
 
   return (
     <>
-      <B2BLoader />
+      <B2BLoader key="b2b-loader" />
       <Header />
 
       <main>{children}</main>

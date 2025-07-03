@@ -48,6 +48,7 @@ export async function B2BLoader() {
 
   return (
     <B2BScript
+      key="b2b-script"
       cartId={session?.user?.cartId ?? undefined}
       channelId={BIGCOMMERCE_CHANNEL_ID}
       environment={environment}

@@ -14,7 +14,9 @@ export function MakeswiftProvider({
 }) {
   return (
     <ReactRuntimeProvider previewMode={previewMode} runtime={runtime}>
-      <RootStyleRegistry>{children}</RootStyleRegistry>
+      {/* Temporarily disabled RootStyleRegistry to prevent DOM conflicts */}
+      {/* <RootStyleRegistry key="makeswift-styles">{children}</RootStyleRegistry> */}
+      {children}
     </ReactRuntimeProvider>
   );
 }
