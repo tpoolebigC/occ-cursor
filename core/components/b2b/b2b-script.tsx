@@ -1,52 +1,59 @@
+'use client';
+
 import Script from 'next/script';
 
-export function B2BScript() {
-  const storeHash = process.env.BIGCOMMERCE_STORE_HASH;
-  const channelId = process.env.BIGCOMMERCE_CHANNEL_ID;
+import { useB2BAuth } from './use-b2b-auth';
+import { useB2BCart } from './use-b2b-cart';
+
+interface Props {
+  storeHash: string;
+  channelId: string;
+  token?: string;
+  environment?: 'staging' | 'production';
+  cartId?: string | null;
+}
+
+export function B2BScript({ 
+  storeHash, 
+  channelId, 
+  token, 
+  environment = 'production',
+  cartId 
+}: Props) {
+  useB2BAuth(token);
+  useB2BCart(cartId);
 
   console.log('B2B Script Debug:', {
     storeHash,
     channelId,
-    b2bApiHost: process.env.B2B_API_HOST,
-    b2bApiToken: process.env.B2B_API_TOKEN ? 'SET' : 'NOT SET'
+    environment,
+    hasToken: !!token,
+    cartId
   });
 
   return (
     <>
-      <Script id="b2b-config" strategy="beforeInteractive">
+      <Script id="b2b-config">
         {`
-        console.log('B2B Script Loading...');
-        window.b3CheckoutConfig = {
-          routes: {
-            dashboard: '/#/dashboard',
-          },
-        }
-        window.B3 = {
-          setting: {
-            store_hash: '${storeHash}',  
-            channel_id: ${channelId},
-          },
-        }
-        console.log('B2B Config:', window.B3);
+            window.B3 = {
+              setting: {
+                store_hash: '${storeHash}',
+                channel_id: ${channelId},
+                platform: 'catalyst',
+                cart_url: '/cart',
+              }
+            }
+            console.log('B2B Config loaded:', window.B3);
         `}
       </Script>
       <Script
+        data-channelid={channelId}
+        data-environment={environment}
+        data-storehash={storeHash}
+        src={`https://cdn.bundleb2b.net/b2b/${environment}/storefront/headless.js`}
         type="module"
-        crossOrigin=""
-        src="https://buyer-portal.bigcommerce.com/index.*.js"
-        strategy="afterInteractive"
-      />
-      <Script
-        noModule
-        crossOrigin=""
-        src="https://buyer-portal.bigcommerce.com/polyfills-legacy.*.js"
-        strategy="afterInteractive"
-      />
-      <Script
-        noModule
-        crossOrigin=""
-        src="https://buyer-portal.bigcommerce.com/index-legacy.*.js"
-        strategy="afterInteractive"
+        onLoad={() => console.log('B2B Script loaded successfully')}
+        onError={(e) => console.error('B2B Script failed to load:', e)}
       />
     </>
   );

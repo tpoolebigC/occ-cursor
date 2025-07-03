@@ -7,18 +7,24 @@ import { z } from 'zod';
 
 import { client } from '~/client';
 import { graphql } from '~/client/graphql';
+import { loginWithB2B } from '~/b2b/client';
+import { getCartId } from '~/lib/cart';
 
 const LoginMutation = graphql(`
   mutation Login($email: String!, $password: String!, $cartEntityId: String) {
     login(email: $email, password: $password, guestCartEntityId: $cartEntityId) {
       customerAccessToken {
         value
+        expiresAt
       }
       customer {
         entityId
         firstName
         lastName
         email
+      }
+      cart {
+        entityId
       }
     }
   }
@@ -29,12 +35,16 @@ const LoginWithTokenMutation = graphql(`
     loginWithCustomerLoginJwt(jwt: $jwt, guestCartEntityId: $cartEntityId) {
       customerAccessToken {
         value
+        expiresAt
       }
       customer {
         entityId
         firstName
         lastName
         email
+      }
+      cart {
+        entityId
       }
     }
   }
@@ -84,10 +94,34 @@ async function loginWithPassword(
     return null;
   }
 
+  // Get B2B token if B2B API is configured
+  let b2bToken: string | undefined;
+  try {
+    console.log('Checking B2B API configuration...');
+    console.log('B2B_API_TOKEN exists:', !!process.env.B2B_API_TOKEN);
+    console.log('B2B_API_HOST:', process.env.B2B_API_HOST);
+    
+    if (process.env.B2B_API_TOKEN) {
+      console.log('Attempting B2B login for customer:', result.customer.entityId);
+      b2bToken = await loginWithB2B({
+        customerId: result.customer.entityId,
+        customerAccessToken: result.customerAccessToken,
+      });
+      console.log('B2B login successful, token received');
+    } else {
+      console.log('B2B_API_TOKEN not configured, skipping B2B login');
+    }
+  } catch (error) {
+    console.error('B2B login failed:', error);
+    // Continue without B2B token if B2B API fails
+  }
+
   return {
     name: `${result.customer.firstName} ${result.customer.lastName}`,
     email: result.customer.email,
     customerAccessToken: result.customerAccessToken.value,
+    b2bToken,
+    cartId: result.cart?.entityId ?? cartEntityId,
   };
 }
 
@@ -114,18 +148,37 @@ async function loginWithJwt(jwt: string, cartEntityId?: string): Promise<User | 
     return null;
   }
 
+  // Get B2B token if B2B API is configured
+  let b2bToken: string | undefined;
+  try {
+    if (process.env.B2B_API_TOKEN) {
+      console.log('Attempting B2B login for customer:', result.customer.entityId);
+      b2bToken = await loginWithB2B({
+        customerId: result.customer.entityId,
+        customerAccessToken: result.customerAccessToken,
+      });
+      console.log('B2B login successful, token received');
+    } else {
+      console.log('B2B_API_TOKEN not configured, skipping B2B login');
+    }
+  } catch (error) {
+    console.error('B2B login failed:', error);
+    // Continue without B2B token if B2B API fails
+  }
+
   return {
     name: `${result.customer.firstName} ${result.customer.lastName}`,
     email: result.customer.email,
     customerAccessToken: result.customerAccessToken.value,
     impersonatorId,
+    b2bToken,
+    cartId: result.cart?.entityId ?? cartEntityId,
   };
 }
 
 async function authorize(credentials: unknown): Promise<User | null> {
   const parsed = Credentials.parse(credentials);
-  const cookieStore = await cookies();
-  const cartEntityId = cookieStore.get('cartId')?.value;
+  const cartEntityId = await getCartId();
 
   switch (parsed.type) {
     case 'password': {
@@ -160,11 +213,32 @@ const config = {
         token.customerAccessToken = user.customerAccessToken;
       }
 
+      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+      if (user?.b2bToken) {
+        token.b2bToken = user.b2bToken;
+      }
+
+      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+      if (user?.cartId) {
+        token.cartId = user.cartId;
+      }
+
       return token;
     },
     session({ session, token }) {
       if (token.customerAccessToken) {
         session.customerAccessToken = token.customerAccessToken;
+      }
+
+      if (token.b2bToken) {
+        session.b2bToken = token.b2bToken;
+      }
+
+      if (token.cartId !== undefined) {
+        session.user = {
+          ...session.user,
+          cartId: token.cartId,
+        };
       }
 
       return session;
@@ -225,8 +299,11 @@ export { handlers, auth, signIn, signOut, getSessionCustomerAccessToken };
 
 declare module 'next-auth' {
   interface Session {
-    user?: DefaultSession['user'];
+    user?: DefaultSession['user'] & {
+      cartId?: string | null;
+    };
     customerAccessToken?: string;
+    b2bToken?: string;
   }
 
   interface User {
@@ -234,6 +311,8 @@ declare module 'next-auth' {
     email?: string | null;
     customerAccessToken?: string;
     impersonatorId?: string | null;
+    b2bToken?: string;
+    cartId?: string | null;
   }
 }
 
@@ -241,5 +320,7 @@ declare module 'next-auth/jwt' {
   interface JWT {
     id?: string;
     customerAccessToken?: string;
+    b2bToken?: string;
+    cartId?: string | null;
   }
 }
