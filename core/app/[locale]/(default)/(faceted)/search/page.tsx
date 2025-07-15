@@ -48,6 +48,9 @@ async function getSearchTerm(props: Props): Promise<string> {
   const searchParams = await props.searchParams;
   const searchTerm = typeof searchParams.term === 'string' ? searchParams.term : '';
 
+  console.log('🔍 [Search] getSearchTerm called with searchParams:', JSON.stringify(searchParams, null, 2));
+  console.log('🔍 [Search] Extracted searchTerm:', searchTerm);
+
   return searchTerm;
 }
 
@@ -63,11 +66,13 @@ async function getSearch(props: Props) {
 async function getProducts(props: Props) {
   const searchTerm = await getSearchTerm(props);
 
-  if (searchTerm === '') {
-    return [];
-  }
+  console.log('🔍 [Search] getProducts called with searchTerm:', searchTerm);
 
+  // For empty search terms (Shop All), we still want to show products
+  // The search will be handled by the fetchFacetedSearch function
   const search = await getSearch(props);
+
+  console.log('🔍 [Search] getProducts found:', search.products.items.length, 'products');
 
   return search.products.items;
 }
@@ -75,6 +80,10 @@ async function getProducts(props: Props) {
 async function getTitle(props: Props): Promise<string> {
   const searchTerm = await getSearchTerm(props);
   const t = await getTranslations('Search');
+
+  if (searchTerm === '') {
+    return t('allProducts') || 'All Products';
+  }
 
   return `${t('searchResults')} "${searchTerm}"`;
 }
@@ -115,25 +124,29 @@ async function getListProducts(props: Props): Promise<ListProduct[]> {
   const products = await getProducts(props);
   const format = await getFormatter();
 
-  return products.map((product) => ({
-    id: product.entityId.toString(),
-    title: product.name,
-    href: product.path,
-    image: product.defaultImage
-      ? { src: product.defaultImage.url, alt: product.defaultImage.altText }
-      : undefined,
-    price: pricesTransformer(product.prices, format),
-    subtitle: product.brand?.name ?? undefined,
-  }));
+  return products.map((product, index) => {
+    // Debug: Log the first product's prices before transformer
+    if (index === 0) {
+      console.log('🔍 [Search] First product prices before transformer:', JSON.stringify(product.prices, null, 2));
+    }
+    
+    return {
+      id: product.entityId.toString(),
+      title: product.name,
+      href: product.path,
+      image: product.defaultImage
+        ? { src: product.defaultImage.url, alt: product.defaultImage.altText }
+        : undefined,
+      price: pricesTransformer(product.prices, format),
+      subtitle: product.brand?.name ?? undefined,
+    };
+  });
 }
 
 async function getTotalCount(props: Props): Promise<number> {
   const searchTerm = await getSearchTerm(props);
 
-  if (searchTerm === '') {
-    return 0;
-  }
-
+  // For empty search terms (Shop All), we still want to show the total count
   const search = await getSearch(props);
 
   return search.products.collectionInfo?.totalItems ?? 0;
@@ -164,15 +177,7 @@ async function getSortOptions(): Promise<SortOption[]> {
 async function getPaginationInfo(props: Props): Promise<CursorPaginationInfo> {
   const searchTerm = await getSearchTerm(props);
 
-  if (searchTerm === '') {
-    return {
-      startCursorParamName: 'before',
-      endCursorParamName: 'after',
-      endCursor: null,
-      startCursor: null,
-    };
-  }
-
+  // For empty search terms (Shop All), we still want to show pagination
   const search = await getSearch(props);
   const { hasNextPage, hasPreviousPage, endCursor, startCursor } = search.products.pageInfo;
 

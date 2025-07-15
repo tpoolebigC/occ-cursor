@@ -8,6 +8,7 @@ import { PaginationFragment } from '~/client/fragments/pagination';
 import { graphql, VariablesOf } from '~/client/graphql';
 import { revalidate } from '~/client/revalidate-target';
 import { ProductCardFragment } from '~/components/product-card/fragment';
+import { fetchAlgoliaFacetedSearch } from '~/lib/algolia/faceted-search';
 
 const GetProductSearchResultsQuery = graphql(
   `
@@ -391,14 +392,32 @@ export const PublicToPrivateParams = PublicSearchParamsSchema.catchall(SearchPar
 export const fetchFacetedSearch = cache(
   // We need to make sure the reference passed into this function is the same if we want it to be memoized.
   async (params: z.input<typeof PublicSearchParamsSchema>) => {
+    console.log('🔍 [fetchFacetedSearch] Received params:', JSON.stringify(params, null, 2));
+    
     const { after, before, limit = 9, sort, filters } = PublicToPrivateParams.parse(params);
 
-    return getProductSearchResults({
-      after,
-      before,
+    console.log('🔍 [fetchFacetedSearch] Parsed filters:', JSON.stringify(filters, null, 2));
+
+    // Use Algolia for faceted search instead of BigCommerce
+    const algoliaParams = {
+      term: filters.searchTerm || '',
+      page: after ? parseInt(after.replace('page_', '')) : 0,
       limit,
-      sort,
-      filters,
-    });
+      sort: sort?.toLowerCase() as any,
+      brand: filters.brandEntityIds?.map(id => id.toString()),
+      // Only apply category filters if there's a search term (not for Shop All)
+      category: filters.searchTerm ? filters.categoryEntityId : undefined,
+      categoryIn: filters.searchTerm ? filters.categoryEntityIds : undefined,
+      minPrice: filters.price?.minPrice,
+      maxPrice: filters.price?.maxPrice,
+      minRating: filters.rating?.minRating,
+      maxRating: filters.rating?.maxRating,
+      isFeatured: filters.isFeatured,
+      stock: filters.hideOutOfStock ? ['in_stock'] : undefined,
+      shipping: filters.isFreeShipping ? ['free_shipping'] : undefined,
+    };
+
+    console.log('🔄 [Search] Using Algolia for faceted search with params:', JSON.stringify(algoliaParams, null, 2));
+    return fetchAlgoliaFacetedSearch(algoliaParams);
   },
 );

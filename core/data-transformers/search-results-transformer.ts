@@ -1,86 +1,91 @@
 import { ResultOf } from 'gql.tada';
-import { getFormatter, getTranslations } from 'next-intl/server';
+import { getFormatter } from 'next-intl/server';
 
-import { SearchResult } from '@/vibes/soul/primitives/navigation';
-import { SearchProductFragment } from '~/components/header/_actions/fragment';
+import { ProductCardFragment } from '~/components/product-card/fragment';
 
-import { pricesTransformer } from './prices-transformer';
-
-export async function searchResultsTransformer(
-  searchProducts: Array<ResultOf<typeof SearchProductFragment>>,
-): Promise<SearchResult[]> {
+export const searchResultsTransformer = async (
+  hits: Array<{
+    objectID: string;
+    name: string;
+    path?: string;
+    url?: string;
+    brand?: {
+      name: string;
+    };
+    defaultImage?: {
+      url: string;
+      altText: string;
+    };
+    product_images?: Array<{
+      description: string;
+      is_thumbnail: boolean;
+      url_thumbnail: string;
+    }>;
+    variants?: Array<{
+      image_url?: string;
+    }>;
+    prices?: Record<string, number>;
+    sales_prices?: Record<string, number>;
+    calculated_prices?: Record<string, number>;
+    retail_prices?: Record<string, number>;
+    default_price?: string;
+    entityId: number;
+  }>,
+): Promise<Array<ResultOf<typeof ProductCardFragment>>> => {
   const format = await getFormatter();
-  const t = await getTranslations('Components.Header.Search');
 
-  const productResults: SearchResult = {
-    type: 'products',
-    title: t('products'),
-    products: searchProducts.map((product) => {
-      const price = pricesTransformer(product.prices, format);
-
-      return {
-        id: product.entityId.toString(),
-        title: product.name,
-        href: product.path,
-        image: product.defaultImage
-          ? { src: product.defaultImage.url, alt: product.defaultImage.altText }
-          : undefined,
-        price,
-      };
-    }),
-  };
-
-  const categoryResults: SearchResult = {
-    type: 'links',
-    title: t('categories'),
-    links:
-      searchProducts.length > 0
-        ? Object.entries(
-            searchProducts.reduce<Record<string, string>>((categories, product) => {
-              product.categories.edges?.forEach((category) => {
-                categories[category.node.name] = category.node.path;
-              });
-
-              return categories;
-            }, {}),
-          ).map(([name, path]) => {
-            return { label: name, href: path };
-          })
-        : [],
-  };
-
-  const brandResults: SearchResult = {
-    type: 'links',
-    title: t('brands'),
-    links:
-      searchProducts.length > 0
-        ? Object.entries(
-            searchProducts.reduce<Record<string, string>>((brands, product) => {
-              if (product.brand) {
-                brands[product.brand.name] = product.brand.path;
-              }
-
-              return brands;
-            }, {}),
-          ).map(([name, path]) => {
-            return { label: name, href: path };
-          })
-        : [],
-  };
-
-  const results = [];
-
-  if (categoryResults.links.length > 0) {
-    results.push(categoryResults);
+  // Debug: Log the first hit to see the actual structure
+  if (hits.length > 0) {
+    console.log('🔍 [Algolia] First hit structure:', JSON.stringify(hits[0], null, 2));
   }
 
-  if (brandResults.links.length > 0) {
-    results.push(brandResults);
-  }
-
-  if (productResults.products.length > 0) {
-    results.push(productResults);
-  }
-
-  return results;
-}
+  return hits.map((hit) => {
+    const selectedCurrency = 'USD';
+    // Handle nested price structure from Algolia
+    const priceValue = hit.calculated_prices?.[selectedCurrency]?.value || 
+                      hit.prices?.[selectedCurrency]?.value || 
+                      hit.default_price?.value || 
+                      0;
+    
+    return {
+      entityId: hit.entityId || parseInt(hit.objectID),
+      name: hit.name,
+      path: hit.path || hit.url || `/product/${hit.objectID}`,
+      brand: hit.brand ? { name: hit.brand.name } : null,
+      defaultImage: hit.defaultImage ? {
+        url: hit.defaultImage.url,
+        altText: hit.defaultImage.altText || hit.name,
+      } : hit.product_images && hit.product_images.length > 0 ? {
+        url: hit.product_images.find(img => img.is_thumbnail)?.url_thumbnail || hit.product_images[0].url_thumbnail,
+        altText: hit.product_images.find(img => img.is_thumbnail)?.description || hit.product_images[0].description || hit.name,
+      } : hit.variants && hit.variants.length > 0 && hit.variants[0].image_url ? {
+        url: hit.variants[0].image_url,
+        altText: hit.name,
+      } : null,
+      prices: {
+        price: {
+          value: priceValue,
+          currencyCode: selectedCurrency,
+        },
+        priceRange: {
+          min: {
+            value: priceValue,
+            currencyCode: selectedCurrency,
+          },
+          max: {
+            value: priceValue,
+            currencyCode: selectedCurrency,
+          },
+        },
+        basePrice: {
+          value: hit.retail_prices?.[selectedCurrency]?.value || priceValue,
+          currencyCode: selectedCurrency,
+        },
+        salePrice: hit.sales_prices?.[selectedCurrency]?.value && hit.sales_prices[selectedCurrency].value > 0 ? {
+          value: hit.sales_prices[selectedCurrency].value,
+          currencyCode: selectedCurrency,
+        } : null,
+      },
+    };
+  });
+};

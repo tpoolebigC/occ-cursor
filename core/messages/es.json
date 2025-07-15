@@ -185,6 +185,7 @@
         "products": "Productos",
         "sortBy": "{items, plural, =0 {no items} =1 {1 item} other {# items}}",
         "searchResults": "Resultados de la búsqueda para",
+        "allProducts": "Todos los productos",
         "emptyStateTitle": "Lo sentimos, no hay resultados para \"{term}\".",
         "emptyStateSubtitle": "Please try another search.",
         "Breadcrumbs": {
