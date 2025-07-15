@@ -1,8 +1,11 @@
-import { getFormatter, getTranslations } from 'next-intl/server';
+import { getFormatter } from 'next-intl/server';
+import { getTranslations } from 'next-intl/server';
+
 import { ResultOf } from 'gql.tada';
 
 import { SearchResult } from '@/vibes/soul/primitives/navigation';
 import { ProductCardFragment } from '~/components/product-card/fragment';
+import { PricingFragment } from '~/client/fragments/pricing';
 
 import { pricesTransformer } from './prices-transformer';
 
@@ -58,6 +61,29 @@ export async function algoliaResultsTransformer(
   const products: QuickSearchProduct[] = hits.map((hit) => {
     const selectedCurrency = 'USD'; // TODO: use selected storefront currency
 
+    // Fix price extraction - handle different possible price structures
+    let priceValue = 0;
+    
+    // Try different price fields in order of preference
+    if (hit.default_price) {
+      // Handle both string and number types
+      priceValue = typeof hit.default_price === 'string' 
+        ? parseFloat(hit.default_price) || 0
+        : hit.default_price;
+    } else if (hit.prices && hit.prices[selectedCurrency]) {
+      priceValue = hit.prices[selectedCurrency];
+    } else if (hit.calculated_prices && hit.calculated_prices[selectedCurrency]) {
+      priceValue = hit.calculated_prices[selectedCurrency];
+    } else if (hit.retail_prices && hit.retail_prices[selectedCurrency]) {
+      priceValue = hit.retail_prices[selectedCurrency];
+    }
+    
+    // Ensure we have a valid price
+    if (isNaN(priceValue) || priceValue <= 0) {
+      console.warn(`⚠️ [Algolia] Invalid price for product ${hit.objectID}:`, priceValue);
+      priceValue = 0;
+    }
+
     return {
       entityId: hit.objectID,
       name: hit.name,
@@ -81,30 +107,28 @@ export async function algoliaResultsTransformer(
       reviewSummary: null,
       prices: {
         price: {
-          value: hit.calculated_prices?.[selectedCurrency] || hit.prices?.[selectedCurrency] || 0,
+          value: priceValue,
           currencyCode: selectedCurrency,
         },
         basePrice: {
-          value: parseInt(hit.default_price, 10) || 0,
+          value: priceValue,
           currencyCode: selectedCurrency,
         },
         retailPrice: {
-          value: hit.retail_prices?.[selectedCurrency] || 0,
+          value: priceValue,
           currencyCode: selectedCurrency,
         },
         salePrice: {
-          value: hit.sales_prices?.[selectedCurrency] && hit.sales_prices[selectedCurrency] > 0
-            ? hit.sales_prices[selectedCurrency]
-            : parseInt(hit.default_price, 10) || 0,
+          value: priceValue,
           currencyCode: selectedCurrency,
         },
         priceRange: {
           min: {
-            value: hit.prices?.[selectedCurrency] || 0,
+            value: priceValue,
             currencyCode: selectedCurrency,
           },
           max: {
-            value: hit.prices?.[selectedCurrency] || 0,
+            value: priceValue,
             currencyCode: selectedCurrency,
           },
         },
@@ -122,8 +146,8 @@ export async function algoliaResultsTransformer(
       href: product.path,
       price: pricesTransformer(product.prices, format),
       image: {
-        src: product.defaultImage.url,
-        alt: product.defaultImage.altText,
+        src: product.defaultImage?.url || '',
+        alt: product.defaultImage?.altText || '',
       },
     })),
   };

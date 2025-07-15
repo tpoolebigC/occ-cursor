@@ -28,7 +28,7 @@ export const searchResultsTransformer = async (
     sales_prices?: Record<string, number>;
     calculated_prices?: Record<string, number>;
     retail_prices?: Record<string, number>;
-    default_price?: string;
+    default_price?: string | number;
     entityId: number;
   }>,
 ): Promise<Array<ResultOf<typeof ProductCardFragment>>> => {
@@ -41,11 +41,41 @@ export const searchResultsTransformer = async (
 
   return hits.map((hit) => {
     const selectedCurrency = 'USD';
-    // Handle nested price structure from Algolia
-    const priceValue = hit.calculated_prices?.[selectedCurrency]?.value || 
-                      hit.prices?.[selectedCurrency]?.value || 
-                      hit.default_price?.value || 
-                      0;
+    
+    // Fix price extraction - handle different possible price structures
+    let priceValue = 0;
+    
+    // Try different price fields in order of preference
+    if (hit.default_price) {
+      // Handle both string and number types
+      priceValue = typeof hit.default_price === 'string' 
+        ? parseFloat(hit.default_price) || 0
+        : hit.default_price;
+    } else if (hit.prices && hit.prices[selectedCurrency]) {
+      priceValue = hit.prices[selectedCurrency];
+    } else if (hit.calculated_prices && hit.calculated_prices[selectedCurrency]) {
+      priceValue = hit.calculated_prices[selectedCurrency];
+    } else if (hit.retail_prices && hit.retail_prices[selectedCurrency]) {
+      priceValue = hit.retail_prices[selectedCurrency];
+    }
+    
+    // Ensure we have a valid price
+    if (isNaN(priceValue) || priceValue <= 0) {
+      console.warn(`⚠️ [Algolia] Invalid price for product ${hit.objectID}:`, priceValue);
+      priceValue = 0;
+    }
+    
+    // Debug: Log the extracted price
+    if (hits.indexOf(hit) === 0) {
+      console.log('🔍 [Algolia] Extracted price:', {
+        objectID: hit.objectID,
+        priceValue,
+        default_price: hit.default_price,
+        prices: hit.prices,
+        calculated_prices: hit.calculated_prices,
+        retail_prices: hit.retail_prices
+      });
+    }
     
     return {
       entityId: hit.entityId || parseInt(hit.objectID),
@@ -78,13 +108,10 @@ export const searchResultsTransformer = async (
           },
         },
         basePrice: {
-          value: hit.retail_prices?.[selectedCurrency]?.value || priceValue,
+          value: priceValue,
           currencyCode: selectedCurrency,
         },
-        salePrice: hit.sales_prices?.[selectedCurrency]?.value && hit.sales_prices[selectedCurrency].value > 0 ? {
-          value: hit.sales_prices[selectedCurrency].value,
-          currencyCode: selectedCurrency,
-        } : null,
+        salePrice: null,
       },
     };
   });

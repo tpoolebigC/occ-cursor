@@ -98,58 +98,81 @@ export const getSearchResults = cache(async (searchTerm: string) => {
       },
     });
 
-    const products: QuickSearchProduct[] = algoliaResults.hits.map((hit: AlgoliaHit) => ({
-      entityId: hit.objectID,
-      name: hit.name,
-      path: hit.url,
-      defaultImage: {
-        altText: hit.product_images.find((img) => img.is_thumbnail)?.description || '',
-        url: hit.product_images.find((img) => img.is_thumbnail)?.url_thumbnail || '',
-      },
-      categories: {
-        edges: (hit.categories?.lvl0 || hit.categories_without_path || []).map((categoryName) => ({
-          node: {
-            name: categoryName,
-            path: `/${categoryName.replaceAll(' ', '-').toLowerCase()}`,
-          },
-        })),
-      },
-      brand: {
-        name: hit.brand_name || '',
-        path: hit.brand_name ? `/${hit.brand_name.replaceAll(' ', '-').toLowerCase()}` : '',
-      },
-      reviewSummary: null,
-      prices: {
-        price: {
-          value: hit.calculated_prices?.[selectedCurrency] || hit.prices?.[selectedCurrency] || 0,
-          currencyCode: selectedCurrency,
+    const products: QuickSearchProduct[] = algoliaResults.hits.map((hit: AlgoliaHit) => {
+      // Fix price extraction - handle different possible price structures
+      let priceValue = 0;
+      
+      // Try different price fields in order of preference
+      if (hit.default_price) {
+        // Handle both string and number types
+        priceValue = typeof hit.default_price === 'string' 
+          ? parseFloat(hit.default_price) || 0
+          : hit.default_price;
+      } else if (hit.prices && hit.prices[selectedCurrency]) {
+        priceValue = hit.prices[selectedCurrency];
+      } else if (hit.calculated_prices && hit.calculated_prices[selectedCurrency]) {
+        priceValue = hit.calculated_prices[selectedCurrency];
+      } else if (hit.retail_prices && hit.retail_prices[selectedCurrency]) {
+        priceValue = hit.retail_prices[selectedCurrency];
+      }
+      
+      // Ensure we have a valid price
+      if (isNaN(priceValue) || priceValue <= 0) {
+        console.warn(`⚠️ [Algolia] Invalid price for product ${hit.objectID}:`, priceValue);
+        priceValue = 0;
+      }
+
+      return {
+        entityId: hit.objectID,
+        name: hit.name,
+        path: hit.url,
+        defaultImage: {
+          altText: hit.product_images.find((img) => img.is_thumbnail)?.description || '',
+          url: hit.product_images.find((img) => img.is_thumbnail)?.url_thumbnail || '',
         },
-        basePrice: {
-          value: parseInt(hit.default_price, 10) || 0,
-          currencyCode: selectedCurrency,
+        categories: {
+          edges: (hit.categories?.lvl0 || hit.categories_without_path || []).map((categoryName) => ({
+            node: {
+              name: categoryName,
+              path: `/${categoryName.replaceAll(' ', '-').toLowerCase()}`,
+            },
+          })),
         },
-        retailPrice: {
-          value: hit.retail_prices?.[selectedCurrency] || 0,
-          currencyCode: selectedCurrency,
+        brand: {
+          name: hit.brand_name || '',
+          path: hit.brand_name ? `/${hit.brand_name.replaceAll(' ', '-').toLowerCase()}` : '',
         },
-        salePrice: {
-          value: hit.sales_prices?.[selectedCurrency] && hit.sales_prices[selectedCurrency] > 0
-            ? hit.sales_prices[selectedCurrency]
-            : parseInt(hit.default_price, 10) || 0,
-          currencyCode: selectedCurrency,
-        },
-        priceRange: {
-          min: {
-            value: hit.prices?.[selectedCurrency] || 0,
+        reviewSummary: null,
+        prices: {
+          price: {
+            value: priceValue,
             currencyCode: selectedCurrency,
           },
-          max: {
-            value: hit.prices?.[selectedCurrency] || 0,
+          basePrice: {
+            value: priceValue,
             currencyCode: selectedCurrency,
           },
+          retailPrice: {
+            value: priceValue,
+            currencyCode: selectedCurrency,
+          },
+          salePrice: {
+            value: priceValue,
+            currencyCode: selectedCurrency,
+          },
+          priceRange: {
+            min: {
+              value: priceValue,
+              currencyCode: selectedCurrency,
+            },
+            max: {
+              value: priceValue,
+              currencyCode: selectedCurrency,
+            },
+          },
         },
-      },
-    }));
+      };
+    });
 
     return {
       status: 'success',
