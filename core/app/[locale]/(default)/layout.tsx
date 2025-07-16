@@ -1,7 +1,7 @@
 import { setRequestLocale } from 'next-intl/server';
 import { PropsWithChildren } from 'react';
 
-import { B2BLoader } from '~/components/b2b/b2b-loader';
+import { B2BLoader } from '~/b2b/loader';
 import { Footer } from '~/components/footer/footer';
 import { Header } from '~/components/header';
 

@@ -1,6 +1,6 @@
 import { auth, signOut } from '~/auth';
 import { getCartId } from '~/lib/cart';
-import { CustomerDebug } from '~/components/b2b/customer-debug';
+import { CustomerDebug } from '~/b2b/customer-debug';
 
 export default async function TestB2BPage() {
   const session = await auth();

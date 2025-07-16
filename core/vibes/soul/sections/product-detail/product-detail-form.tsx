@@ -29,6 +29,7 @@ import { toast } from '@/vibes/soul/primitives/toaster';
 import { usePathname, useRouter } from '~/i18n/routing';
 
 import { Field, schema, SchemaRawShape } from './schema';
+import { ProductDetailB2BActions } from './ProductDetailB2BActions';
 
 type Action<S, P> = (state: Awaited<S>, payload: P) => S | Promise<S>;
 
@@ -155,6 +156,14 @@ export function ProductDetailForm<F extends Field>({
             />
             <SubmitButton disabled={ctaDisabled}>{ctaLabel}</SubmitButton>
           </div>
+          {/* B2B Actions: Add to Quote / Shopping List */}
+          <ProductDetailB2BActions
+            productId={productId}
+            quantity={Number(quantityControl.value) || 1}
+            selectedOptions={fields
+              .filter((f) => f.name !== 'quantity')
+              .map((f) => ({ field: f, value: formFields[f.name].value }))}
+          />
         </div>
       </form>
     </FormProvider>
