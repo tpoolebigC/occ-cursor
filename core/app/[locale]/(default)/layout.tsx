@@ -2,6 +2,7 @@ import { setRequestLocale } from 'next-intl/server';
 import { PropsWithChildren } from 'react';
 
 import { B2BLoader } from '~/components/b2b/b2b-loader';
+import { QuickOrderDebug } from '~/components/b2b/quick-order-debug';
 import { Footer } from '~/components/footer/footer';
 import { Header } from '~/components/header';
 
@@ -22,6 +23,9 @@ export default async function DefaultLayout({ params, children }: Props) {
       <main>{children}</main>
 
       <Footer />
+      
+      {/* Quick Order Debug - Only in development */}
+      {process.env.NODE_ENV === 'development' && <QuickOrderDebug />}
     </>
   );
 }

@@ -39,6 +39,21 @@ export default async (): Promise<NextConfig> => {
     },
     // default URL generation in BigCommerce uses trailing slash
     trailingSlash: process.env.TRAILING_SLASH !== 'false',
+    // Remove console.log statements in production
+    webpack: (config, { dev, isServer }) => {
+      if (!dev && !isServer) {
+        config.optimization.minimizer?.push(
+          new (require('terser-webpack-plugin'))({
+            terserOptions: {
+              compress: {
+                drop_console: true, // Remove console.log statements
+              },
+            },
+          })
+        );
+      }
+      return config;
+    },
     // eslint-disable-next-line @typescript-eslint/require-await
     async headers() {
       return [

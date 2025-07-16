@@ -258,6 +258,13 @@ const getRouteInfo = async (request: NextRequest, event: NextFetchEvent) => {
 
 export const withRoutes: MiddlewareFactory = () => {
   return async (request, event) => {
+    const { pathname } = request.nextUrl;
+    
+    // Skip business routes - let Next.js handle them directly
+    if (pathname.startsWith('/business') || pathname.includes('/business/')) {
+      return NextResponse.next();
+    }
+    
     const locale = request.headers.get('x-bc-locale') ?? '';
 
     const { route, status } = await getRouteInfo(request, event);

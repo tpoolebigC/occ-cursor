@@ -7,7 +7,7 @@ import { z } from 'zod';
 
 import { client } from '~/client';
 import { graphql } from '~/client/graphql';
-import { loginWithB2B } from '~/b2b/client';
+import { b2bClient } from '~/lib/b2b/client';
 import { getCartId } from '~/lib/cart';
 
 const LoginMutation = graphql(`
@@ -76,13 +76,19 @@ async function loginWithPassword(
   password: string,
   cartEntityId?: string,
 ): Promise<User | null> {
-  const response = await client.fetch({
-    document: LoginMutation,
-    variables: { email, password, cartEntityId },
-    fetchOptions: {
-      cache: 'no-store',
-    },
-  });
+  let response;
+  try {
+    response = await client.fetch({
+      document: LoginMutation,
+      variables: { email, password, cartEntityId },
+      fetchOptions: {
+        cache: 'no-store',
+      },
+    });
+  } catch (error) {
+    console.error('Login fetch failed:', error);
+    return null;
+  }
 
   if (response.errors && response.errors.length > 0) {
     return null;
@@ -94,26 +100,27 @@ async function loginWithPassword(
     return null;
   }
 
-  // Get B2B token if B2B API is configured
+  // Check if user is a B2B customer before attempting B2B login
   let b2bToken: string | undefined;
+  let isB2BCustomer = false;
+  
   try {
-    console.log('Checking B2B API configuration...');
-    console.log('B2B_API_TOKEN exists:', !!process.env.B2B_API_TOKEN);
-    console.log('B2B_API_HOST:', process.env.B2B_API_HOST);
-    
     if (process.env.B2B_API_TOKEN) {
-      console.log('Attempting B2B login for customer:', result.customer.entityId);
-      b2bToken = await loginWithB2B({
-        customerId: result.customer.entityId,
-        customerAccessToken: result.customerAccessToken,
-      });
-      console.log('B2B login successful, token received');
-    } else {
-      console.log('B2B_API_TOKEN not configured, skipping B2B login');
+      // First, check if this customer exists in B2B system
+      const b2bProfile = await b2bClient.getCustomerProfile(result.customer.entityId);
+      if (b2bProfile) {
+        isB2BCustomer = true;
+        // Now attempt to get B2B token
+        b2bToken = await b2bClient.loginWithB2B(
+          result.customer.entityId,
+          result.customerAccessToken,
+        );
+      }
     }
   } catch (error) {
-    console.error('B2B login failed:', error);
-    // Continue without B2B token if B2B API fails
+    console.error('B2B login check failed:', error);
+    // Continue without B2B token - user is not a B2B customer
+    isB2BCustomer = false;
   }
 
   return {
@@ -121,6 +128,7 @@ async function loginWithPassword(
     email: result.customer.email,
     customerAccessToken: result.customerAccessToken.value,
     b2bToken,
+    isB2BCustomer,
     cartId: result.cart?.entityId ?? cartEntityId,
   };
 }
@@ -129,14 +137,21 @@ async function loginWithJwt(jwt: string, cartEntityId?: string): Promise<User | 
   const claims = decodeJwt(jwt);
   const channelId = claims.channel_id?.toString() ?? process.env.BIGCOMMERCE_CHANNEL_ID;
   const impersonatorId = claims.impersonator_id?.toString() ?? null;
-  const response = await client.fetch({
-    document: LoginWithTokenMutation,
-    variables: { jwt, cartEntityId },
-    channelId,
-    fetchOptions: {
-      cache: 'no-store',
-    },
-  });
+  
+  let response;
+  try {
+    response = await client.fetch({
+      document: LoginWithTokenMutation,
+      variables: { jwt, cartEntityId },
+      channelId,
+      fetchOptions: {
+        cache: 'no-store',
+      },
+    });
+  } catch (error) {
+    console.error('JWT login fetch failed:', error);
+    return null;
+  }
 
   if (response.errors && response.errors.length > 0) {
     return null;
@@ -148,22 +163,27 @@ async function loginWithJwt(jwt: string, cartEntityId?: string): Promise<User | 
     return null;
   }
 
-  // Get B2B token if B2B API is configured
+  // Check if user is a B2B customer before attempting B2B login
   let b2bToken: string | undefined;
+  let isB2BCustomer = false;
+  
   try {
     if (process.env.B2B_API_TOKEN) {
-      console.log('Attempting B2B login for customer:', result.customer.entityId);
-      b2bToken = await loginWithB2B({
-        customerId: result.customer.entityId,
-        customerAccessToken: result.customerAccessToken,
-      });
-      console.log('B2B login successful, token received');
-    } else {
-      console.log('B2B_API_TOKEN not configured, skipping B2B login');
+      // First, check if this customer exists in B2B system
+      const b2bProfile = await b2bClient.getCustomerProfile(result.customer.entityId);
+      if (b2bProfile) {
+        isB2BCustomer = true;
+        // Now attempt to get B2B token
+        b2bToken = await b2bClient.loginWithB2B(
+          result.customer.entityId,
+          result.customerAccessToken,
+        );
+      }
     }
   } catch (error) {
-    console.error('B2B login failed:', error);
-    // Continue without B2B token if B2B API fails
+    console.error('B2B login check failed:', error);
+    // Continue without B2B token - user is not a B2B customer
+    isB2BCustomer = false;
   }
 
   return {
@@ -172,6 +192,7 @@ async function loginWithJwt(jwt: string, cartEntityId?: string): Promise<User | 
     customerAccessToken: result.customerAccessToken.value,
     impersonatorId,
     b2bToken,
+    isB2BCustomer,
     cartId: result.cart?.entityId ?? cartEntityId,
   };
 }
@@ -219,6 +240,11 @@ const config = {
       }
 
       // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+      if (user?.isB2BCustomer !== undefined) {
+        token.isB2BCustomer = user.isB2BCustomer;
+      }
+
+      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
       if (user?.cartId) {
         token.cartId = user.cartId;
       }
@@ -234,6 +260,10 @@ const config = {
         session.b2bToken = token.b2bToken;
       }
 
+      if (token.isB2BCustomer !== undefined) {
+        session.isB2BCustomer = token.isB2BCustomer;
+      }
+
       if (token.cartId !== undefined) {
         session.user = {
           ...session.user,
@@ -242,6 +272,20 @@ const config = {
       }
 
       return session;
+    },
+    redirect({ url, baseUrl }) {
+      // Check if the user has a B2B token to determine redirect destination
+      // This will be handled by the individual login forms
+      if (url.startsWith(baseUrl)) {
+              // For business login, let the form handle the redirect
+      if (url.includes('/business/login')) {
+        return `${baseUrl}/business`;
+      }
+        // For regular login, redirect to account page
+        return `${baseUrl}/account/orders`;
+      }
+      // For external URLs, allow them
+      return url;
     },
   },
   events: {
@@ -304,6 +348,7 @@ declare module 'next-auth' {
     };
     customerAccessToken?: string;
     b2bToken?: string;
+    isB2BCustomer?: boolean;
   }
 
   interface User {
@@ -312,6 +357,7 @@ declare module 'next-auth' {
     customerAccessToken?: string;
     impersonatorId?: string | null;
     b2bToken?: string;
+    isB2BCustomer?: boolean;
     cartId?: string | null;
   }
 }
@@ -321,6 +367,7 @@ declare module 'next-auth/jwt' {
     id?: string;
     customerAccessToken?: string;
     b2bToken?: string;
+    isB2BCustomer?: boolean;
     cartId?: string | null;
   }
 }

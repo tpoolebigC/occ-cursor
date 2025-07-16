@@ -7,6 +7,7 @@ import { getLocale, getTranslations } from 'next-intl/server';
 import { z } from 'zod';
 
 import { getSessionCustomerAccessToken } from '~/auth';
+import { auth } from '~/auth';
 import { client } from '~/client';
 import { graphql } from '~/client/graphql';
 import { redirect } from '~/i18n/routing';
@@ -30,6 +31,7 @@ export const redirectToCheckout = async (
   const locale = await getLocale();
   const t = await getTranslations('Cart.Errors');
   const cookieStore = await cookies();
+  const session = await auth();
 
   const customerAccessToken = await getSessionCustomerAccessToken();
 
@@ -62,6 +64,14 @@ export const redirectToCheckout = async (
 
   if (!url) {
     return submission.reply({ formErrors: [t('failedToRedirectToCheckout')] });
+  }
+
+  // Add B2B session syncing parameters if user has B2B token
+  if (session?.b2bToken) {
+    const checkoutUrl = new URL(url);
+    checkoutUrl.searchParams.set('b2b_session', 'true');
+    checkoutUrl.searchParams.set('return_url', `${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/cart`);
+    url = checkoutUrl.toString();
   }
 
   return redirect({ href: url, locale });

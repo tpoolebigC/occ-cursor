@@ -193,6 +193,33 @@
       "search": "Search"
     }
   },
+  "B2B": {
+    "QuickOrder": {
+      "searchLabel": "Search Products",
+      "searchPlaceholder": "Enter product name, SKU, or description...",
+      "searching": "Searching...",
+      "resultsFound": "{count} products found",
+      "addAllToCart": "Add All to Cart",
+      "add": "Add",
+      "noResults": "No products found",
+      "addToCartSuccess": "Successfully added {count} item(s) to cart",
+      "addToCartError": "Failed to add items to cart. Please try again."
+    },
+    "Dashboard": {
+      "title": "B2B Dashboard",
+      "description": "Welcome to your business portal. Manage quotes, orders, and shopping lists.",
+      "totalQuotes": "Total Quotes",
+      "pendingQuotes": "Pending Quotes",
+      "totalOrders": "Total Orders",
+      "recentOrders": "Recent Orders (30d)",
+      "quickActions": "Quick Actions",
+      "quickActionsDescription": "Common tasks to help you work faster",
+      "recentQuotes": "Recent Quotes",
+      "recentOrders": "Recent Orders",
+      "viewAllQuotes": "View all quotes",
+      "viewAllOrders": "View all orders"
+    }
+  },
   "Account": {
     "Layout": {
       "addresses": "Addresses",
@@ -620,6 +647,25 @@
         "increase": "Increase count",
         "decrease": "Decrease count"
       }
+    }
+  },
+  "B2B": {
+    "QuickOrder": {
+      "title": "Quick Order",
+      "searchTitle": "Search Products",
+      "resultsTitle": "Quick Order Tools",
+      "searchLabel": "Search for products",
+      "searchPlaceholder": "Enter product name, SKU, or description...",
+      "searching": "Searching...",
+      "resultsFound": "{count} product(s) found",
+      "addAllToCart": "Add All to Cart",
+      "add": "Add",
+      "noResults": "No products found. Try a different search term.",
+      "resultsDescription": "Search for products above to add them to your cart quickly.",
+      "tips": "Quick Order Tips",
+      "tip1": "Search by product name, SKU, or description",
+      "tip2": "Set quantities and add multiple items at once",
+      "tip3": "Use 'Add All to Cart' to add multiple items quickly"
     }
   }
 }

@@ -28,6 +28,7 @@ export const config = {
      * - sitemap.xml (sitemap route)
      * - xmlsitemap.php (legacy sitemap route)
      * - robots.txt (robots route)
+     * - login/token (login token routes)
      */
     '/((?!api|admin|_next/static|_next/image|_vercel|favicon.ico|xmlsitemap.php|sitemap.xml|robots.txt|login/token).*)',
   ],

@@ -68,6 +68,7 @@ export const addToCart = async (data: FormData) => {
 
     return { status: 'success', data: cart };
   } catch (error: unknown) {
+    console.error('Error adding to cart:', error);
     if (error instanceof Error) {
       return { status: 'error', error: error.message };
     }

@@ -23,7 +23,6 @@ type CartSelectedOptionsInput = ReturnType<typeof graphql.scalar<'CartSelectedOp
 interface State {
   fields: Field[];
   lastResult: SubmissionResult | null;
-  successMessage?: ReactNode;
 }
 
 export const addToCart = async (
@@ -246,14 +245,8 @@ export const addToCart = async (
         ),
       }),
     };
-  } catch (error: unknown) {
-    if (error instanceof Error) {
-      return {
-        lastResult: submission.reply({ formErrors: [error.message] }),
-        fields: prevState.fields,
-      };
-    }
-
+  } catch (error) {
+    console.error('Error adding to cart:', error);
     return {
       lastResult: submission.reply({ formErrors: [t('unknownError')] }),
       fields: prevState.fields,

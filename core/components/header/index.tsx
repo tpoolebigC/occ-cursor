@@ -4,7 +4,7 @@ import PLazy from 'p-lazy';
 import { cache } from 'react';
 
 import { LayoutQuery } from '~/app/[locale]/(default)/query';
-import { getSessionCustomerAccessToken } from '~/auth';
+import { getSessionCustomerAccessToken, auth } from '~/auth';
 import { client } from '~/client';
 import { graphql, readFragment } from '~/client/graphql';
 import { revalidate } from '~/client/revalidate-target';
@@ -98,17 +98,22 @@ const getCartCount = async () => {
 export const Header = async () => {
   const t = await getTranslations('Components.Header');
   const locale = await getLocale();
+  const session = await auth();
 
   const locales = routing.locales.map((enabledLocales) => ({
     id: enabledLocales,
     label: enabledLocales.toLocaleUpperCase(),
   }));
 
+  // Determine account link based on user type
+      const accountHref = session?.isB2BCustomer ? '/business' : '/login';
+  const accountLabel = session?.isB2BCustomer ? 'B2B Portal' : t('Icons.account');
+
   return (
     <HeaderSection
       navigation={{
-        accountHref: '/login',
-        accountLabel: t('Icons.account'),
+        accountHref,
+        accountLabel,
         cartHref: '/cart',
         cartLabel: t('Icons.cart'),
         searchHref: '/search',

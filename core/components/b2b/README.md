@@ -9,6 +9,7 @@ The B2B buyer portal provides additional functionality for B2B customers, includ
 - Shopping lists
 - B2B-specific pricing and discounts
 - Enhanced order management
+- Quick order functionality
 
 ## Setup
 
@@ -21,9 +22,41 @@ Add the following environment variables to your `.env.local` file:
 B2B_API_TOKEN=your_b2b_api_token_here
 B2B_API_HOST=https://api-b2b.bigcommerce.com
 
+# For local development (optional)
+LOCAL_BUYER_PORTAL_HOST=http://localhost:3001
+
 # Optional: Use staging B2B CDN
 STAGING_B2B_CDN_ORIGIN=false
 ```
+
+### Local Development Setup
+
+For local development and customization of the B2B buyer portal:
+
+1. **Clone the B2B Buyer Portal React application:**
+   ```bash
+   git clone https://github.com/bigcommerce/b2b-buyer-portal.git
+   cd b2b-buyer-portal
+   npm install
+   npm run dev
+   ```
+
+2. **Set the LOCAL_BUYER_PORTAL_HOST environment variable:**
+   ```bash
+   LOCAL_BUYER_PORTAL_HOST=http://localhost:3001
+   ```
+
+3. **Configure the Buyer Portal type in your BigCommerce control panel to Custom**
+
+4. **Run your Catalyst application:**
+   ```bash
+   npm run dev
+   ```
+
+5. **Test the integration:**
+   - Log in to your B2B account
+   - Navigate to the buyer portal
+   - Test the quick order functionality
 
 ### Authentication Flow
 
@@ -69,6 +102,7 @@ import { CustomerDebug } from '~/components/b2b/customer-debug';
 1. **B2B token not available**: Check that `B2B_API_TOKEN` is set in your environment variables
 2. **B2B script not loading**: Verify that `BIGCOMMERCE_STORE_HASH` and `BIGCOMMERCE_CHANNEL_ID` are correctly set
 3. **Authentication failures**: Ensure the B2B API token has the correct permissions
+4. **Quick order not working**: Make sure the local buyer portal is running and `LOCAL_BUYER_PORTAL_HOST` is set correctly
 
 ### Debug Information
 
@@ -117,4 +151,18 @@ window.b2b.callbacks.addEventListener('on-registered', callback)
 
 // Cart events
 window.b2b.callbacks.addEventListener('on-cart-created', callback)
-``` 
+window.b2b.callbacks.addEventListener('on-product-added', callback)
+window.b2b.callbacks.addEventListener('on-cart-updated', callback)
+```
+
+## Quick Order Integration
+
+The B2B buyer portal includes a quick order feature that allows customers to:
+- Search for products using Algolia
+- Add products to cart directly from the search results
+- Manage quantities and options
+
+The quick order functionality is integrated with the main Catalyst cart system through:
+- Custom API endpoints (`/api/products/add-to-cart`)
+- Cart synchronization between B2B portal and main application
+- Event-driven updates for real-time cart state management 

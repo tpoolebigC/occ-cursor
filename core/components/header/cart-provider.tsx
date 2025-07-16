@@ -13,12 +13,28 @@ const CartContext = createContext<CartContext | undefined>(undefined);
 
 export const CartProvider = ({ children }: { children: ReactNode }) => {
   const [count, setCount] = useState(0);
-  const increment = useCallback((step = 1) => setCount((prev) => prev + step), []);
-  const decrement = useCallback((step = 1) => setCount((prev) => prev - step), []);
+  
+  const increment = useCallback((step = 1) => {
+    setCount((prev) => prev + step);
+    // Dispatch cart update event for B2B integration
+    window.dispatchEvent(new CustomEvent('cart-updated'));
+  }, []);
+  
+  const decrement = useCallback((step = 1) => {
+    setCount((prev) => prev - step);
+    // Dispatch cart update event for B2B integration
+    window.dispatchEvent(new CustomEvent('cart-updated'));
+  }, []);
+  
+  const setCountWithEvent = useCallback((newCount: number) => {
+    setCount(newCount);
+    // Dispatch cart update event for B2B integration
+    window.dispatchEvent(new CustomEvent('cart-updated'));
+  }, []);
 
   const value = useMemo(
-    () => ({ count, increment, decrement, setCount }),
-    [count, increment, decrement],
+    () => ({ count, increment, decrement, setCount: setCountWithEvent }),
+    [count, increment, decrement, setCountWithEvent],
   );
 
   return <CartContext.Provider value={value}>{children}</CartContext.Provider>;

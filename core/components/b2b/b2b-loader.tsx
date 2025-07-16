@@ -9,7 +9,6 @@ const EnvironmentSchema = z.object({
   BIGCOMMERCE_CHANNEL_ID: z.string({ message: 'BIGCOMMERCE_CHANNEL_ID is required' }),
   B2B_API_HOST: z.string().optional(),
   B2B_API_TOKEN: z.string().optional(),
-  NEXT_PUBLIC_BUYER_PORTAL_URL: z.string().optional(),
   STAGING_B2B_CDN_ORIGIN: z.string().optional(),
 });
 
@@ -19,14 +18,12 @@ export async function B2BLoader() {
     BIGCOMMERCE_CHANNEL_ID,
     B2B_API_HOST,
     B2B_API_TOKEN,
-    NEXT_PUBLIC_BUYER_PORTAL_URL,
     STAGING_B2B_CDN_ORIGIN,
   } = EnvironmentSchema.parse(process.env);
 
   const session = await auth();
   
-  // For now, we'll use production environment
-  // In a real B2B setup, you'd have a b2bToken in the session
+  // Determine environment
   const environment = STAGING_B2B_CDN_ORIGIN === 'true' ? 'staging' : 'production';
 
   console.log('B2B Loader Debug:', {
@@ -35,7 +32,6 @@ export async function B2BLoader() {
     environment,
     hasB2BApiHost: !!B2B_API_HOST,
     hasB2BApiToken: !!B2B_API_TOKEN,
-    buyerPortalUrl: NEXT_PUBLIC_BUYER_PORTAL_URL,
     session: session ? 'exists' : 'none',
     hasB2BToken: !!session?.b2bToken,
     hasCartId: !!session?.user?.cartId,

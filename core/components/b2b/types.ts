@@ -60,12 +60,21 @@ declare global {
           ): void;
           (event: 'on-logout', callback: (props: { data: Record<string, string> }) => void): void;
           (event: 'on-cart-created', callback: (props: { data: { cartId: string } }) => void): void;
+          (event: 'on-product-added', callback: (props: any) => void): void;
+          (event: 'on-cart-updated', callback: (props: any) => void): void;
         };
-        removeEventListener: (
-          event: 'on-logout' | 'on-registered' | 'on-cart-created',
-          callback: unknown,
-        ) => void;
-        dispatchEvent: (event: string) => void;
+        removeEventListener: {
+          (
+            event: 'on-registered',
+            callback: (props: {
+              data: Record<'email' | 'password' | 'landingLoginLocation', string>;
+            }) => void,
+          ): void;
+          (event: 'on-logout', callback: (props: { data: Record<string, string> }) => void): void;
+          (event: 'on-cart-created', callback: (props: { data: { cartId: string } }) => void): void;
+          (event: 'on-product-added', callback: (props: any) => void): void;
+          (event: 'on-cart-updated', callback: (props: any) => void): void;
+        };
       };
     };
   }
