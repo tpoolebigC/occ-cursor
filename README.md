@@ -86,9 +86,9 @@ Learn more about Catalyst at [catalyst.dev](https://catalyst.dev).
 > [!IMPORTANT]
 > If you just want to build a storefront, start with the [CLI](#quickstart) which will install the Next.js application in [/core](/core/).
 > If you wish to contribute back to Catalyst or create a fork of Catalyst, you can check the [docs for this monorepo](https://catalyst.dev/docs/monorepo) to get started.
-# Catalyst with Algolia Search Integration
+# Catalyst with Algolia Search & B2B Integration
 
-A production-ready BigCommerce Catalyst storefront with **Algolia search integration**, featuring lightning-fast faceted search, advanced filtering, and superior user experience.
+A production-ready BigCommerce Catalyst storefront with **Algolia search integration** and **complete B2B buyer portal integration**, featuring lightning-fast faceted search, advanced B2B functionality, and superior user experience.
 
 ## ✨ Features
 
@@ -98,13 +98,23 @@ A production-ready BigCommerce Catalyst storefront with **Algolia search integra
 - **Smart navigation** - "Shop All" and category navigation working seamlessly
 - **Real-time results** - Instant search results with highlighting
 - **Mobile-optimized** - Responsive search experience across all devices
+- **B2B-aware search** - Search results show B2B pricing and features
+
+### 🏢 **B2B Buyer Portal Integration**
+- **BigCommerce-hosted portal** - Official, supported B2B buyer portal integration
+- **Quote management** - Create, manage, and convert quotes to orders
+- **Shopping lists** - Create and manage shopping lists for team collaboration
+- **Cart synchronization** - Seamless cart sync between buyer portal and Catalyst
+- **B2B authentication** - Secure customer login with session management
+- **Product actions** - "Add to Quote" and "Add to Shopping List" buttons
+- **B2B pricing** - Customer-specific pricing and discounts
 
 ### 🛒 **E-commerce Features**
-- **B2B Buyer Portal** - Complete B2B functionality with quotes and shopping lists
 - **Product catalog** - Full product browsing with images, pricing, variants
 - **Shopping cart** - Add to cart, quantity management, checkout flow
 - **User authentication** - Customer login/logout with session management
 - **Responsive design** - Mobile-first, accessible design
+- **Makeswift integration** - Visual editing with B2B components
 
 ## 🚀 Quick Start
 
@@ -176,6 +186,31 @@ Use the provided debug script to inspect your index structure:
 npm run algolia:debug
 ```
 
+## 🏢 B2B Setup
+
+### 1. Enable B2B Features
+1. In your BigCommerce admin, go to **Settings** → **Store Setup** → **B2B**
+2. Enable **B2B Features**
+3. Configure customer groups for B2B customers
+4. Set up pricing rules and discounts
+
+### 2. Get B2B API Credentials
+1. Go to **Settings** → **API** → **B2B API**
+2. Note down your **B2B API Token**
+3. The B2B API host is typically: `https://api-b2b.bigcommerce.com/`
+
+### 3. Test B2B Integration
+Use the debug pages to monitor B2B functionality:
+```bash
+# Access debug page
+http://localhost:3000/b2b-debug
+
+# Check customer debug info
+http://localhost:3000/business-test
+```
+
+For detailed B2B setup instructions, see [B2B Setup Guide](docs/B2B_SETUP.md).
+
 ## 📁 Project Structure
 
 ```
@@ -184,7 +219,17 @@ core/
 │   ├── (faceted)/
 │   │   ├── fetch-faceted-search.ts    # Algolia search implementation
 │   │   └── search/page.tsx            # Search results page
+│   ├── b2b-debug/page.tsx             # B2B debug page
+│   ├── business-test/page.tsx         # B2B test page
 │   └── shop-all/page.tsx              # Shop All navigation
+├── b2b/                               # B2B Integration
+│   ├── loader.tsx                     # B2B loader script
+│   ├── use-b2b-auth.ts                # B2B authentication
+│   ├── use-b2b-cart.ts                # Cart synchronization
+│   ├── use-product-details.tsx        # Product actions
+│   ├── use-b2b-quote-enabled.ts       # Quote functionality
+│   ├── use-b2b-shopping-list-enabled.ts # Shopping list functionality
+│   └── map-to-b2b-product-options.tsx # Product options mapping
 ├── lib/algolia/
 │   ├── client.ts                      # Algolia client configuration
 │   ├── faceted-search.ts              # Faceted search logic
@@ -192,6 +237,8 @@ core/
 │   └── debug-index.ts                 # Debug utilities
 ├── data-transformers/
 │   └── algolia-search-results-transformer.ts
+├── vibes/soul/sections/product-detail/
+│   └── ProductDetailB2BActions.tsx    # B2B product actions
 └── components/
     └── header/_actions/search.ts      # Header search component
 ```
@@ -259,9 +306,21 @@ npm start
 - **Input Validation** - All user inputs sanitized
 - **HTTPS Only** - Secure connections enforced
 
+## 📚 Documentation
+
+### Setup Guides
+- **[Algolia Setup Guide](docs/ALGOLIA_SETUP.md)** - Complete Algolia integration setup
+- **[B2B Setup Guide](docs/B2B_SETUP.md)** - Complete B2B buyer portal integration setup
+
+### Key Features
+- **Algolia Search** - Lightning-fast faceted search with advanced filtering
+- **B2B Buyer Portal** - Official BigCommerce-hosted B2B portal integration
+- **Cart Synchronization** - Seamless cart sync between B2B portal and Catalyst
+- **Product Actions** - Add to Quote and Add to Shopping List functionality
+
 ## 📞 Support
 
-For technical support or questions about the Algolia integration:
+For technical support or questions about the integration:
 
 - **Documentation**: See `/docs` folder for detailed guides
 - **Issues**: Create GitHub issues for bugs
