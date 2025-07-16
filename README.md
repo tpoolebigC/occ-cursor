@@ -311,6 +311,7 @@ npm start
 ### Setup Guides
 - **[Algolia Setup Guide](docs/ALGOLIA_SETUP.md)** - Complete Algolia integration setup
 - **[B2B Setup Guide](docs/B2B_SETUP.md)** - Complete B2B buyer portal integration setup
+- **[Troubleshooting Guide](docs/TROUBLESHOOTING_AND_FIXES.md)** - All issues encountered and their solutions
 
 ### Key Features
 - **Algolia Search** - Lightning-fast faceted search with advanced filtering
