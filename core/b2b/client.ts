@@ -33,7 +33,7 @@ export async function loginWithB2B({ customerId, customerAccessToken }: LoginWit
 
 
 
-  const apiUrl = `${B2B_API_HOST}api/io/auth/customers/storefront`;
+  const apiUrl = `${B2B_API_HOST}/api/io/auth/customers/storefront`;
   console.log('B2B API call details:', {
     url: apiUrl,
     host: B2B_API_HOST,

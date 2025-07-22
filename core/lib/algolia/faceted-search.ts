@@ -151,16 +151,22 @@ export const fetchAlgoliaFacetedSearch = cache(
       query: term || '*', // Use wildcard for empty search terms
       page,
       hitsPerPage: limit,
-      facets: ['categories_without_path', 'brand_name', 'default_price', 'in_stock'],
+      facets: [
+        'categories_without_path', 
+        'brand_name', 
+        'default_price', 
+        'in_stock',
+        'is_visible'
+      ],
       facetFilters: [],
       numericFilters: [],
       filters: '',
     };
 
-    // Handle sorting
-    if (sort && SORT_MAPPING[sort]) {
-      searchParams.sortFacetBy = SORT_MAPPING[sort];
-    }
+    // Handle sorting (commented out as it might be causing facet issues)
+    // if (sort && SORT_MAPPING[sort]) {
+    //   searchParams.sortFacetBy = SORT_MAPPING[sort];
+    // }
 
     // Handle brand filters
     if (brand && brand.length > 0) {
@@ -244,7 +250,15 @@ export const fetchAlgoliaFacetedSearch = cache(
       const searchResult = results.results[0];
       
       console.log('✅ [Algolia] Faceted search found:', searchResult?.nbHits || 0, 'results');
-      console.log('🔍 [Algolia] Facets returned:', JSON.stringify(searchResult?.facets, null, 2));
+      console.log('🔍 [Algolia] Raw facets from Algolia:', JSON.stringify(searchResult?.facets, null, 2));
+      
+      // Log what facets we're requesting
+      console.log('🔍 [Algolia] Requested facets:', searchParams.facets);
+      
+      // Log available facet keys
+      if (searchResult?.facets) {
+        console.log('🔍 [Algolia] Available facet keys:', Object.keys(searchResult.facets));
+      }
       
       // Transform Algolia results to match BigCommerce format
       const transformedProducts = await searchResultsTransformer(searchResult.hits);
@@ -252,9 +266,12 @@ export const fetchAlgoliaFacetedSearch = cache(
       // Build facets from Algolia's facet data, or from search results if facets are empty
       let facets = [];
       if (searchResult.facets && Object.keys(searchResult.facets).length > 0) {
+        console.log('🔍 [Algolia] Building facets from Algolia data:', Object.keys(searchResult.facets));
         facets = buildFacetsFromAlgoliaFacets(searchResult.facets, params);
+        console.log('🔍 [Algolia] Built facets:', facets.map(f => ({ name: f.name, type: f.__typename })));
       } else {
         // Fallback: build facets from search results
+        console.log('🔍 [Algolia] Building facets from search results (fallback)');
         facets = buildFacetsFromSearchResults(searchResult.hits, params);
       }
 
@@ -288,6 +305,7 @@ export const fetchAlgoliaFacetedSearch = cache(
 );
 
 function buildFacetsFromAlgoliaFacets(algoliaFacets: any, params: AlgoliaSearchParams) {
+  console.log('🔍 [Algolia] Processing facets:', Object.keys(algoliaFacets));
   const facets = [];
 
   // Extract categories from Algolia facets
@@ -344,7 +362,7 @@ function buildFacetsFromAlgoliaFacets(algoliaFacets: any, params: AlgoliaSearchP
   if (algoliaFacets?.in_stock) {
     const availabilityFacet = {
       __typename: 'OtherSearchFilter',
-      name: 'Availability',
+      name: 'IN STOCK',
       isCollapsedByDefault: false,
       displayProductCount: true,
       isInStock: {
@@ -353,6 +371,22 @@ function buildFacetsFromAlgoliaFacets(algoliaFacets: any, params: AlgoliaSearchP
       },
     };
     facets.push(availabilityFacet);
+  }
+
+  // Extract inventory tracking if available
+  if (algoliaFacets?.inventory_tracking) {
+    const inventoryFacet = {
+      __typename: 'OtherSearchFilter',
+      name: 'Inventory Tracking',
+      isCollapsedByDefault: true,
+      displayProductCount: true,
+      inventoryTracking: Object.entries(algoliaFacets.inventory_tracking).map(([value, count]) => ({
+        value,
+        isSelected: false,
+        productCount: count as number,
+      })),
+    };
+    facets.push(inventoryFacet);
   }
 
   return facets;

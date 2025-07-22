@@ -104,13 +104,9 @@ async function getFilters(props: Props): Promise<Filter[]> {
   }
 
   const categorySearch = await fetchFacetedSearch({});
-  const allFacets = categorySearch.facets.items.filter(
-    (facet) => facet.__typename !== 'CategorySearchFilter',
-  );
+  const allFacets = categorySearch.facets.items;
 
-  const refinedFacets =
-    refinedSearch?.facets.items.filter((facet) => facet.__typename !== 'CategorySearchFilter') ??
-    [];
+  const refinedFacets = refinedSearch?.facets.items ?? [];
   const transformedFacets = await facetsTransformer({
     refinedFacets,
     allFacets,

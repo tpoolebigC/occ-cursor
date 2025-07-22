@@ -402,7 +402,7 @@ export const fetchFacetedSearch = cache(
     const algoliaParams = {
       term: filters.searchTerm || '',
       page: after ? parseInt(after.replace('page_', '')) : 0,
-      limit,
+      limit: limit ?? undefined,
       sort: sort?.toLowerCase() as any,
       brand: filters.brandEntityIds?.map(id => id.toString()),
       // Only apply category filters if there's a search term (not for Shop All)
