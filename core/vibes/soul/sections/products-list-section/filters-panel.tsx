@@ -175,7 +175,16 @@ export function FiltersPanelInner({
                 >
                   <ToggleGroup
                     onValueChange={(toggleGroupValues) => {
+                      console.log('🔍 [ToggleGroup] onValueChange called:', {
+                        paramName: filter.paramName,
+                        toggleGroupValues,
+                        currentValue: optimisticParams[filter.paramName],
+                        options: filter.options
+                      });
+                      
                       startTransition(async () => {
+                        // Prevent the "all selected" bug by ensuring we only get the actual selected values
+                        // The toggleGroupValues should only contain the values that are actually selected
                         const nextParams = {
                           ...optimisticParams,
                           [startCursorParamName]: null,
@@ -183,6 +192,11 @@ export function FiltersPanelInner({
                           [filter.paramName]:
                             toggleGroupValues.length === 0 ? null : toggleGroupValues,
                         };
+
+                        console.log('🔍 [ToggleGroup] Setting next params:', {
+                          paramName: filter.paramName,
+                          newValue: nextParams[filter.paramName]
+                        });
 
                         setOptimisticParams(nextParams);
                         await setParams(nextParams);
