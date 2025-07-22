@@ -315,8 +315,8 @@ function buildFacetsFromAlgoliaFacets(algoliaFacets: any, params: AlgoliaSearchP
       name: 'Category',
       isCollapsedByDefault: false,
       displayProductCount: true,
-      categories: Object.entries(algoliaFacets.categories_without_path).map(([name, count]) => ({
-        entityId: 0,
+      categories: Object.entries(algoliaFacets.categories_without_path).map(([name, count], index) => ({
+        entityId: index + 1, // Give each category a unique entityId
         name,
         isSelected: false, // TODO: implement selection logic
         productCount: count as number,
@@ -333,8 +333,8 @@ function buildFacetsFromAlgoliaFacets(algoliaFacets: any, params: AlgoliaSearchP
       name: 'Brand',
       isCollapsedByDefault: false,
       displayProductCount: true,
-      brands: Object.entries(algoliaFacets.brand_name).map(([name, count]) => ({
-        entityId: 0,
+      brands: Object.entries(algoliaFacets.brand_name).map(([name, count], index) => ({
+        entityId: index + 1, // Give each brand a unique entityId
         name,
         isSelected: params.brand?.includes(name) || false,
         productCount: count as number,
