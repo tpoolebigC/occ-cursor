@@ -25,5 +25,9 @@
     "dotenv-cli": "^7.4.4",
     "turbo": "^2.3.3",
     "typescript": "^5.7.2"
+  },
+  "dependencies": {
+    "@heroicons/react": "^2.2.0",
+    "graphql-request": "^7.2.0"
   }
 }
