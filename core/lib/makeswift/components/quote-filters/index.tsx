@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { FunnelIcon } from 'lucide-react';
+import { FilterIcon } from 'lucide-react';
 
 interface QuoteFiltersProps {
   className?: string;
@@ -36,7 +36,7 @@ export function QuoteFilters({
   return (
     <div className={`space-y-3 ${className}`}>
       <div className="flex items-center space-x-2">
-        <FunnelIcon className="h-4 w-4 text-gray-400" />
+        <FilterIcon className="h-4 w-4 text-gray-400" />
         <span className="text-sm font-medium text-gray-700">Filters</span>
       </div>
 
