@@ -3,6 +3,9 @@ import { defineRouting } from 'next-intl/routing';
 
 import { defaultLocale, locales } from './locales';
 
+// Re-export defaultLocale for use in other modules
+export { defaultLocale, locales };
+
 interface LocaleEntry {
   id: string;
   language: string;
