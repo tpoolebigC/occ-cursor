@@ -2,7 +2,7 @@ import { z } from 'zod';
 
 interface FormField {
   name: string;
-  label?: string;
+  label: string;
   errors?: string[];
   required?: boolean;
   persist?: boolean;
@@ -44,6 +44,8 @@ type TextAreaField = {
   type: 'textarea';
   defaultValue?: string;
   pattern?: string;
+  minLength?: number;
+  maxLength?: number;
 } & FormField;
 
 type DateField = {
@@ -80,7 +82,7 @@ type CardRadioField = {
   options: Array<{
     value: string;
     label: string;
-    image: { src: string; alt: string };
+    image?: { src: string; alt: string };
     disabled?: boolean;
   }>;
 } & FormField;
@@ -118,14 +120,25 @@ export interface SchemaRawShape {
   quantity: z.ZodNumber;
 }
 
-export function schema(fields: Field[]): z.ZodObject<SchemaRawShape> {
+export function schema(
+  fields: Field[],
+  minQuantity?: number,
+  maxQuantity?: number,
+): z.ZodObject<SchemaRawShape> {
+  let quantitySchema = z.number().min(minQuantity ?? 1);
+
+  if (maxQuantity != null) {
+    quantitySchema = quantitySchema.max(maxQuantity);
+  }
+
   const shape: SchemaRawShape = {
     id: z.string(),
-    quantity: z.number().min(1),
+    quantity: quantitySchema,
   };
 
   fields.forEach((field) => {
     let fieldSchema: z.ZodString | z.ZodNumber;
+
     switch (field.type) {
       case 'number':
         fieldSchema = z.number();
@@ -135,6 +148,15 @@ export function schema(fields: Field[]): z.ZodObject<SchemaRawShape> {
 
         shape[field.name] = fieldSchema;
         break;
+
+      case 'textarea':
+        fieldSchema = z.string();
+        if (field.minLength != null) fieldSchema = fieldSchema.min(field.minLength);
+        if (field.maxLength != null) fieldSchema = fieldSchema.max(field.maxLength);
+
+        shape[field.name] = fieldSchema;
+        break;
+
       default:
         fieldSchema = z.string();
 

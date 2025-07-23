@@ -1,15 +1,44 @@
 'use server';
 
+import { BigCommerceGQLError, removeEdgesAndNodes } from '@bigcommerce/catalyst-client';
 import { SubmissionResult } from '@conform-to/react';
 import { parseWithZod } from '@conform-to/zod';
-import { strict } from 'assert';
 import { getTranslations } from 'next-intl/server';
 import { z } from 'zod';
 
 import { SearchResult } from '@/vibes/soul/primitives/navigation';
+import { getSessionCustomerAccessToken } from '~/auth';
+import { client } from '~/client';
+import { graphql } from '~/client/graphql';
+import { revalidate } from '~/client/revalidate-target';
+import { searchResultsTransformer } from '~/data-transformers/search-results-transformer';
+import { getPreferredCurrencyCode } from '~/lib/currency';
 
-import { AlgoliaHit, algoliaResultsTransformer } from '~/data-transformers/algolia-search-results-transformer';
-import algoliaClient from '~/lib/algolia/client';
+import { SearchProductFragment } from './fragment';
+
+const GetQuickSearchResultsQuery = graphql(
+  `
+    query getQuickSearchResults(
+      $filters: SearchProductsFiltersInput!
+      $currencyCode: currencyCode
+    ) {
+      site {
+        search {
+          searchProducts(filters: $filters) {
+            products(first: 5) {
+              edges {
+                node {
+                  ...SearchProductFragment
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  `,
+  [SearchProductFragment],
+);
 
 export async function search(
   prevState: {
@@ -50,33 +79,40 @@ export async function search(
     };
   }
 
+  const customerAccessToken = await getSessionCustomerAccessToken();
+
+  const currencyCode = await getPreferredCurrencyCode();
+
   try {
-    // Ensure the Algolia index name is set
-    strict(process.env.NEXT_PUBLIC_ALGOLIA_INDEXNAME);
-
-    console.log('🔍 [Algolia] Searching for:', submission.value.term);
-
-    // Send the search term to Algolia instead of BigCommerce
-    const algoliaResults = await algoliaClient.searchSingleIndex<AlgoliaHit>({
-      indexName: process.env.NEXT_PUBLIC_ALGOLIA_INDEXNAME,
-      searchParams: {
-        query: submission.value.term,
-        // Add any filters you want to apply to the search results
-        filters: 'is_visible:true',
-      },
+    const response = await client.fetch({
+      document: GetQuickSearchResultsQuery,
+      variables: { filters: { searchTerm: submission.value.term }, currencyCode },
+      customerAccessToken,
+      fetchOptions: customerAccessToken ? { cache: 'no-store' } : { next: { revalidate } },
     });
 
-    console.log('✅ [Algolia] Found', algoliaResults.hits.length, 'results');
+    const { products } = response.data.site.search.searchProducts;
 
     return {
       lastResult: submission.reply(),
-      // Transform the Algolia hits into SearchResult objects
-      searchResults: await algoliaResultsTransformer(algoliaResults.hits),
+      searchResults: await searchResultsTransformer(removeEdgesAndNodes(products)),
       emptyStateTitle,
       emptyStateSubtitle,
     };
   } catch (error) {
-    console.error('❌ [Algolia] Error during search:', error);
+    // eslint-disable-next-line no-console
+    console.error(error);
+
+    if (error instanceof BigCommerceGQLError) {
+      return {
+        lastResult: submission.reply({
+          formErrors: error.errors.map(({ message }) => message),
+        }),
+        searchResults: prevState.searchResults,
+        emptyStateTitle,
+        emptyStateSubtitle,
+      };
+    }
 
     if (error instanceof Error) {
       return {
@@ -89,7 +125,7 @@ export async function search(
 
     return {
       lastResult: submission.reply({
-        formErrors: [t('error')],
+        formErrors: [t('somethingWentWrong')],
       }),
       searchResults: prevState.searchResults,
       emptyStateTitle,

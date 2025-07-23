@@ -1,12 +1,13 @@
 'use server';
 
+import { BigCommerceGQLError } from '@bigcommerce/catalyst-client';
 import { SubmissionResult } from '@conform-to/react';
 import { parseWithZod } from '@conform-to/zod';
 import { FragmentOf } from 'gql.tada';
 import { getTranslations } from 'next-intl/server';
 
+import { CartLineItem } from '@/vibes/soul/sections/cart';
 import { cartLineItemActionFormDataSchema } from '@/vibes/soul/sections/cart/schema';
-import { CartLineItem } from '@/vibes/soul/sections/cart/types';
 
 import { DigitalItemFragment, PhysicalItemFragment } from '../page-data';
 
@@ -38,7 +39,7 @@ export const updateLineItem = async (
   if (submission.status !== 'success') {
     return {
       ...prevState,
-      lastResult: submission.reply({ formErrors: [t('somethingWentWrong')] }),
+      lastResult: submission.reply(),
     };
   }
 
@@ -177,6 +178,18 @@ export const updateLineItem = async (
           quantity: cartLineItem.quantity + 1,
         });
       } catch (error) {
+        // eslint-disable-next-line no-console
+        console.error(error);
+
+        if (error instanceof BigCommerceGQLError) {
+          return {
+            ...prevState,
+            lastResult: submission.reply({
+              formErrors: error.errors.map(({ message }) => message),
+            }),
+          };
+        }
+
         if (error instanceof Error) {
           return { ...prevState, lastResult: submission.reply({ formErrors: [error.message] }) };
         }
@@ -319,6 +332,18 @@ export const updateLineItem = async (
           quantity: cartLineItem.quantity - 1,
         });
       } catch (error) {
+        // eslint-disable-next-line no-console
+        console.error(error);
+
+        if (error instanceof BigCommerceGQLError) {
+          return {
+            ...prevState,
+            lastResult: submission.reply({
+              formErrors: error.errors.map(({ message }) => message),
+            }),
+          };
+        }
+
         if (error instanceof Error) {
           return { ...prevState, lastResult: submission.reply({ formErrors: [error.message] }) };
         }
@@ -340,6 +365,18 @@ export const updateLineItem = async (
       try {
         await removeItem({ lineItemEntityId: submission.value.id });
       } catch (error) {
+        // eslint-disable-next-line no-console
+        console.error(error);
+
+        if (error instanceof BigCommerceGQLError) {
+          return {
+            ...prevState,
+            lastResult: submission.reply({
+              formErrors: error.errors.map(({ message }) => message),
+            }),
+          };
+        }
+
         if (error instanceof Error) {
           return { ...prevState, lastResult: submission.reply({ formErrors: [error.message] }) };
         }
@@ -348,13 +385,6 @@ export const updateLineItem = async (
       }
 
       const deletedItem = submission.value;
-
-      // TODO: add bodl
-      // bodl.cart.productRemoved({
-      //   currency,
-      //   product_value: product.listPrice.value * product.quantity,
-      //   line_items: [lineItemTransform(product)],
-      // });
 
       return {
         lineItems: prevState.lineItems.filter((item) => item.id !== deletedItem.id),

@@ -1,17 +1,16 @@
 'use server';
 
-import { BigCommerceAPIError } from '@bigcommerce/catalyst-client';
+import { BigCommerceGQLError } from '@bigcommerce/catalyst-client';
 import { parseWithZod } from '@conform-to/zod';
 import { unstable_expireTag } from 'next/cache';
 import { getTranslations } from 'next-intl/server';
 
-import { updateAccountSchema } from '@/vibes/soul/sections/account-settings-section/schema';
+import { updateAccountSchema } from '@/vibes/soul/sections/account-settings/schema';
+import { UpdateAccountAction } from '@/vibes/soul/sections/account-settings/update-account-form';
 import { getSessionCustomerAccessToken } from '~/auth';
 import { client } from '~/client';
 import { graphql } from '~/client/graphql';
 import { TAGS } from '~/client/tags';
-
-import { UpdateAccountAction } from '../../../../../../vibes/soul/sections/account-settings-section/update-account-form';
 
 const UpdateCustomerMutation = graphql(`
   mutation UpdateCustomerMutation($input: UpdateCustomerInput!) {
@@ -45,7 +44,7 @@ const UpdateCustomerMutation = graphql(`
 `);
 
 export const updateCustomer: UpdateAccountAction = async (prevState, formData) => {
-  const t = await getTranslations('Register');
+  const t = await getTranslations('Account.Settings');
   const customerAccessToken = await getSessionCustomerAccessToken();
 
   const submission = parseWithZod(formData, { schema: updateAccountSchema });
@@ -80,23 +79,32 @@ export const updateCustomer: UpdateAccountAction = async (prevState, formData) =
 
     return {
       account: submission.value,
-      successMessage: t('successfulUpdate'),
+      successMessage: t('settingsUpdated'),
       lastResult: submission.reply(),
     };
   } catch (error) {
     // eslint-disable-next-line no-console
     console.error(error);
 
-    if (error instanceof BigCommerceAPIError) {
+    if (error instanceof BigCommerceGQLError) {
       return {
         account: prevState.account,
-        lastResult: submission.reply({ formErrors: [t('Errors.apiError')] }),
+        lastResult: submission.reply({
+          formErrors: error.errors.map(({ message }) => message),
+        }),
+      };
+    }
+
+    if (error instanceof Error) {
+      return {
+        account: prevState.account,
+        lastResult: submission.reply({ formErrors: [error.message] }),
       };
     }
 
     return {
       account: prevState.account,
-      lastResult: submission.reply({ formErrors: [t('Errors.error')] }),
+      lastResult: submission.reply({ formErrors: [t('somethingWentWrong')] }),
     };
   }
 };

@@ -1,10 +1,10 @@
-import { BigCommerceAPIError } from '@bigcommerce/catalyst-client';
+import { BigCommerceGQLError } from '@bigcommerce/catalyst-client';
 import { parseWithZod } from '@conform-to/zod';
 import { unstable_expireTag as expireTag } from 'next/cache';
 import { getTranslations } from 'next-intl/server';
 import { z } from 'zod';
 
-import { Field, FieldGroup } from '@/vibes/soul/primitives/dynamic-form/schema';
+import { Field, FieldGroup } from '@/vibes/soul/form/dynamic-form/schema';
 import { schema } from '@/vibes/soul/sections/address-list-section/schema';
 import { getSessionCustomerAccessToken } from '~/auth';
 import { client } from '~/client';
@@ -257,16 +257,25 @@ export async function updateAddress(prevState: Awaited<State>, formData: FormDat
     // eslint-disable-next-line no-console
     console.error(error);
 
-    if (error instanceof BigCommerceAPIError) {
+    if (error instanceof BigCommerceGQLError) {
       return {
         ...prevState,
-        lastResult: submission.reply({ formErrors: [t('Errors.apiError')] }),
+        lastResult: submission.reply({
+          formErrors: error.errors.map(({ message }) => message),
+        }),
+      };
+    }
+
+    if (error instanceof Error) {
+      return {
+        ...prevState,
+        lastResult: submission.reply({ formErrors: [error.message] }),
       };
     }
 
     return {
       ...prevState,
-      lastResult: submission.reply({ formErrors: [t('Errors.error')] }),
+      lastResult: submission.reply({ formErrors: [t('somethingWentWrong')] }),
     };
   }
 }

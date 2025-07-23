@@ -1,12 +1,11 @@
 import { removeEdgesAndNodes } from '@bigcommerce/catalyst-client';
-import { getFormatter, getTranslations } from 'next-intl/server';
+import { getFormatter } from 'next-intl/server';
 import { cache } from 'react';
 
 import { client } from '~/client';
 import { PaginationFragment } from '~/client/fragments/pagination';
 import { graphql } from '~/client/graphql';
 import { revalidate } from '~/client/revalidate-target';
-import { BlogPostCardFragment } from '~/components/blog-post-card/fragment';
 
 const BlogQuery = graphql(`
   query BlogQuery {
@@ -37,8 +36,18 @@ const BlogPostsPageQuery = graphql(
             posts(first: $first, after: $after, last: $last, before: $before, filters: $filters) {
               edges {
                 node {
+                  author
                   entityId
-                  ...BlogPostCardFragment
+                  name
+                  path
+                  plainTextSummary
+                  publishedDate {
+                    utc
+                  }
+                  thumbnailImage {
+                    url: urlTemplate(lossy: true)
+                    altText
+                  }
                 }
               }
               pageInfo {
@@ -50,7 +59,7 @@ const BlogPostsPageQuery = graphql(
       }
     }
   `,
-  [BlogPostCardFragment, PaginationFragment],
+  [PaginationFragment],
 );
 
 export interface BlogPostsFiltersInput {
@@ -110,16 +119,3 @@ export const getBlogPosts = cache(
     };
   },
 );
-
-export async function getBlogMetaData() {
-  const t = await getTranslations('Blog');
-  const blog = await getBlog();
-
-  return {
-    title: blog?.name ?? t('title'),
-    description:
-      blog?.description && blog.description.length > 150
-        ? `${blog.description.substring(0, 150)}...`
-        : blog?.description,
-  };
-}

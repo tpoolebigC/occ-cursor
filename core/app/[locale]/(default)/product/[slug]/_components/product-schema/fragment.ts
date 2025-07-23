@@ -19,20 +19,6 @@ export const ProductSchemaFragment = graphql(`
     defaultImage {
       url: urlTemplate(lossy: true)
     }
-    prices {
-      price {
-        value
-        currencyCode
-      }
-      priceRange {
-        min {
-          value
-        }
-        max {
-          value
-        }
-      }
-    }
     condition
     availabilityV2 {
       status

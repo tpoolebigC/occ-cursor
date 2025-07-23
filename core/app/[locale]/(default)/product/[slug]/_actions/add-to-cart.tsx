@@ -1,22 +1,16 @@
 'use server';
 
+import { BigCommerceGQLError } from '@bigcommerce/catalyst-client';
 import { SubmissionResult } from '@conform-to/react';
 import { parseWithZod } from '@conform-to/zod';
-import { unstable_expireTag } from 'next/cache';
-import { cookies } from 'next/headers';
 import { getTranslations } from 'next-intl/server';
 import { ReactNode } from 'react';
 
 import { Field, schema } from '@/vibes/soul/sections/product-detail/schema';
 import { graphql } from '~/client/graphql';
-import {
-  addCartLineItem,
-  assertAddCartLineItemErrors,
-} from '~/client/mutations/add-cart-line-item';
-import { assertCreateCartErrors, createCart } from '~/client/mutations/create-cart';
-import { getCart } from '~/client/queries/get-cart';
-import { TAGS } from '~/client/tags';
 import { Link } from '~/components/link';
+import { addToOrCreateCart } from '~/lib/cart';
+import { MissingCartError } from '~/lib/cart/error';
 
 type CartSelectedOptionsInput = ReturnType<typeof graphql.scalar<'CartSelectedOptionsInput'>>;
 
@@ -44,11 +38,6 @@ export const addToCart = async (
 
   const productEntityId = Number(submission.value.id);
   const quantity = Number(submission.value.quantity);
-
-  const cookieStore = await cookies();
-  const cartId = cookieStore.get('cartId')?.value;
-
-  let cart;
 
   const selectedOptions = prevState.fields.reduce<CartSelectedOptionsInput>((accum, field) => {
     const optionValueEntityId = submission.value[field.name];
@@ -163,76 +152,15 @@ export const addToCart = async (
   }, {});
 
   try {
-    cart = await getCart(cartId);
-
-    if (cart) {
-      const addCartLineItemResponse = await addCartLineItem(cart.entityId, {
-        lineItems: [
-          {
-            productEntityId,
-            selectedOptions,
-            quantity,
-          },
-        ],
-      });
-
-      assertAddCartLineItemErrors(addCartLineItemResponse);
-
-      cart = addCartLineItemResponse.data.cart.addCartLineItems?.cart;
-
-      if (!cart?.entityId) {
-        return {
-          lastResult: submission.reply({ formErrors: [t('missingCart')] }),
-          fields: prevState.fields,
-        };
-      }
-
-      unstable_expireTag(TAGS.cart);
-
-      return {
-        lastResult: submission.reply(),
-        fields: prevState.fields,
-        successMessage: t.rich('successMessage', {
-          cartItems: quantity,
-          cartLink: (chunks) => (
-            <Link className="underline" href="/cart" prefetch="viewport" prefetchKind="full">
-              {chunks}
-            </Link>
-          ),
-        }),
-      };
-    }
-
-    // Create cart
-    const createCartResponse = await createCart([
-      {
-        productEntityId,
-        selectedOptions,
-        quantity,
-      },
-    ]);
-
-    assertCreateCartErrors(createCartResponse);
-
-    cart = createCartResponse.data.cart.createCart?.cart;
-
-    if (!cart?.entityId) {
-      return {
-        lastResult: submission.reply({ formErrors: [t('missingCart')] }),
-        fields: prevState.fields,
-      };
-    }
-
-    cookieStore.set({
-      name: 'cartId',
-      value: cart.entityId,
-      httpOnly: true,
-      sameSite: 'lax',
-      secure: true,
-      path: '/',
+    await addToOrCreateCart({
+      lineItems: [
+        {
+          productEntityId,
+          selectedOptions,
+          quantity,
+        },
+      ],
     });
-
-    unstable_expireTag(TAGS.cart);
 
     return {
       lastResult: submission.reply(),
@@ -246,7 +174,34 @@ export const addToCart = async (
         ),
       }),
     };
-  } catch (error: unknown) {
+  } catch (error) {
+    // eslint-disable-next-line no-console
+    console.error(error);
+
+    if (error instanceof BigCommerceGQLError) {
+      return {
+        lastResult: submission.reply({
+          formErrors: error.errors.map(({ message }) => {
+            if (message.includes('Not enough stock:')) {
+              // This removes the item id from the message. It's very brittle, but it's the only
+              // solution to do it until our API returns a better error message.
+              return message.replace('Not enough stock: ', '').replace(/\(\w.+\)\s{1}/, '');
+            }
+
+            return message;
+          }),
+        }),
+        fields: prevState.fields,
+      };
+    }
+
+    if (error instanceof MissingCartError) {
+      return {
+        lastResult: submission.reply({ formErrors: [t('missingCart')] }),
+        fields: prevState.fields,
+      };
+    }
+
     if (error instanceof Error) {
       return {
         lastResult: submission.reply({ formErrors: [error.message] }),

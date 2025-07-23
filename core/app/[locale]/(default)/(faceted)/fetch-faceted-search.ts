@@ -2,13 +2,11 @@ import { removeEdgesAndNodes } from '@bigcommerce/catalyst-client';
 import { cache } from 'react';
 import { z } from 'zod';
 
-import { getSessionCustomerAccessToken } from '~/auth';
 import { client } from '~/client';
 import { PaginationFragment } from '~/client/fragments/pagination';
 import { graphql, VariablesOf } from '~/client/graphql';
-import { revalidate } from '~/client/revalidate-target';
+import { CurrencyCode } from '~/components/header/fragment';
 import { ProductCardFragment } from '~/components/product-card/fragment';
-import { fetchAlgoliaFacetedSearch } from '~/lib/algolia/faceted-search';
 
 const GetProductSearchResultsQuery = graphql(
   `
@@ -19,6 +17,7 @@ const GetProductSearchResultsQuery = graphql(
       $before: String
       $filters: SearchProductsFiltersInput!
       $sort: SearchProductsSortInput
+      $currencyCode: currencyCode
     ) {
       site {
         search {
@@ -148,6 +147,13 @@ const GetProductSearchResultsQuery = graphql(
             }
           }
         }
+        settings {
+          storefront {
+            catalog {
+              productComparisonsEnabled
+            }
+          }
+        }
       }
     }
   `,
@@ -167,14 +173,17 @@ interface ProductSearch {
 }
 
 const getProductSearchResults = cache(
-  async ({ limit = 9, after, before, sort, filters }: ProductSearch) => {
-    const customerAccessToken = await getSessionCustomerAccessToken();
+  async (
+    { limit = 9, after, before, sort, filters }: ProductSearch,
+    currencyCode?: CurrencyCode,
+    customerAccessToken?: string,
+  ) => {
     const filterArgs = { filters, sort };
     const paginationArgs = before ? { last: limit, before } : { first: limit, after };
 
     const response = await client.fetch({
       document: GetProductSearchResultsQuery,
-      variables: { ...filterArgs, ...paginationArgs },
+      variables: { ...filterArgs, ...paginationArgs, currencyCode },
       customerAccessToken,
       fetchOptions: customerAccessToken ? { cache: 'no-store' } : { next: { revalidate: 300 } },
     });
@@ -185,7 +194,6 @@ const getProductSearchResults = cache(
 
     const items = removeEdgesAndNodes(searchResults.products).map((product) => ({
       ...product,
-      fetchOptions: { next: { revalidate } },
     }));
 
     return {
@@ -322,7 +330,7 @@ export const PublicSearchParamsSchema = z.object({
 });
 
 const AttributeKey = z.custom<`attr_${string}`>((val) => {
-  return typeof val === 'string' ? /^attr_\w+$/.test(val) : false;
+  return typeof val === 'string' ? /^attr_.+$/.test(val) : false;
 });
 
 export const PublicToPrivateParams = PublicSearchParamsSchema.catchall(SearchParamToArray.nullish())
@@ -391,33 +399,23 @@ export const PublicToPrivateParams = PublicSearchParamsSchema.catchall(SearchPar
 
 export const fetchFacetedSearch = cache(
   // We need to make sure the reference passed into this function is the same if we want it to be memoized.
-  async (params: z.input<typeof PublicSearchParamsSchema>) => {
-    console.log('🔍 [fetchFacetedSearch] Received params:', JSON.stringify(params, null, 2));
-    
+  async (
+    params: z.input<typeof PublicSearchParamsSchema>,
+    currencyCode?: CurrencyCode,
+    customerAccessToken?: string,
+  ) => {
     const { after, before, limit = 9, sort, filters } = PublicToPrivateParams.parse(params);
 
-    console.log('🔍 [fetchFacetedSearch] Parsed filters:', JSON.stringify(filters, null, 2));
-
-    // Use Algolia for faceted search instead of BigCommerce
-    const algoliaParams = {
-      term: filters.searchTerm || '',
-      page: after ? parseInt(after.replace('page_', '')) : 0,
-      limit: limit ?? undefined,
-      sort: sort?.toLowerCase() as any,
-      brand: filters.brandEntityIds?.map(id => id.toString()),
-      // Only apply category filters if there's a search term (not for Shop All)
-      category: filters.searchTerm ? filters.categoryEntityId : undefined,
-      categoryIn: filters.searchTerm ? filters.categoryEntityIds : undefined,
-      minPrice: filters.price?.minPrice,
-      maxPrice: filters.price?.maxPrice,
-      minRating: filters.rating?.minRating,
-      maxRating: filters.rating?.maxRating,
-      isFeatured: filters.isFeatured,
-      stock: filters.hideOutOfStock ? ['in_stock'] : undefined,
-      shipping: filters.isFreeShipping ? ['free_shipping'] : undefined,
-    };
-
-    console.log('🔄 [Search] Using Algolia for faceted search with params:', JSON.stringify(algoliaParams, null, 2));
-    return fetchAlgoliaFacetedSearch(algoliaParams);
+    return getProductSearchResults(
+      {
+        after,
+        before,
+        limit,
+        sort,
+        filters,
+      },
+      currencyCode,
+      customerAccessToken,
+    );
   },
 );

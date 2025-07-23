@@ -4,23 +4,16 @@ import { PropsWithChildren } from 'react';
 import { usePathname } from 'next/navigation';
 
 import { Toaster } from '@/vibes/soul/primitives/toaster';
-import { CartProvider } from '~/components/header/cart-provider';
-import { CompareDrawerProvider } from '~/components/ui/compare-drawer';
+import { SearchProvider } from '~/lib/search';
 
 export function Providers({ children }: PropsWithChildren) {
   const pathname = usePathname();
   const isBuyerPortal = pathname?.startsWith('/buyer-portal');
 
   return (
-    <>
+    <SearchProvider>
       <Toaster position="top-right" />
-      <CartProvider>
-        {isBuyerPortal ? (
-          children
-        ) : (
-          <CompareDrawerProvider>{children}</CompareDrawerProvider>
-        )}
-      </CartProvider>
-    </>
+      {children}
+    </SearchProvider>
   );
 }

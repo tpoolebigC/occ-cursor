@@ -1,6 +1,9 @@
+import { cache } from 'react';
+
 import { getSessionCustomerAccessToken } from '~/auth';
 import { client } from '~/client';
-import { graphql } from '~/client/graphql';
+import { graphql, VariablesOf } from '~/client/graphql';
+import { revalidate } from '~/client/revalidate-target';
 import { TAGS } from '~/client/tags';
 
 export const PhysicalItemFragment = graphql(`
@@ -122,11 +125,66 @@ export const DigitalItemFragment = graphql(`
 `);
 
 const MoneyFieldsFragment = graphql(`
-  fragment MoneyFields on Money {
+  fragment MoneyFieldsFragment on Money {
     currencyCode
     value
   }
 `);
+
+const ShippingInfoFragment = graphql(`
+  fragment ShippingInfoFragment on Checkout {
+    entityId
+    shippingConsignments {
+      entityId
+      availableShippingOptions {
+        cost {
+          value
+        }
+        description
+        entityId
+        isRecommended
+      }
+      selectedShippingOption {
+        entityId
+        description
+        cost {
+          value
+        }
+      }
+      address {
+        city
+        countryCode
+        stateOrProvince
+        postalCode
+      }
+    }
+    handlingCostTotal {
+      value
+    }
+    shippingCostTotal {
+      currencyCode
+      value
+    }
+  }
+`);
+
+const GeographyFragment = graphql(
+  `
+    fragment GeographyFragment on Geography {
+      countries {
+        entityId
+        name
+        code
+        statesOrProvinces {
+          entityId
+          name
+          abbreviation
+        }
+      }
+    }
+  `,
+  [],
+);
 
 const CartPageQuery = graphql(
   `
@@ -134,7 +192,11 @@ const CartPageQuery = graphql(
       site {
         cart(entityId: $cartId) {
           entityId
+          version
           currencyCode
+          discountedAmount {
+            ...MoneyFieldsFragment
+          }
           lineItems {
             physicalItems {
               ...PhysicalItemFragment
@@ -146,34 +208,50 @@ const CartPageQuery = graphql(
           }
         }
         checkout(entityId: $cartId) {
+          entityId
           subtotal {
-            ...MoneyFields
+            ...MoneyFieldsFragment
           }
           grandTotal {
-            ...MoneyFields
+            ...MoneyFieldsFragment
           }
           taxTotal {
-            ...MoneyFields
+            ...MoneyFieldsFragment
           }
           cart {
             currencyCode
+          }
+          coupons {
+            code
             discountedAmount {
-              ...MoneyFields
+              ...MoneyFieldsFragment
             }
           }
+          ...ShippingInfoFragment
         }
+      }
+      geography {
+        ...GeographyFragment
       }
     }
   `,
-  [PhysicalItemFragment, DigitalItemFragment, MoneyFieldsFragment],
+  [
+    PhysicalItemFragment,
+    DigitalItemFragment,
+    MoneyFieldsFragment,
+    ShippingInfoFragment,
+    GeographyFragment,
+  ],
 );
 
-export const getCart = async (cartId: string) => {
+type Variables = VariablesOf<typeof CartPageQuery>;
+
+export const getCart = async (variables: Variables) => {
   const customerAccessToken = await getSessionCustomerAccessToken();
 
   const { data } = await client.fetch({
     document: CartPageQuery,
-    variables: { cartId },
+    variables,
     customerAccessToken,
     fetchOptions: {
       cache: 'no-store',
@@ -185,3 +263,35 @@ export const getCart = async (cartId: string) => {
 
   return data;
 };
+
+const SupportedShippingDestinationsQuery = graphql(`
+  query SupportedShippingDestinations {
+    site {
+      settings {
+        shipping {
+          supportedShippingDestinations {
+            countries {
+              entityId
+              code
+              name
+              statesOrProvinces {
+                entityId
+                name
+                abbreviation
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+`);
+
+export const getShippingCountries = cache(async () => {
+  const { data } = await client.fetch({
+    document: SupportedShippingDestinationsQuery,
+    fetchOptions: { next: { revalidate } },
+  });
+
+  return data.site.settings?.shipping?.supportedShippingDestinations.countries ?? [];
+});

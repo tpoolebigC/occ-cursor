@@ -2,27 +2,63 @@ import { removeEdgesAndNodes } from '@bigcommerce/catalyst-client';
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { getFormatter, getTranslations, setRequestLocale } from 'next-intl/server';
-import { createSearchParamsCache } from 'nuqs/server';
+import { createLoader, SearchParams } from 'nuqs/server';
 import { cache } from 'react';
 
-import { Stream } from '@/vibes/soul/lib/streamable';
-import { Breadcrumb } from '@/vibes/soul/primitives/breadcrumbs';
-import { CursorPaginationInfo } from '@/vibes/soul/primitives/cursor-pagination';
-import { ListProduct } from '@/vibes/soul/primitives/products-list';
+import { Stream, Streamable } from '@/vibes/soul/lib/streamable';
+import { createCompareLoader } from '@/vibes/soul/primitives/compare-drawer/loader';
 import { ProductsListSection } from '@/vibes/soul/sections/products-list-section';
 import { getFilterParsers } from '@/vibes/soul/sections/products-list-section/filter-parsers';
-import { Filter } from '@/vibes/soul/sections/products-list-section/filters-panel';
-import { Option as SortOption } from '@/vibes/soul/sections/products-list-section/sorting';
+import { getSessionCustomerAccessToken } from '~/auth';
 import { facetsTransformer } from '~/data-transformers/facets-transformer';
 import { pageInfoTransformer } from '~/data-transformers/page-info-transformer';
 import { pricesTransformer } from '~/data-transformers/prices-transformer';
+import { getPreferredCurrencyCode } from '~/lib/currency';
 
+import { MAX_COMPARE_LIMIT } from '../../../compare/page-data';
+import { getCompareProducts } from '../../fetch-compare-products';
 import { fetchFacetedSearch } from '../../fetch-faceted-search';
 
 import { CategoryViewed } from './_components/category-viewed';
 import { getCategoryPageData } from './page-data';
 
-type SearchParams = Record<string, string | string[] | undefined>;
+const getCachedCategory = cache((categoryId: number) => {
+  return {
+    category: categoryId,
+  };
+});
+
+const compareLoader = createCompareLoader();
+
+const createCategorySearchParamsLoader = cache(
+  async (categoryId: number, customerAccessToken?: string) => {
+    const cachedCategory = getCachedCategory(categoryId);
+    const categorySearch = await fetchFacetedSearch(cachedCategory, undefined, customerAccessToken);
+    const categoryFacets = categorySearch.facets.items.filter(
+      (facet) => facet.__typename !== 'CategorySearchFilter',
+    );
+    const transformedCategoryFacets = await facetsTransformer({
+      refinedFacets: categoryFacets,
+      allFacets: categoryFacets,
+      searchParams: {},
+    });
+    const categoryFilters = transformedCategoryFacets.filter((facet) => facet != null);
+    const filterParsers = getFilterParsers(categoryFilters);
+
+    // If there are no filters, return `null`, since calling `createLoader` with an empty
+    // object will throw the following cryptic error:
+    //
+    // ```
+    // Error: [nuqs] Empty search params cache. Search params can't be accessed in Layouts.
+    //   See https://err.47ng.com/NUQS-500
+    // ```
+    if (Object.keys(filterParsers).length === 0) {
+      return null;
+    }
+
+    return createLoader(filterParsers);
+  },
+);
 
 interface Props {
   params: Promise<{
@@ -32,238 +68,17 @@ interface Props {
   searchParams: Promise<SearchParams>;
 }
 
-async function getCategory(props: Props) {
-  const { slug } = await props.params;
-  const categoryId = Number(slug);
-  const data = await getCategoryPageData({ categoryId });
-
-  const category = data.category;
-
-  if (category == null) notFound();
-
-  return category;
-}
-
-async function getBreadcrumbs(props: Props): Promise<Breadcrumb[]> {
-  const category = await getCategory(props);
-
-  return removeEdgesAndNodes(category.breadcrumbs).map(({ name, path }) => ({
-    label: name,
-    href: path ?? '#',
-  }));
-}
-
-async function getSubCategoriesFilters(props: Props): Promise<Filter[]> {
-  const { slug } = await props.params;
-  const categoryId = Number(slug);
-  const data = await getCategoryPageData({ categoryId });
-  const t = await getTranslations('FacetedGroup.MobileSideNav');
-
-  const categoryTree = data.categoryTree[0];
-
-  if (categoryTree == null || categoryTree.children.length === 0) return [];
-
-  return [
-    {
-      type: 'link-group',
-      label: t('subCategories'),
-      links: categoryTree.children.map((category) => ({
-        label: category.name,
-        href: category.path,
-      })),
-    },
-  ];
-}
-
-async function getTitle(props: Props): Promise<string | null> {
-  const category = await getCategory(props);
-
-  return category.name;
-}
-
-const createCategorySearchParamsCache = cache(async (props: Props) => {
-  const { slug } = await props.params;
-  const categorySearch = await fetchFacetedSearch({ category: Number(slug) });
-  const categoryFacets = categorySearch.facets.items.filter(
-    (facet) => facet.__typename !== 'CategorySearchFilter',
-  );
-  const transformedCategoryFacets = await facetsTransformer({
-    refinedFacets: categoryFacets,
-    allFacets: categoryFacets,
-    searchParams: {},
-  });
-  const categoryFilters = transformedCategoryFacets.filter((facet) => facet != null);
-  const filterParsers = getFilterParsers(categoryFilters);
-
-  // If there are no filters, return `null`, since calling `createSearchParamsCache` with an empty
-  // object will throw the following cryptic error:
-  //
-  // ```
-  // Error: [nuqs] Empty search params cache. Search params can't be accessed in Layouts.
-  //   See https://err.47ng.com/NUQS-500
-  // ```
-  if (Object.keys(filterParsers).length === 0) {
-    return null;
-  }
-
-  return createSearchParamsCache(filterParsers);
-});
-
-async function getSearch(props: Props) {
-  const { slug } = await props.params;
-  const categoryId = Number(slug);
-  const searchParams = await props.searchParams;
-  const searchParamsCache = await createCategorySearchParamsCache(props);
-  const parsedSearchParams = searchParamsCache?.parse(searchParams) ?? {};
-  const search = await fetchFacetedSearch({
-    ...searchParams,
-    ...parsedSearchParams,
-    category: categoryId,
-  });
-
-  return search;
-}
-
-async function getTotalCount(props: Props): Promise<number> {
-  const search = await getSearch(props);
-
-  return search.products.collectionInfo?.totalItems ?? 0;
-}
-
-async function getProducts(props: Props) {
-  const search = await getSearch(props);
-
-  return search.products.items;
-}
-
-async function getListProducts(props: Props): Promise<ListProduct[]> {
-  const products = await getProducts(props);
-  const format = await getFormatter();
-
-  return products.map((product) => ({
-    id: product.entityId.toString(),
-    title: product.name,
-    href: product.path,
-    image: product.defaultImage
-      ? { src: product.defaultImage.url, alt: product.defaultImage.altText }
-      : undefined,
-    price: pricesTransformer(product.prices, format),
-    subtitle: product.brand?.name ?? undefined,
-  }));
-}
-
-async function getFilters(props: Props): Promise<Filter[]> {
-  const { slug } = await props.params;
-  const categoryId = Number(slug);
-  const searchParams = await props.searchParams;
-  const searchParamsCache = await createCategorySearchParamsCache(props);
-  const parsedSearchParams = searchParamsCache?.parse(searchParams) ?? {};
-  const categorySearch = await fetchFacetedSearch({ category: categoryId });
-  const refinedSearch = await fetchFacetedSearch({
-    ...searchParams,
-    ...parsedSearchParams,
-    category: categoryId,
-  });
-  const allFacets = categorySearch.facets.items.filter(
-    (facet) => facet.__typename !== 'CategorySearchFilter',
-  );
-  const refinedFacets = refinedSearch.facets.items.filter(
-    (facet) => facet.__typename !== 'CategorySearchFilter',
-  );
-
-  const transformedFacets = await facetsTransformer({
-    refinedFacets,
-    allFacets,
-    searchParams: { ...searchParams, ...parsedSearchParams },
-  });
-
-  const filters = transformedFacets.filter((facet) => facet != null);
-  const subCategoriesFilters = await getSubCategoriesFilters(props);
-
-  return [...subCategoriesFilters, ...filters];
-}
-
-async function getSortLabel(): Promise<string> {
-  const t = await getTranslations('FacetedGroup.SortBy');
-
-  return t('ariaLabel');
-}
-
-async function getSortOptions(): Promise<SortOption[]> {
-  const t = await getTranslations('FacetedGroup.SortBy');
-
-  return [
-    { value: 'featured', label: t('featuredItems') },
-    { value: 'newest', label: t('newestItems') },
-    { value: 'best_selling', label: t('bestSellingItems') },
-    { value: 'a_to_z', label: t('aToZ') },
-    { value: 'z_to_a', label: t('zToA') },
-    { value: 'best_reviewed', label: t('byReview') },
-    { value: 'lowest_price', label: t('priceAscending') },
-    { value: 'highest_price', label: t('priceDescending') },
-    { value: 'relevance', label: t('relevance') },
-  ];
-}
-
-async function getPaginationInfo(props: Props): Promise<CursorPaginationInfo> {
-  const { slug } = await props.params;
-  const categoryId = Number(slug);
-  const searchParams = await props.searchParams;
-  const searchParamsCache = await createCategorySearchParamsCache(props);
-  const parsedSearchParams = searchParamsCache?.parse(searchParams) ?? {};
-  const search = await fetchFacetedSearch({
-    ...searchParams,
-    ...parsedSearchParams,
-    category: categoryId,
-  });
-
-  return pageInfoTransformer(search.products.pageInfo);
-}
-
-async function getFilterLabel(): Promise<string> {
-  const t = await getTranslations('FacetedGroup.FacetedSearch');
-
-  return t('filters');
-}
-
-async function getCompareLabel(): Promise<string> {
-  const t = await getTranslations('Components.ProductCard.Compare');
-
-  return t('compare');
-}
-
-async function getFiltersPanelTitle(): Promise<string> {
-  const t = await getTranslations('FacetedGroup.FacetedSearch');
-
-  return t('filters');
-}
-
-async function getRangeFilterApplyLabel(): Promise<string> {
-  const t = await getTranslations('FacetedGroup.FacetedSearch.Range');
-
-  return t('apply');
-}
-
-async function getResetFiltersLabel(): Promise<string> {
-  const t = await getTranslations('FacetedGroup.FacetedSearch');
-
-  return t('resetFilters');
-}
-
-async function getEmptyStateTitle(): Promise<string | null> {
-  const t = await getTranslations('Category.Empty');
-
-  return t('title');
-}
-
-async function getEmptyStateSubtitle(): Promise<string | null> {
-  const t = await getTranslations('Category.Empty');
-
-  return t('subtitle');
-}
-
 export async function generateMetadata(props: Props): Promise<Metadata> {
-  const category = await getCategory(props);
+  const { slug } = await props.params;
+  const customerAccessToken = await getSessionCustomerAccessToken();
+
+  const categoryId = Number(slug);
+
+  const { category } = await getCategoryPageData(categoryId, customerAccessToken);
+
+  if (!category) {
+    return notFound();
+  }
 
   const { pageTitle, metaDescription, metaKeywords } = category.seo;
 
@@ -275,35 +90,192 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
 }
 
 export default async function Category(props: Props) {
-  const { locale } = await props.params;
+  const { slug, locale } = await props.params;
+  const customerAccessToken = await getSessionCustomerAccessToken();
 
   setRequestLocale(locale);
+
+  const t = await getTranslations('Faceted');
+
+  const categoryId = Number(slug);
+
+  const { category, settings, categoryTree } = await getCategoryPageData(
+    categoryId,
+    customerAccessToken,
+  );
+
+  if (!category) {
+    return notFound();
+  }
+
+  const breadcrumbs = removeEdgesAndNodes(category.breadcrumbs).map(({ name, path }) => ({
+    label: name,
+    href: path ?? '#',
+  }));
+
+  const productComparisonsEnabled =
+    settings?.storefront.catalog?.productComparisonsEnabled ?? false;
+
+  const streamableFacetedSearch = Streamable.from(async () => {
+    const searchParams = await props.searchParams;
+    const currencyCode = await getPreferredCurrencyCode();
+
+    const loadSearchParams = await createCategorySearchParamsLoader(
+      categoryId,
+      customerAccessToken,
+    );
+    const parsedSearchParams = loadSearchParams?.(searchParams) ?? {};
+
+    const search = await fetchFacetedSearch(
+      {
+        ...searchParams,
+        ...parsedSearchParams,
+        category: categoryId,
+      },
+      currencyCode,
+      customerAccessToken,
+    );
+
+    return search;
+  });
+
+  const streamableProducts = Streamable.from(async () => {
+    const format = await getFormatter();
+
+    const search = await streamableFacetedSearch;
+    const products = search.products.items;
+
+    return products.map((product) => ({
+      id: product.entityId.toString(),
+      title: product.name,
+      href: product.path,
+      image: product.defaultImage
+        ? { src: product.defaultImage.url, alt: product.defaultImage.altText }
+        : undefined,
+      price: pricesTransformer(product.prices, format),
+      subtitle: product.brand?.name ?? undefined,
+    }));
+  });
+
+  const streamableTotalCount = Streamable.from(async () => {
+    const format = await getFormatter();
+    const search = await streamableFacetedSearch;
+
+    return format.number(search.products.collectionInfo?.totalItems ?? 0);
+  });
+
+  const streamablePagination = Streamable.from(async () => {
+    const search = await streamableFacetedSearch;
+
+    return pageInfoTransformer(search.products.pageInfo);
+  });
+
+  const streamableFilters = Streamable.from(async () => {
+    const searchParams = await props.searchParams;
+
+    const loadSearchParams = await createCategorySearchParamsLoader(
+      categoryId,
+      customerAccessToken,
+    );
+    const parsedSearchParams = loadSearchParams?.(searchParams) ?? {};
+    const cachedCategory = getCachedCategory(categoryId);
+    const categorySearch = await fetchFacetedSearch(cachedCategory, undefined, customerAccessToken);
+    const refinedSearch = await streamableFacetedSearch;
+
+    const allFacets = categorySearch.facets.items.filter(
+      (facet) => facet.__typename !== 'CategorySearchFilter',
+    );
+    const refinedFacets = refinedSearch.facets.items.filter(
+      (facet) => facet.__typename !== 'CategorySearchFilter',
+    );
+
+    const transformedFacets = await facetsTransformer({
+      refinedFacets,
+      allFacets,
+      searchParams: { ...searchParams, ...parsedSearchParams },
+    });
+
+    const filters = transformedFacets.filter((facet) => facet != null);
+
+    const tree = categoryTree[0];
+    const subCategoriesFilters =
+      tree == null || tree.children.length === 0
+        ? []
+        : [
+            {
+              type: 'link-group' as const,
+              label: t('Category.subCategories'),
+              links: tree.children.map((child) => ({
+                label: child.name,
+                href: child.path,
+              })),
+            },
+          ];
+
+    return [...subCategoriesFilters, ...filters];
+  });
+
+  const streamableCompareProducts = Streamable.from(async () => {
+    const searchParams = await props.searchParams;
+
+    if (!productComparisonsEnabled) {
+      return [];
+    }
+
+    const { compare } = compareLoader(searchParams);
+
+    const compareIds = { entityIds: compare ? compare.map((id: string) => Number(id)) : [] };
+
+    const products = await getCompareProducts(compareIds, customerAccessToken);
+
+    return products.map((product) => ({
+      id: product.entityId.toString(),
+      title: product.name,
+      image: product.defaultImage
+        ? { src: product.defaultImage.url, alt: product.defaultImage.altText }
+        : undefined,
+      href: product.path,
+    }));
+  });
 
   return (
     <>
       <ProductsListSection
-        breadcrumbs={getBreadcrumbs(props)}
-        compareLabel={getCompareLabel()}
-        emptyStateSubtitle={getEmptyStateSubtitle()}
-        emptyStateTitle={getEmptyStateTitle()}
-        filterLabel={await getFilterLabel()}
-        filters={getFilters(props)}
-        filtersPanelTitle={getFiltersPanelTitle()}
-        paginationInfo={getPaginationInfo(props)}
-        products={getListProducts(props)}
-        rangeFilterApplyLabel={getRangeFilterApplyLabel()}
-        resetFiltersLabel={getResetFiltersLabel()}
+        breadcrumbs={breadcrumbs}
+        compareLabel={t('Compare.compare')}
+        compareProducts={streamableCompareProducts}
+        emptyStateSubtitle={t('Category.Empty.subtitle')}
+        emptyStateTitle={t('Category.Empty.title')}
+        filterLabel={t('FacetedSearch.filters')}
+        filters={streamableFilters}
+        filtersPanelTitle={t('FacetedSearch.filters')}
+        maxCompareLimitMessage={t('Compare.maxCompareLimit')}
+        maxItems={MAX_COMPARE_LIMIT}
+        paginationInfo={streamablePagination}
+        products={streamableProducts}
+        rangeFilterApplyLabel={t('FacetedSearch.Range.apply')}
+        removeLabel={t('Compare.remove')}
+        resetFiltersLabel={t('FacetedSearch.resetFilters')}
+        showCompare={productComparisonsEnabled}
         sortDefaultValue="featured"
-        sortLabel={getSortLabel()}
-        sortOptions={getSortOptions()}
+        sortLabel={t('SortBy.sortBy')}
+        sortOptions={[
+          { value: 'featured', label: t('SortBy.featuredItems') },
+          { value: 'newest', label: t('SortBy.newestItems') },
+          { value: 'best_selling', label: t('SortBy.bestSellingItems') },
+          { value: 'a_to_z', label: t('SortBy.aToZ') },
+          { value: 'z_to_a', label: t('SortBy.zToA') },
+          { value: 'best_reviewed', label: t('SortBy.byReview') },
+          { value: 'lowest_price', label: t('SortBy.priceAscending') },
+          { value: 'highest_price', label: t('SortBy.priceDescending') },
+          { value: 'relevance', label: t('SortBy.relevance') },
+        ]}
         sortParamName="sort"
-        title={getTitle(props)}
-        totalCount={getTotalCount(props)}
+        title={category.name}
+        totalCount={streamableTotalCount}
       />
-      <Stream value={Promise.all([getCategory(props), getProducts(props)])}>
-        {([category, products]) => (
-          <CategoryViewed category={category} categoryId={category.entityId} products={products} />
-        )}
+      <Stream value={streamableFacetedSearch}>
+        {(search) => <CategoryViewed category={category} products={search.products.items} />}
       </Stream>
     </>
   );
