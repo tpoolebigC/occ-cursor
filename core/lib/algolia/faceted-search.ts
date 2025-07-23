@@ -103,6 +103,54 @@ interface AlgoliaSearchResult {
   };
 }
 
+// Build mappings between entityIds and actual facet values
+async function buildFacetMappings(index: any) {
+  try {
+    // Get facet data to build mappings
+    const facetResults = await index.search([{
+      indexName: INDEX_NAME,
+      query: '*',
+      facets: ['categories_without_path', 'brand_name'],
+      hitsPerPage: 0, // We only need facets, not hits
+    }]);
+    
+    const searchResult = facetResults.results[0];
+    const facets = searchResult.facets || {};
+    
+    // Build category mappings
+    const categoryMappings: Record<number, string> = {};
+    if (facets.categories_without_path) {
+      Object.keys(facets.categories_without_path).forEach((categoryName, index) => {
+        categoryMappings[index + 1] = categoryName; // entityId starts at 1
+      });
+    }
+    
+    // Build brand mappings
+    const brandMappings: Record<number, string> = {};
+    if (facets.brand_name) {
+      Object.keys(facets.brand_name).forEach((brandName, index) => {
+        brandMappings[index + 1] = brandName; // entityId starts at 1
+      });
+    }
+    
+    console.log('🔍 [Algolia] Built facet mappings:', {
+      categories: categoryMappings,
+      brands: brandMappings
+    });
+    
+    return {
+      categories: categoryMappings,
+      brands: brandMappings
+    };
+  } catch (error) {
+    console.error('❌ [Algolia] Error building facet mappings:', error);
+    return {
+      categories: {},
+      brands: {}
+    };
+  }
+}
+
 export const fetchAlgoliaFacetedSearch = cache(
   async (params: AlgoliaSearchParams): Promise<AlgoliaSearchResult> => {
     console.log('🔍 [Algolia] Starting faceted search with params:', JSON.stringify(params, null, 2));
@@ -126,6 +174,10 @@ export const fetchAlgoliaFacetedSearch = cache(
     // In algoliasearch v5, we need to use the search method directly
     // The client itself is the search function
     const index = algoliaClient;
+    
+    // Create mappings for entityIds to actual values
+    // We'll need to get the facet data first to build these mappings
+    const facetMappings = await buildFacetMappings(index);
     
     // Extract search parameters
     const {
@@ -170,15 +222,20 @@ export const fetchAlgoliaFacetedSearch = cache(
 
     // Handle brand filters
     if (brand && brand.length > 0) {
-      searchParams.facetFilters.push(`brand_name:${brand.join(',')}`);
+      // Map entityIds back to actual brand names
+      const brandNames = brand.map(id => facetMappings.brands[id]).filter(Boolean);
+      if (brandNames.length > 0) {
+        searchParams.facetFilters.push(`brand_name:${brandNames.join(',')}`);
+      }
     }
 
     // Handle category filters
-    if (category) {
-      searchParams.facetFilters.push(`category_ids:${category}`);
-    }
     if (categoryIn && categoryIn.length > 0) {
-      searchParams.facetFilters.push(`category_ids:${categoryIn.join(',')}`);
+      // Map entityIds back to actual category names
+      const categoryNames = categoryIn.map(id => facetMappings.categories[id]).filter(Boolean);
+      if (categoryNames.length > 0) {
+        searchParams.facetFilters.push(`categories_without_path:${categoryNames.join(',')}`);
+      }
     }
 
     // Handle price filters
