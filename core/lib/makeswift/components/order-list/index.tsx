@@ -3,12 +3,12 @@
 import { useState, useEffect } from 'react';
 import { 
   EyeIcon, 
-  DocumentDuplicateIcon, 
+  Copy, 
   ChevronUpIcon, 
   ChevronDownIcon,
   ChevronLeftIcon,
   ChevronRightIcon
-} from '@heroicons/react/24/outline';
+} from 'lucide-react';
 
 interface Order {
   id: string;
@@ -331,7 +331,7 @@ export function OrderList({
                         title="Copy order number"
                         onClick={() => navigator.clipboard.writeText(order.orderNumber)}
                       >
-                        <DocumentDuplicateIcon className="h-4 w-4" />
+                        <Copy className="h-4 w-4" />
                       </button>
                     </div>
                   </td>

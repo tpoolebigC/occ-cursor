@@ -9,6 +9,10 @@ export function useB2BCart(cartId?: string | null) {
   const sdk = useSDK();
 
   useEffect(() => {
+    // Skip on server side
+    if (typeof window === 'undefined') {
+      return;
+    }
     if (!sdk || !cartId) {
       return;
     }
@@ -21,6 +25,11 @@ export function useB2BCart(cartId?: string | null) {
   }, [sdk, cartId]);
 
   useEffect(() => {
+    // Skip on server side
+    if (typeof window === 'undefined') {
+      return;
+    }
+
     if (!sdk) {
       return;
     }

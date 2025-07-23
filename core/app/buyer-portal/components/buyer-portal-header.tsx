@@ -3,12 +3,12 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { 
-  Bars3Icon, 
-  XMarkIcon, 
-  UserCircleIcon,
-  BellIcon,
-  Cog6ToothIcon 
-} from '@heroicons/react/24/outline';
+  Menu, 
+  X, 
+  User,
+  Bell,
+  Settings 
+} from 'lucide-react';
 
 export function BuyerPortalHeader() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -25,7 +25,7 @@ export function BuyerPortalHeader() {
               className="lg:hidden p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100"
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
             >
-              <Bars3Icon className="h-5 w-5" />
+              <Menu className="h-5 w-5" />
             </button>
             
             <Link href="/buyer-portal" className="flex items-center">
@@ -42,7 +42,7 @@ export function BuyerPortalHeader() {
               type="button"
               className="p-2 text-gray-400 hover:text-gray-500 hover:bg-gray-100 rounded-md"
             >
-              <BellIcon className="h-5 w-5" />
+              <Bell className="h-5 w-5" />
             </button>
 
             {/* Settings */}
@@ -50,7 +50,7 @@ export function BuyerPortalHeader() {
               type="button"
               className="p-2 text-gray-400 hover:text-gray-500 hover:bg-gray-100 rounded-md"
             >
-              <Cog6ToothIcon className="h-5 w-5" />
+              <Settings className="h-5 w-5" />
             </button>
 
             {/* User menu */}
@@ -60,7 +60,7 @@ export function BuyerPortalHeader() {
                 className="flex items-center space-x-2 p-2 text-gray-400 hover:text-gray-500 hover:bg-gray-100 rounded-md"
                 onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
               >
-                <UserCircleIcon className="h-5 w-5" />
+                <User className="h-5 w-5" />
                 <span className="text-sm font-medium text-gray-700">Admin User</span>
               </button>
 

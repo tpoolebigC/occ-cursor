@@ -1,6 +1,6 @@
 'use client';
 
-import { SubmissionResult, useForm } from '@conform-to/react';
+import { SubmissionResult, useForm, getFormProps } from '@conform-to/react';
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
 import * as NavigationMenu from '@radix-ui/react-navigation-menu';
 import * as Popover from '@radix-ui/react-popover';
@@ -637,7 +637,7 @@ Navigation.displayName = 'Navigation';
 
 function SearchForm<S extends SearchResult>({
   searchAction,
-  searchParamName = 'query',
+  searchParamName = 'term',
   searchHref = '/search',
   searchInputPlaceholder = 'Search Products',
   searchSubmitLabel = 'Submit',
@@ -658,6 +658,8 @@ function SearchForm<S extends SearchResult>({
   const [isDebouncing, setIsDebouncing] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const isPending = isSearching || isDebouncing || isSubmitting;
+  const router = useRouter();
+  
   const debouncedOnChange = useMemo(() => {
     const debounced = debounce((q: string) => {
       setIsDebouncing(false);
@@ -680,16 +682,22 @@ function SearchForm<S extends SearchResult>({
 
   const [form] = useForm({ lastResult });
 
-  const handleSubmit = useCallback(() => {
+  const handleSubmit = useCallback((event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
     setIsSubmitting(true);
-  }, []);
+    
+    // Redirect to search page with the query
+    if (query.trim()) {
+      router.push(`${searchHref}?${searchParamName}=${encodeURIComponent(query.trim())}`);
+    }
+  }, [query, router, searchHref, searchParamName]);
 
   return (
     <>
       <form
-        action={searchHref}
-        className="flex items-center gap-3 px-3 py-3 @4xl:px-5 @4xl:py-4"
+        {...getFormProps(form)}
         onSubmit={handleSubmit}
+        className="nav-search-form flex items-center gap-3 px-3 py-3 @4xl:px-5 @4xl:py-4 bg-white rounded-lg border border-gray-200"
       >
         <SearchIcon
           className="hidden shrink-0 text-[var(--nav-search-icon,hsl(var(--contrast-500)))] @xl:block"
@@ -697,7 +705,7 @@ function SearchForm<S extends SearchResult>({
           strokeWidth={1}
         />
         <input
-          className="grow bg-transparent pl-2 text-lg font-medium outline-0 focus-visible:outline-none @xl:pl-0"
+          className="nav-search-input grow bg-transparent pl-2 text-lg font-medium outline-0 focus-visible:outline-none @xl:pl-0"
           name={searchParamName}
           onChange={(e) => {
             setQuery(e.currentTarget.value);
@@ -761,7 +769,7 @@ function SearchResults({
     if (stale) return null;
 
     return (
-      <div className="flex flex-col border-t border-[var(--nav-search-divider,hsl(var(--contrast-100)))] p-6">
+      <div className="flex flex-col border-t border-[var(--nav-search-divider,hsl(var(--contrast-100)))] p-6 bg-white">
         {errors.map((error) => (
           <FormStatus key={error} type="error">
             {error}
@@ -775,7 +783,7 @@ function SearchResults({
     if (stale) return null;
 
     return (
-      <div className="flex flex-col border-t border-[var(--nav-search-divider,hsl(var(--contrast-100)))] p-6">
+      <div className="flex flex-col border-t border-[var(--nav-search-divider,hsl(var(--contrast-100)))] p-6 bg-white">
         <p className="text-2xl font-medium text-[var(--nav-search-empty-title,hsl(var(--foreground)))]">
           {emptySearchTitle}
         </p>
@@ -789,7 +797,7 @@ function SearchResults({
   return (
     <div
       className={clsx(
-        'flex flex-1 flex-col overflow-y-auto border-t border-[var(--nav-search-divider,hsl(var(--contrast-100)))] @2xl:flex-row',
+        'flex flex-1 flex-col overflow-y-auto border-t border-[var(--nav-search-divider,hsl(var(--contrast-100)))] @2xl:flex-row bg-white',
         stale && 'opacity-50',
       )}
     >
@@ -799,7 +807,7 @@ function SearchResults({
             return (
               <section
                 aria-label={result.title}
-                className="flex w-full flex-col gap-1 border-b border-[var(--nav-search-divider,hsl(var(--contrast-100)))] p-5 @2xl:max-w-80 @2xl:border-b-0 @2xl:border-r"
+                className="flex w-full flex-col gap-1 border-b border-[var(--nav-search-divider,hsl(var(--contrast-100)))] p-5 @2xl:max-w-80 @2xl:border-b-0 @2xl:border-r bg-white"
                 key={`result-${index}`}
               >
                 <h3 className="mb-4 font-[family-name:var(--nav-search-result-title-font-family,var(--font-family-mono))] text-sm uppercase text-[var(--nav-search-result-title,hsl(var(--foreground)))]">
@@ -825,7 +833,7 @@ function SearchResults({
             return (
               <section
                 aria-label={result.title}
-                className="flex w-full flex-col gap-5 p-5"
+                className="flex w-full flex-col gap-5 p-5 bg-white"
                 key={`result-${index}`}
               >
                 <h3 className="font-[family-name:var(--nav-search-result-title-font-family,var(--font-family-mono))] text-sm uppercase text-[var(--nav-search-result-title,hsl(var(--foreground)))]">

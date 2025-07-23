@@ -3,21 +3,21 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { 
-  HomeIcon,
-  ShoppingBagIcon,
-  DocumentTextIcon,
-  CubeIcon,
-  UserIcon,
-  ChartBarIcon
-} from '@heroicons/react/24/outline';
+  Home,
+  ShoppingBag,
+  FileText,
+  Package,
+  User,
+  BarChart3
+} from 'lucide-react';
 
 const navigation = [
-  { name: 'Dashboard', href: '/buyer-portal', icon: HomeIcon },
-  { name: 'Orders', href: '/buyer-portal/orders', icon: ShoppingBagIcon },
-  { name: 'Quotes', href: '/buyer-portal/quotes', icon: DocumentTextIcon },
-  { name: 'Catalog', href: '/buyer-portal/catalog', icon: CubeIcon },
-  { name: 'Account', href: '/buyer-portal/account', icon: UserIcon },
-  { name: 'Analytics', href: '/buyer-portal/analytics', icon: ChartBarIcon },
+  { name: 'Dashboard', href: '/buyer-portal', icon: Home },
+  { name: 'Orders', href: '/buyer-portal/orders', icon: ShoppingBag },
+  { name: 'Quotes', href: '/buyer-portal/quotes', icon: FileText },
+  { name: 'Catalog', href: '/buyer-portal/catalog', icon: Package },
+  { name: 'Account', href: '/buyer-portal/account', icon: User },
+  { name: 'Analytics', href: '/buyer-portal/analytics', icon: BarChart3 },
 ];
 
 export function BuyerPortalSidebar() {

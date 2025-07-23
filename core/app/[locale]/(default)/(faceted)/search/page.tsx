@@ -12,10 +12,10 @@ import { facetsTransformer } from '~/data-transformers/facets-transformer';
 import { pageInfoTransformer } from '~/data-transformers/page-info-transformer';
 import { pricesTransformer } from '~/data-transformers/prices-transformer';
 import { getPreferredCurrencyCode } from '~/lib/currency';
+import { fetchAlgoliaFacetedSearch } from '~/lib/algolia/faceted-search';
 
 import { MAX_COMPARE_LIMIT } from '../../compare/page-data';
 import { getCompareProducts as getCompareProductsData } from '../fetch-compare-products';
-import { fetchFacetedSearch } from '../fetch-faceted-search';
 
 import { getSearchPageData } from './page-data';
 
@@ -29,7 +29,14 @@ const createSearchSearchParamsLoader = cache(
       return null;
     }
 
-    const search = await fetchFacetedSearch(searchParams, undefined, customerAccessToken);
+    // Use Algolia faceted search instead of BigCommerce search
+    const search = await fetchAlgoliaFacetedSearch({
+      term: searchTerm,
+      page: 0,
+      limit: 12,
+      ...searchParams
+    });
+    
     const searchFacets = search.facets.items;
     const transformedSearchFacets = await facetsTransformer({
       refinedFacets: searchFacets,
@@ -92,14 +99,21 @@ export default async function Search(props: Props) {
     );
     const parsedSearchParams = loadSearchParams?.(searchParams) ?? {};
 
-    const search = await fetchFacetedSearch(
-      {
-        ...searchParams,
-        ...parsedSearchParams,
-      },
-      currencyCode,
-      customerAccessToken,
-    );
+    // Use Algolia faceted search instead of BigCommerce search
+    const search = await fetchAlgoliaFacetedSearch({
+      term: searchParams.term as string || '',
+      page: parseInt(searchParams.page as string) || 0,
+      limit: parseInt(searchParams.limit as string) || 12,
+      sort: searchParams.sort as any,
+      brand: Array.isArray(searchParams.brand) ? searchParams.brand : searchParams.brand ? [searchParams.brand as string] : undefined,
+      categoryIn: Array.isArray(searchParams.categoryIn) ? searchParams.categoryIn : searchParams.categoryIn ? [searchParams.categoryIn as number] : undefined,
+      minPrice: searchParams.minPrice ? parseFloat(searchParams.minPrice as string) : undefined,
+      maxPrice: searchParams.maxPrice ? parseFloat(searchParams.maxPrice as string) : undefined,
+      stock: Array.isArray(searchParams.stock) ? searchParams.stock : searchParams.stock ? [searchParams.stock as string] : undefined,
+      Color: Array.isArray(searchParams.Color) ? searchParams.Color : searchParams.Color ? [searchParams.Color as string] : undefined,
+      Size: Array.isArray(searchParams.Size) ? searchParams.Size : searchParams.Size ? [searchParams.Size as string] : undefined,
+      ...parsedSearchParams,
+    });
 
     return search;
   });
@@ -189,7 +203,12 @@ export default async function Search(props: Props) {
       customerAccessToken,
     );
     const parsedSearchParams = loadSearchParams?.(searchParams) ?? {};
-    const categorySearch = await fetchFacetedSearch({}, undefined, customerAccessToken);
+    const categorySearch = await fetchAlgoliaFacetedSearch({
+      term: searchTerm,
+      page: 0,
+      limit: 12,
+      ...searchParams
+    });
     const refinedSearch = await streamableFacetedSearch;
 
     const allFacets = categorySearch.facets.items.filter(

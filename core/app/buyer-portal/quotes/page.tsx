@@ -1,9 +1,3 @@
-import { Suspense } from 'react';
-import { QuoteList } from '~/lib/makeswift/components/quote-list';
-import { QuoteFilters } from '~/lib/makeswift/components/quote-filters';
-import { QuoteSearch } from '~/lib/makeswift/components/quote-search';
-import { QuoteStats } from '~/lib/makeswift/components/quote-stats';
-
 export default function QuotesPage() {
   return (
     <div className="space-y-6">
@@ -15,55 +9,12 @@ export default function QuotesPage() {
         </p>
       </div>
 
-      {/* Quote Statistics */}
+      {/* Placeholder content */}
       <div className="bg-white p-4 lg:p-6 rounded-lg shadow-sm border border-gray-200">
-        <Suspense fallback={<div>Loading stats...</div>}>
-          <QuoteStats
-            showPending={true}
-            showApproved={true}
-            showExpired={true}
-            showTotal={true}
-          />
-        </Suspense>
-      </div>
-
-      {/* Search and Filters */}
-      <div className="bg-white p-4 lg:p-6 rounded-lg shadow-sm border border-gray-200">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-          <div className="lg:col-span-2">
-            <QuoteSearch
-              placeholder="Search quotes by number, customer, or product..."
-              allowSearch={true}
-            />
-          </div>
-          <div>
-            <QuoteFilters
-              showStatusFilter={true}
-              showDateFilter={true}
-              showCustomerFilter={true}
-              showExpiryFilter={true}
-            />
-          </div>
+        <div className="text-center text-gray-500">
+          <p>Quotes functionality coming soon...</p>
+          <p className="text-sm mt-2">This page will display quote management components</p>
         </div>
-      </div>
-
-      {/* Quotes List */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-        <Suspense fallback={<div className="p-6">Loading quotes...</div>}>
-          <QuoteList
-            customerId={null}
-            limit="20"
-            showStatus={true}
-            showPricing={true}
-            showDate={true}
-            showQuoteNumber={true}
-            showCustomer={true}
-            showExpiry={true}
-            showActions={true}
-            allowPagination={true}
-            allowSorting={true}
-          />
-        </Suspense>
       </div>
     </div>
   );

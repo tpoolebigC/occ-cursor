@@ -1,6 +1,6 @@
 import algoliaClient from './client';
 
-const INDEX_NAME = process.env.NEXT_PUBLIC_ALGOLIA_INDEXNAME || 'products';
+const INDEX_NAME = process.env.ALGOLIA_INDEX_NAME || 'products';
 
 export async function debugAlgoliaIndex() {
   try {

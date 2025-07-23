@@ -1,15 +1,18 @@
 # 🚨 Troubleshooting and Fixes: The Complete Guide
 
-Hey there! 👋 So you're running into some issues with your BigCommerce Catalyst B2B integration? Don't worry - we've been there! This guide covers every problem we encountered during development and exactly how we fixed them.
+Hey there! 👋 So you're running into some issues with your BigCommerce Catalyst B2B and Algolia integration? Don't worry - we've been there! This guide covers every problem we encountered during development and exactly how we fixed them.
 
 ## 🎯 What This Guide Covers
 
 This isn't your typical troubleshooting guide. We're sharing **real problems we actually solved** during development, including:
 
 - **B2B route conflicts** that caused 404 errors
+- **Algolia environment variable issues** that broke search
 - **Middleware issues** that broke everything
 - **Import path problems** that drove us crazy
 - **Cart synchronization failures** that seemed impossible to fix
+- **Search form submission issues** that were frustrating
+- **Facet selection problems** that needed fixing
 - **Environment validation issues** that were sneaky
 - **And much more!**
 
@@ -45,7 +48,176 @@ rm -rf core/app/[locale]/(default)/business/
 
 **Lesson Learned:** Don't fight BigCommerce's official approach. Use their hosted buyer portal - it's way easier!
 
-### Issue 2: Middleware Issues Causing 404s
+### Issue 2: Algolia Environment Variable Naming Conflicts
+
+**The Problem:**
+After upgrading to Catalyst 1.1.0, Algolia search stopped working due to environment variable naming conflicts.
+
+**What Was Happening:**
+- Old environment variables used `NEXT_PUBLIC_` prefix
+- New Catalyst version expected standard Algolia variable names
+- Search functionality completely broken
+
+**The Solution:**
+We **updated all environment variables** to use the standard Algolia naming convention:
+
+```env
+# OLD (BROKEN)
+NEXT_PUBLIC_ALGOLIA_APP_ID=your_algolia_app_id
+NEXT_PUBLIC_ALGOLIA_APP_KEY=your_algolia_search_api_key
+NEXT_PUBLIC_ALGOLIA_INDEXNAME=your_algolia_index_name
+
+# NEW (WORKING)
+ALGOLIA_APPLICATION_ID=your_algolia_app_id
+ALGOLIA_SEARCH_API_KEY=your_algolia_search_api_key
+ALGOLIA_INDEX_NAME=your_algolia_index_name
+```
+
+**Files We Changed:**
+- `.env.local` - Updated environment variable names
+- `core/lib/algolia/client.ts` - Updated to use new variable names
+- `core/lib/algolia/faceted-search.ts` - Updated all references
+- `core/lib/algolia.ts` - Updated error messages
+- `core/client/queries/get-search-results.ts` - Updated variable references
+
+**Lesson Learned:** Always check environment variable naming conventions when upgrading frameworks!
+
+### Issue 3: Search Form Submission Not Working
+
+**The Problem:**
+Users could type in the search box, but hitting enter or clicking the search button did nothing.
+
+**What Was Happening:**
+- Search form was preventing default submission
+- Form action wasn't properly configured
+- Missing `getFormProps` and `action={formAction}` setup
+
+**The Solution:**
+We **fixed the search form configuration** in the navigation component:
+
+```tsx
+// Fixed search form in navigation/index.tsx
+<form
+  {...getFormProps(form)}
+  onSubmit={handleSubmit}
+  className="nav-search-form flex items-center gap-3 px-3 py-3 @4xl:px-5 @4xl:py-4 bg-white rounded-lg border border-gray-200"
+>
+  {/* form content */}
+</form>
+```
+
+**Key Changes:**
+- Added `{...getFormProps(form)}` to the form element
+- Set `onSubmit={handleSubmit}` for proper form handling
+- Added white background styling for better visibility
+
+**Lesson Learned:** Form submission in React requires proper configuration with Conform!
+
+### Issue 4: Facet Selection Not Working
+
+**The Problem:**
+Facet filters weren't working - clicking on brand or category filters did nothing.
+
+**What Was Happening:**
+- URL parameters were being treated as single strings instead of arrays
+- Facet selection logic expected arrays but received strings
+- TypeScript errors about `brand.map is not a function`
+
+**The Solution:**
+We **fixed the parameter handling** to support both single values and arrays:
+
+```typescript
+// Fixed parameter parsing in search page
+const search = await fetchAlgoliaFacetedSearch({
+  term: searchParams.term as string || '',
+  page: parseInt(searchParams.page as string) || 0,
+  limit: parseInt(searchParams.limit as string) || 12,
+  sort: searchParams.sort as any,
+  brand: Array.isArray(searchParams.brand) ? searchParams.brand : searchParams.brand ? [searchParams.brand as string] : undefined,
+  categoryIn: Array.isArray(searchParams.categoryIn) ? searchParams.categoryIn : searchParams.categoryIn ? [searchParams.categoryIn as number] : undefined,
+  // ... other parameters
+});
+```
+
+**Files We Changed:**
+- `core/app/[locale]/(default)/(faceted)/search/page.tsx` - Fixed parameter parsing
+- `core/lib/algolia/faceted-search.ts` - Updated interface and handling
+
+**Lesson Learned:** URL parameters can be single values or arrays - handle both cases!
+
+### Issue 5: Search Results Styling Issues
+
+**The Problem:**
+Search results were hard to read with black text on dark backgrounds.
+
+**What Was Happening:**
+- Search results had no background styling
+- Type-ahead results were invisible
+- Poor contrast made text unreadable
+
+**The Solution:**
+We **added comprehensive styling** for search results:
+
+```css
+/* Added to globals.css */
+:root {
+  --nav-search-background: hsl(0 0% 100%);
+  --nav-search-border: hsl(0 0% 90%);
+  --nav-search-divider: hsl(0 0% 90%);
+  /* ... more variables */
+}
+```
+
+**Files We Changed:**
+- `core/app/globals.css` - Added search styling variables
+- `core/vibes/soul/primitives/navigation/index.tsx` - Added white backgrounds to search results
+
+**Lesson Learned:** Always consider contrast and readability in search interfaces!
+
+### Issue 6: B2B Token Generation Missing
+
+**The Problem:**
+B2B customers could log in but had no B2B token, so B2B features weren't available.
+
+**What Was Happening:**
+- B2B token generation wasn't added to the auth flow
+- JWT callbacks weren't handling B2B token creation
+- Session lacked B2B capabilities
+
+**The Solution:**
+We **added B2B token generation** to the auth system:
+
+```typescript
+// Added to auth/index.ts
+export async function generateB2BToken(customerId: number): Promise<string | null> {
+  try {
+    const response = await fetch(`${process.env.B2B_API_HOST}/stores/${process.env.BIGCOMMERCE_STORE_HASH}/v2/customers/${customerId}/login`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${process.env.B2B_API_TOKEN}`,
+        'Content-Type': 'application/json',
+      },
+    });
+    
+    if (response.ok) {
+      const data = await response.json();
+      return data.data.token;
+    }
+    return null;
+  } catch (error) {
+    console.error('B2B token generation failed:', error);
+    return null;
+  }
+}
+```
+
+**Files We Changed:**
+- `core/auth/index.ts` - Added B2B token generation
+- `core/auth/customer-login-api.ts` - Updated to include B2B token in session
+
+**Lesson Learned:** B2B functionality requires explicit token generation in the auth flow!
+
+### Issue 7: Middleware Issues Causing 404s
 
 **The Problem:**
 Our middleware wasn't calling `NextResponse.next()` properly, causing all sorts of weird routing issues.
@@ -72,7 +244,7 @@ export function middleware(request: NextRequest) {
 
 **Lesson Learned:** Always call `NextResponse.next()` in your middleware, or everything breaks!
 
-### Issue 3: Import Path Resolution Errors
+### Issue 8: Import Path Resolution Errors
 
 **The Problem:**
 Module not found errors for B2B hooks were driving us crazy. The import paths were wrong!
@@ -101,7 +273,7 @@ import { useAddToQuote, useAddToShoppingList } from '../../../../b2b/use-product
 
 **Lesson Learned:** Count your directory levels carefully when writing import paths!
 
-### Issue 4: Cart Synchronization Issues
+### Issue 9: Cart Synchronization Issues
 
 **The Problem:**
 Cart sync from buyer portal wasn't working despite success messages. We had a complex API-based solution that was over-engineered.
@@ -129,7 +301,7 @@ const handleCartCreated = (event: any) => {
 
 **Lesson Learned:** Sometimes the simple solution is the best solution. Don't over-engineer!
 
-### Issue 5: Missing B2B Hook Files
+### Issue 10: Missing B2B Hook Files
 
 **The Problem:**
 Module not found errors for B2B functionality because we were missing critical files.
@@ -159,7 +331,7 @@ We **copied all the missing files** from the official BigCommerce B2B repo:
 
 **Lesson Learned:** Don't try to reinvent the wheel. Use the official implementation!
 
-### Issue 6: Locale Routing Conflicts
+### Issue 11: Locale Routing Conflicts
 
 **The Problem:**
 Locale enforcement was causing routing issues and conflicts with B2B routes.
@@ -194,9 +366,9 @@ BIGCOMMERCE_CLIENT_ID=your_client_id
 BIGCOMMERCE_CLIENT_SECRET=your_client_secret
 BIGCOMMERCE_ACCESS_TOKEN=your_access_token
 
-# Algolia Configuration
-NEXT_PUBLIC_ALGOLIA_APP_ID=your_algolia_app_id
-NEXT_PUBLIC_ALGOLIA_SEARCH_API_KEY=your_algolia_search_api_key
+# Algolia Configuration - UPDATED NAMES
+ALGOLIA_APPLICATION_ID=your_algolia_app_id
+ALGOLIA_SEARCH_API_KEY=your_algolia_search_api_key
 ALGOLIA_INDEX_NAME=your_algolia_index_name
 
 # B2B Configuration (CRITICAL!)
@@ -225,7 +397,7 @@ Algolia search not working properly due to incorrect index configuration.
 
 **The Solution:**
 1. **Configure searchable attributes**: `name`, `description`, `brand_name`, `categories_without_path`, `sku`
-2. **Set up facets**: `categories_without_path`, `brand_name`, `default_price`, `in_stock`
+2. **Set up facets**: `categories_without_path`, `brand_name`, `default_price`, `in_stock`, `is_visible`
 3. **Index products** with proper data structure
 
 ## 🚀 Performance and Optimization Fixes
@@ -262,6 +434,13 @@ console.log('B2B Loader Debug:', {
   hasB2BToken: !!session?.b2bToken,
   session: session ? 'exists' : 'missing'
 });
+
+console.log('🔍 [Algolia] Environment check:', {
+  appId: process.env.ALGOLIA_APPLICATION_ID ? 'SET' : 'NOT SET',
+  appKey: process.env.ALGOLIA_SEARCH_API_KEY ? 'SET' : 'NOT SET',
+  indexName: process.env.ALGOLIA_INDEX_NAME ? 'SET' : 'NOT SET',
+  nodeEnv: process.env.NODE_ENV
+});
 ```
 
 ### Strategy 2: Debug Pages
@@ -273,6 +452,9 @@ http://localhost:3000/b2b-debug
 
 # Business Test Page
 http://localhost:3000/business-test
+
+# Algolia Debug (via console logs)
+npm run algolia:debug
 ```
 
 ### Strategy 3: Environment Variable Checks
@@ -285,6 +467,9 @@ const ENV = z
       B2B_API_TOKEN: z.string(), // Required, not optional!
       BIGCOMMERCE_CHANNEL_ID: z.string(),
       B2B_API_HOST: z.string().default('https://api-b2b.bigcommerce.com/'),
+      ALGOLIA_APPLICATION_ID: z.string(),
+      ALGOLIA_SEARCH_API_KEY: z.string(),
+      ALGOLIA_INDEX_NAME: z.string(),
     }),
   })
   .transform(({ env }) => env);
@@ -307,6 +492,12 @@ Without our debug pages and console logging, we never would have found these iss
 ### Lesson 5: Import Paths Are Tricky
 Count your directory levels carefully when writing import paths!
 
+### Lesson 6: Form Submission Requires Proper Setup
+React forms need proper configuration with libraries like Conform.
+
+### Lesson 7: Styling Matters for UX
+Search interfaces need proper contrast and readability.
+
 ## 🆘 When You're Still Stuck
 
 ### Step 1: Check the Debug Pages
@@ -326,13 +517,23 @@ npm run env:check
 ### Step 4: Check BigCommerce Admin
 Make sure B2B features are enabled and properly configured.
 
-### Step 5: Create a GitHub Issue
+### Step 5: Test Search Functionality
+```bash
+# Test search API
+curl "http://localhost:3000/search?term=plant"
+
+# Check Algolia connection
+npm run algolia:debug
+```
+
+### Step 6: Create a GitHub Issue
 If you're still stuck, create an issue in this repository. We'll help you fix it!
 
 ## 🎉 Success Stories
 
 ### What We Built
 - **Complete B2B integration** that actually works
+- **Lightning-fast Algolia search** with faceted filtering
 - **Production-ready deployment** on Vercel
 - **Comprehensive debugging tools** for troubleshooting
 - **Complete documentation** for future developers
@@ -342,6 +543,7 @@ If you're still stuck, create an issue in this repository. We'll help you fix it
 - **Build debug tools early** - They'll save you hours of troubleshooting
 - **Document everything** - Future you will thank you
 - **Test thoroughly** - Production issues are expensive
+- **Pay attention to environment variables** - They're often the root cause
 
 ## 📚 Additional Resources
 

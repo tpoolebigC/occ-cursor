@@ -5,7 +5,7 @@ import algoliaClient from './client';
 import { searchResultsTransformer } from '../../data-transformers/search-results-transformer';
 
 // Algolia index name
-const INDEX_NAME = process.env.NEXT_PUBLIC_ALGOLIA_INDEXNAME || 'products';
+const INDEX_NAME = process.env.ALGOLIA_INDEX_NAME || 'products';
 
 // Sort mapping from BigCommerce to Algolia
 const SORT_MAPPING = {
@@ -35,16 +35,18 @@ interface AlgoliaSearchParams {
   page?: number;
   limit?: number;
   sort?: keyof typeof SORT_MAPPING;
-  brand?: string[];
+  brand?: string | string[];
   category?: number;
-  categoryIn?: number[];
+  categoryIn?: number | number[];
   minPrice?: number;
   maxPrice?: number;
   minRating?: number;
   maxRating?: number;
   isFeatured?: boolean;
-  stock?: string[];
+  stock?: string | string[];
   shipping?: string[];
+  Color?: string | string[];
+  Size?: string | string[];
   [key: string]: any;
 }
 
@@ -161,8 +163,8 @@ export const fetchAlgoliaFacetedSearch = cache(
       clientKeys: algoliaClient ? Object.keys(algoliaClient) : 'N/A',
       indexName: INDEX_NAME,
       envVars: {
-        appId: !!process.env.NEXT_PUBLIC_ALGOLIA_APP_ID,
-        appKey: !!process.env.NEXT_PUBLIC_ALGOLIA_APP_KEY,
+            appId: !!process.env.ALGOLIA_APPLICATION_ID,
+    appKey: !!process.env.ALGOLIA_SEARCH_API_KEY,
         indexName: !!process.env.ALGOLIA_INDEX_NAME
       }
     });
@@ -195,6 +197,8 @@ export const fetchAlgoliaFacetedSearch = cache(
       isFeatured,
       stock,
       shipping,
+      Color,
+      Size,
       ...additionalParams
     } = params;
 
@@ -208,7 +212,9 @@ export const fetchAlgoliaFacetedSearch = cache(
         'brand_name', 
         'default_price', 
         'in_stock',
-        'is_visible'
+        'is_visible',
+        'Color',  // Add Color facet
+        'Size'    // Add Size facet
       ],
       facetFilters: [],
       numericFilters: [],
@@ -221,20 +227,26 @@ export const fetchAlgoliaFacetedSearch = cache(
     // }
 
     // Handle brand filters
-    if (brand && brand.length > 0) {
-      // Map entityIds back to actual brand names
-      const brandNames = brand.map(id => facetMappings.brands[id]).filter(Boolean);
-      if (brandNames.length > 0) {
-        searchParams.facetFilters.push(`brand_name:${brandNames.join(',')}`);
+    if (brand) {
+      const brandArray = Array.isArray(brand) ? brand : [brand];
+      if (brandArray.length > 0) {
+        // Map entityIds back to actual brand names
+        const brandNames = brandArray.map(id => facetMappings.brands[id]).filter(Boolean);
+        if (brandNames.length > 0) {
+          searchParams.facetFilters.push(`brand_name:${brandNames.join(',')}`);
+        }
       }
     }
 
     // Handle category filters
-    if (categoryIn && categoryIn.length > 0) {
-      // Map entityIds back to actual category names
-      const categoryNames = categoryIn.map(id => facetMappings.categories[id]).filter(Boolean);
-      if (categoryNames.length > 0) {
-        searchParams.facetFilters.push(`categories_without_path:${categoryNames.join(',')}`);
+    if (categoryIn) {
+      const categoryArray = Array.isArray(categoryIn) ? categoryIn : [categoryIn];
+      if (categoryArray.length > 0) {
+        // Map entityIds back to actual category names
+        const categoryNames = categoryArray.map(id => facetMappings.categories[id]).filter(Boolean);
+        if (categoryNames.length > 0) {
+          searchParams.facetFilters.push(`categories_without_path:${categoryNames.join(',')}`);
+        }
       }
     }
 
@@ -260,14 +272,28 @@ export const fetchAlgoliaFacetedSearch = cache(
     // }
 
     // Handle stock filters
-    if (stock && stock.includes('in_stock')) {
-      searchParams.facetFilters.push('in_stock:true');
+    if (stock) {
+      const stockArray = Array.isArray(stock) ? stock : [stock];
+      if (stockArray.includes('in_stock')) {
+        searchParams.facetFilters.push('in_stock:true');
+      }
     }
 
-    // Handle shipping filters (skip for now since shipping doesn't exist in data)
-    // if (shipping && shipping.includes('free_shipping')) {
-    //   searchParams.facetFilters.push('shipping:free');
-    // }
+    // Handle Color filters
+    if (Color) {
+      const colorArray = Array.isArray(Color) ? Color : [Color];
+      if (colorArray.length > 0) {
+        searchParams.facetFilters.push(`Color:${colorArray.join(',')}`);
+      }
+    }
+
+    // Handle Size filters
+    if (Size) {
+      const sizeArray = Array.isArray(Size) ? Size : [Size];
+      if (sizeArray.length > 0) {
+        searchParams.facetFilters.push(`Size:${sizeArray.join(',')}`);
+      }
+    }
 
     // Handle additional product attributes
     Object.entries(additionalParams).forEach(([key, values]) => {
@@ -428,6 +454,40 @@ function buildFacetsFromAlgoliaFacets(algoliaFacets: any, params: AlgoliaSearchP
       },
     };
     facets.push(availabilityFacet);
+  }
+
+  // Extract Color from Algolia facets
+  if (algoliaFacets?.Color) {
+    const colorFacet = {
+      __typename: 'ProductAttributeSearchFilter',
+      name: 'COLOR',
+      filterName: 'Color',
+      isCollapsedByDefault: false,
+      displayProductCount: true,
+      attributes: Object.entries(algoliaFacets.Color).map(([value, count]) => ({
+        value,
+        isSelected: params.Color?.includes(value) || false,
+        productCount: count as number,
+      })),
+    };
+    facets.push(colorFacet);
+  }
+
+  // Extract Size from Algolia facets
+  if (algoliaFacets?.Size) {
+    const sizeFacet = {
+      __typename: 'ProductAttributeSearchFilter',
+      name: 'SIZE',
+      filterName: 'Size',
+      isCollapsedByDefault: false,
+      displayProductCount: true,
+      attributes: Object.entries(algoliaFacets.Size).map(([value, count]) => ({
+        value,
+        isSelected: params.Size?.includes(value) || false,
+        productCount: count as number,
+      })),
+    };
+    facets.push(sizeFacet);
   }
 
   // Extract inventory tracking if available

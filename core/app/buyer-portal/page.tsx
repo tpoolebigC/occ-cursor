@@ -1,5 +1,5 @@
 import { Suspense } from 'react';
-import { ChevronRightIcon } from '@heroicons/react/24/outline';
+import { ChevronRight } from 'lucide-react';
 import { CustomerSelector } from '~/lib/makeswift/components/customer-selector';
 import { OrderHistory } from '~/lib/makeswift/components/order-history';
 
@@ -54,7 +54,7 @@ export default function BuyerPortalDashboard() {
                 <div className="font-medium text-gray-900">Create New Quote</div>
                 <div className="text-sm text-gray-500">Request pricing for products</div>
               </div>
-              <ChevronRightIcon className="h-4 w-4 text-blue-600" />
+              <ChevronRight className="h-4 w-4 text-blue-600" />
             </button>
             
             <button className="w-full flex items-center justify-between p-3 text-left border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
@@ -62,7 +62,7 @@ export default function BuyerPortalDashboard() {
                 <div className="font-medium text-gray-900">Browse Catalog</div>
                 <div className="text-sm text-gray-500">View available products</div>
               </div>
-              <ChevronRightIcon className="h-4 w-4 text-blue-600" />
+              <ChevronRight className="h-4 w-4 text-blue-600" />
             </button>
             
             <button className="w-full flex items-center justify-between p-3 text-left border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
@@ -70,7 +70,7 @@ export default function BuyerPortalDashboard() {
                 <div className="font-medium text-gray-900">Account Settings</div>
                 <div className="text-sm text-gray-500">Manage customer information</div>
               </div>
-              <ChevronRightIcon className="h-4 w-4 text-blue-600" />
+              <ChevronRight className="h-4 w-4 text-blue-600" />
             </button>
           </div>
         </div>

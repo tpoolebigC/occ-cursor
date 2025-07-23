@@ -54,7 +54,7 @@ You're about to replace BigCommerce's default search with **Algolia's lightning-
 ### Step 2: Create Your Search Index
 
 1. **In your Algolia dashboard, create a new index**
-2. **Name it something like `products`** (this is where your product data goes)
+2. **Name it something like `BCCatalystTest`** (this is where your product data goes)
 3. **Configure searchable attributes** - These are the fields users can search:
 
 ```
@@ -76,6 +76,7 @@ categories_without_path
 brand_name
 default_price
 in_stock
+is_visible
 ```
 
 **Pro Tip:** Facets should be attributes that users commonly want to filter by.
@@ -103,9 +104,9 @@ BIGCOMMERCE_CLIENT_ID=your_client_id
 BIGCOMMERCE_CLIENT_SECRET=your_client_secret
 BIGCOMMERCE_ACCESS_TOKEN=your_access_token
 
-# Algolia Configuration (The Search Magic)
-NEXT_PUBLIC_ALGOLIA_APP_ID=your_algolia_app_id
-NEXT_PUBLIC_ALGOLIA_SEARCH_API_KEY=your_algolia_search_api_key
+# Algolia Configuration (The Search Magic) - UPDATED NAMES
+ALGOLIA_APPLICATION_ID=your_algolia_app_id
+ALGOLIA_SEARCH_API_KEY=your_algolia_search_api_key
 ALGOLIA_INDEX_NAME=your_algolia_index_name
 
 # B2B Configuration (if using B2B)
@@ -113,7 +114,7 @@ B2B_API_TOKEN=your_b2b_api_token
 B2B_API_HOST=https://api-b2b.bigcommerce.com/
 ```
 
-**Critical Note:** The `NEXT_PUBLIC_` prefix makes these variables available in the browser. Only use search-only API keys here!
+**Critical Note:** We've updated to use the standard Algolia environment variable names (`ALGOLIA_APPLICATION_ID`, `ALGOLIA_SEARCH_API_KEY`, `ALGOLIA_INDEX_NAME`) instead of the old `NEXT_PUBLIC_` prefixed names.
 
 ### Step 6: Index Your Products
 
@@ -136,19 +137,20 @@ For production, you'll want to set up automated syncing from BigCommerce to Algo
 
 ### Search Flow
 
-1. **User types in search box** - Triggers search request
-2. **Algolia processes query** - Searches through indexed products
-3. **Results returned instantly** - With highlighting and facets
-4. **User can filter results** - Using faceted search
-5. **User clicks on product** - Goes to product detail page
+1. **User types in search box** - Triggers type-ahead search via server action
+2. **User submits search** - Redirects to `/search` page with query parameters
+3. **Algolia processes query** - Searches through indexed products
+4. **Results returned instantly** - With highlighting and facets
+5. **User can filter results** - Using faceted search
+6. **User clicks on product** - Goes to product detail page
 
 ### Faceted Search
 
 Faceted search lets users drill down into results:
 
-- **Category filtering** - Browse by product categories
-- **Brand filtering** - Filter by brand names
-- **Price ranges** - Filter by price brackets
+- **Category filtering** - Browse by product categories (Plants, Accessories, Pots)
+- **Brand filtering** - Filter by brand names (Modern Botany, TMP)
+- **Price ranges** - Filter by price brackets with min/max inputs
 - **Stock status** - Show in-stock/out-of-stock items
 - **Smart defaults** - Category filters only apply when searching
 
@@ -156,29 +158,29 @@ Faceted search lets users drill down into results:
 
 The search integrates with your navigation:
 
-- **Shop All** - Shows all products without filters
+- **Shop All** - Redirects to `/search` page showing all products
 - **Category navigation** - Direct links to category pages
 - **Breadcrumbs** - Clear navigation hierarchy
-- **Search suggestions** - Real-time search suggestions
+- **Search suggestions** - Real-time search suggestions in header
 
 ## 🧪 Testing Your Algolia Setup
 
 ### Search Functionality Testing
 
-1. **Quick Search**
+1. **Quick Search (Type-ahead)**
    - Test the header search bar
-   - Should return results instantly
-   - Results should be relevant
+   - Should return results instantly with white background
+   - Results should be relevant and clickable
 
 2. **Full Search Page**
    - Visit `/search?term=product`
-   - Should show search results page
-   - Facets should be available
+   - Should show search results page with facets
+   - Facets should be available and functional
 
 3. **Shop All**
    - Visit `/shop-all`
-   - Should show all products
-   - No filters applied
+   - Should redirect to `/search` showing all products
+   - No filters applied initially
 
 4. **Category Navigation**
    - Test category links
@@ -188,17 +190,17 @@ The search integrates with your navigation:
 ### Faceted Search Testing
 
 1. **Category Filters**
-   - Apply category filters
-   - Results should update
+   - Apply category filters (Plants, Accessories, Pots)
+   - Results should update immediately
    - URL should reflect filters
 
 2. **Brand Filters**
-   - Filter by brand
+   - Filter by brand (Modern Botany, TMP)
    - Multiple brands should work
    - Clear filters should work
 
 3. **Price Filters**
-   - Filter by price range
+   - Filter by price range using min/max inputs
    - Results should be within range
    - Price display should be correct
 
@@ -218,7 +220,7 @@ The search integrates with your navigation:
 
 **Solution:**
 1. Check your Algolia index has data
-2. Verify API credentials are correct
+2. Verify API credentials are correct (use new environment variable names)
 3. Check searchable attributes are configured
 4. Test with simple search terms
 
@@ -260,6 +262,19 @@ The search integrates with your navigation:
 2. Set up custom ranking rules
 3. Add synonyms for common terms
 4. Test and refine search queries
+
+### Issue 5: "Environment variable errors"
+
+**Symptoms:**
+- "ALGOLIA_APPLICATION_ID is required" errors
+- Search not working after deployment
+
+**Solution:**
+1. Update environment variables to use new names:
+   - `ALGOLIA_APPLICATION_ID` (not `NEXT_PUBLIC_ALGOLIA_APP_ID`)
+   - `ALGOLIA_SEARCH_API_KEY` (not `NEXT_PUBLIC_ALGOLIA_APP_KEY`)
+   - `ALGOLIA_INDEX_NAME` (not `NEXT_PUBLIC_ALGOLIA_INDEXNAME`)
+2. Restart your development server after changing environment variables
 
 ## 🔍 Debugging Your Algolia Setup
 
@@ -305,9 +320,9 @@ npm run env:check
 Make sure these are set in your Vercel project:
 
 ```env
-# Algolia Configuration
-NEXT_PUBLIC_ALGOLIA_APP_ID=your_algolia_app_id
-NEXT_PUBLIC_ALGOLIA_SEARCH_API_KEY=your_algolia_search_api_key
+# Algolia Configuration - UPDATED NAMES
+ALGOLIA_APPLICATION_ID=your_algolia_app_id
+ALGOLIA_SEARCH_API_KEY=your_algolia_search_api_key
 ALGOLIA_INDEX_NAME=your_algolia_index_name
 ```
 
@@ -359,6 +374,8 @@ Track these metrics:
 - **Smart navigation** - Shop All and category navigation
 - **Mobile-first design** - Works great on phones and tablets
 - **B2B integration** - Shows B2B pricing and features
+- **White background styling** - Clear, readable search results
+- **Proper form submission** - Search works with enter key and button clicks
 
 ## 🆘 Getting Help
 
@@ -397,6 +414,8 @@ Congratulations! You now have lightning-fast search on your BigCommerce Catalyst
 - ✅ **Navigate efficiently** - Shop All and category navigation
 - ✅ **Enjoy mobile-optimized search** - Great experience on any device
 - ✅ **Access B2B features** - If you have B2B integration
+- ✅ **See clear search results** - White backgrounds and proper styling
+- ✅ **Use keyboard navigation** - Enter key and button clicks work
 
 ### Next Steps
 

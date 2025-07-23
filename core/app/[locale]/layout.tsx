@@ -22,6 +22,7 @@ import { ContainerQueryPolyfill } from '~/components/polyfills/container-query';
 import { ScriptManagerScripts, ScriptsFragment } from '~/components/scripts';
 import { routing } from '~/i18n/routing';
 import { getToastNotification } from '~/lib/server-toast';
+import { B2BLoader } from '~/b2b/loader';
 
 const RootLayoutMetadataQuery = graphql(
   `
@@ -127,6 +128,7 @@ export default async function RootLayout({ params, children }: Props) {
                 {toastNotificationCookieData && (
                   <CookieNotifications {...toastNotificationCookieData} />
                 )}
+                <B2BLoader />
                 {children}
               </Providers>
             </AnalyticsProvider>

@@ -5,8 +5,8 @@ import {
   ClockIcon, 
   CheckCircleIcon, 
   XCircleIcon, 
-  DocumentTextIcon 
-} from '@heroicons/react/24/outline';
+  FileText 
+} from 'lucide-react';
 
 interface QuoteStatsProps {
   className?: string;
@@ -136,7 +136,7 @@ export function QuoteStats({
         {showTotal && (
           <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
             <div className="flex items-center">
-              <DocumentTextIcon className="h-8 w-8 text-blue-600" />
+              <FileText className="h-8 w-8 text-blue-600" />
               <div className="ml-3">
                 <p className="text-sm font-medium text-blue-800">Total Value</p>
                 <p className="text-2xl font-bold text-blue-900">

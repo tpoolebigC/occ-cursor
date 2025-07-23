@@ -3,11 +3,16 @@
 import { useEffect, useState } from 'react';
 
 export function useSDK() {
-  const [sdk, setSdk] = useState<typeof window.b2b | undefined>();
+  const [sdk, setSdk] = useState<typeof window.b2b | undefined>(undefined);
 
   useEffect(() => {
+    // Skip on server side
+    if (typeof window === 'undefined') {
+      return;
+    }
+
     const checkSDK = () => {
-      if (typeof window !== 'undefined' && window.b2b) {
+      if (window.b2b) {
         console.log('B2B SDK Debug:', {
           sdk: window.b2b,
           utils: window.b2b.utils,

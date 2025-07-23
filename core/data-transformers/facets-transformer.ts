@@ -2,20 +2,19 @@
 import { getTranslations } from 'next-intl/server';
 import { z } from 'zod';
 
-import {
-  fetchFacetedSearch,
-  PublicSearchParamsSchema,
-  PublicToPrivateParams,
-} from '~/app/[locale]/(default)/(faceted)/fetch-faceted-search';
+import { fetchAlgoliaFacetedSearch } from '~/lib/algolia/faceted-search';
 import { ExistingResultType } from '~/client/util';
+
+// Import the schema types from the old file for compatibility
+import { PublicSearchParamsSchema, PublicToPrivateParams } from '~/app/[locale]/(default)/(faceted)/fetch-faceted-search';
 
 export const facetsTransformer = async ({
   refinedFacets,
   allFacets,
   searchParams,
 }: {
-  refinedFacets: ExistingResultType<typeof fetchFacetedSearch>['facets']['items'];
-  allFacets: ExistingResultType<typeof fetchFacetedSearch>['facets']['items'];
+  refinedFacets: ExistingResultType<typeof fetchAlgoliaFacetedSearch>['facets']['items'];
+  allFacets: ExistingResultType<typeof fetchAlgoliaFacetedSearch>['facets']['items'];
   searchParams: z.input<typeof PublicSearchParamsSchema>;
 }) => {
   const t = await getTranslations('Faceted.FacetedSearch.Facets');

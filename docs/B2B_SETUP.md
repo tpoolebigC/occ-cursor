@@ -74,6 +74,11 @@ BIGCOMMERCE_ACCESS_TOKEN=your_access_token
 # B2B Configuration (The B2B Magic)
 B2B_API_TOKEN=your_b2b_api_token_here
 B2B_API_HOST=https://api-b2b.bigcommerce.com/
+
+# Algolia Configuration (For Search Integration)
+ALGOLIA_APPLICATION_ID=your_algolia_app_id
+ALGOLIA_SEARCH_API_KEY=your_algolia_search_api_key
+ALGOLIA_INDEX_NAME=your_algolia_index_name
 ```
 
 **Critical Note:** Make sure `B2B_API_TOKEN` is **required**, not optional. We learned this the hard way!
@@ -93,7 +98,27 @@ core/b2b/
 └── map-to-b2b-product-options.tsx # Product options mapping
 ```
 
-### Step 5: Test Your B2B Integration
+### Step 5: Add B2B Loader to Your Layout
+
+The B2B loader needs to be added to your locale layout. It's already configured in:
+
+```tsx
+// core/app/[locale]/layout.tsx
+import { B2BLoader } from '~/b2b/loader';
+
+export default function LocaleLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <html>
+      <body>
+        <B2BLoader />
+        {children}
+      </body>
+    </html>
+  );
+}
+```
+
+### Step 6: Test Your B2B Integration
 
 Use these debug pages to make sure everything's working:
 
@@ -110,7 +135,7 @@ http://localhost:3000/business-test
 ### B2B Authentication Flow
 
 1. **Customer logs in** to your Catalyst storefront
-2. **B2B token is generated** automatically during login
+2. **B2B token is generated** automatically during login via JWT callbacks
 3. **Session is established** with B2B capabilities
 4. **Customer can access** B2B features (quotes, shopping lists, etc.)
 
@@ -132,13 +157,22 @@ B2B customers get special product actions:
 - **B2B pricing** - See customer-specific pricing
 - **Bulk operations** - Add multiple items at once
 
+### Search Integration
+
+B2B customers get enhanced search capabilities:
+
+- **B2B-aware search results** - Shows B2B pricing in search
+- **Faceted search** - Filter by category, brand, price, stock
+- **Type-ahead search** - Instant search suggestions
+- **Mobile-optimized** - Great search experience on all devices
+
 ## 🧪 Testing Your B2B Setup
 
 ### Authentication Testing
 
 1. **Login Flow**
    - Test B2B customer login
-   - Verify B2B token generation
+   - Verify B2B token generation (check console logs)
    - Check session persistence
 
 2. **Session Management**
@@ -182,6 +216,18 @@ B2B customers get special product actions:
    - Delete lists
    - Convert list to cart
 
+### Search Integration Testing
+
+1. **B2B Search Results**
+   - Search for products as B2B customer
+   - Verify B2B pricing appears in results
+   - Test faceted search functionality
+
+2. **Type-ahead Search**
+   - Test header search bar
+   - Verify instant results with white background
+   - Check search form submission (enter key and button clicks)
+
 ## 🚨 Common Issues and How to Fix Them
 
 ### Issue 1: "B2B API Token not found"
@@ -210,6 +256,7 @@ B2B_API_TOKEN=your_actual_b2b_api_token_here
 1. Verify B2B features are enabled in BigCommerce admin
 2. Check customer has B2B permissions
 3. Ensure B2B API host is correct: `https://api-b2b.bigcommerce.com/`
+4. Check that B2B token generation is added to auth callbacks
 
 ### Issue 3: "Cart synchronization not working"
 
@@ -234,6 +281,19 @@ B2B_API_TOKEN=your_actual_b2b_api_token_here
 1. Verify B2B features are enabled in BigCommerce
 2. Check customer group permissions
 3. Ensure proper API access
+
+### Issue 5: "B2B token not generating during login"
+
+**Symptoms:**
+- Customer logs in but no B2B token
+- B2B features not available after login
+- Console shows missing B2B token
+
+**Solution:**
+1. Check that B2B token generation is added to JWT callbacks
+2. Verify B2B API credentials are correct
+3. Ensure customer has B2B permissions
+4. Check console logs for B2B token generation
 
 ## 🔍 Debugging Your B2B Setup
 
@@ -289,6 +349,11 @@ BIGCOMMERCE_ACCESS_TOKEN=your_access_token
 # B2B Configuration
 B2B_API_TOKEN=your_b2b_api_token
 B2B_API_HOST=https://api-b2b.bigcommerce.com/
+
+# Algolia Configuration
+ALGOLIA_APPLICATION_ID=your_algolia_app_id
+ALGOLIA_SEARCH_API_KEY=your_algolia_search_api_key
+ALGOLIA_INDEX_NAME=your_algolia_index_name
 ```
 
 ### SSL and Security
@@ -332,6 +397,8 @@ The buyer portal URL is automatically configured:
 - **Seamless cart synchronization** - Works across buyer portal and storefront
 - **Proper error handling** - Graceful degradation when things go wrong
 - **Debug tools included** - Easy troubleshooting when you need it
+- **Search integration** - B2B-aware search with faceted filtering
+- **Mobile optimization** - Great experience on all devices
 
 ## 🆘 Getting Help
 
@@ -364,6 +431,9 @@ Congratulations! You now have a fully functional B2B buyer portal integration. Y
 - ✅ **Enjoy seamless cart synchronization**
 - ✅ **Access customer-specific pricing**
 - ✅ **Use bulk ordering features**
+- ✅ **Search products with B2B pricing**
+- ✅ **Use faceted search and filtering**
+- ✅ **Enjoy mobile-optimized experience**
 
 ### Next Steps
 

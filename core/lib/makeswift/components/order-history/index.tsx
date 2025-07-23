@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { EyeIcon, DocumentDuplicateIcon } from '@heroicons/react/24/outline';
+import { EyeIcon, Copy } from 'lucide-react';
 
 interface Order {
   id: string;
@@ -227,7 +227,7 @@ export function OrderHistory({
                   title="Copy order number"
                   onClick={() => navigator.clipboard.writeText(order.orderNumber)}
                 >
-                  <DocumentDuplicateIcon className="h-4 w-4" />
+                  <Copy className="h-4 w-4" />
                 </button>
               </div>
             </div>

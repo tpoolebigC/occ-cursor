@@ -32,7 +32,13 @@ const handleRegistered = ({ data: { email, password, landingLoginLocation } }: D
 };
 
 const handleLogout = () => {
-  void signOut({ callbackUrl: '/' });
+  void signOut({
+    redirect: true,
+    redirectTo: '/login',
+  }).catch((error: unknown) => {
+    // eslint-disable-next-line no-console
+    console.error('Failed to sign out:', error);
+  });
 };
 
 const sections: Record<string, string> = {
@@ -45,6 +51,11 @@ export function useB2BAuth(token?: string) {
   const sdk = useSDK();
 
   useEffect(() => {
+    // Skip on server side
+    if (typeof window === 'undefined') {
+      return;
+    }
+
     sdk?.callbacks?.addEventListener('on-logout', handleLogout);
     sdk?.callbacks?.addEventListener('on-registered', handleRegistered);
 
@@ -55,39 +66,31 @@ export function useB2BAuth(token?: string) {
   }, [sdk]);
 
   useEffect(() => {
+    // Skip on server side
+    if (typeof window === 'undefined') {
+      return;
+    }
+
     const params = new URLSearchParams(searchParams);
     const section = params.get('section');
 
-    console.log('B2B Auth Debug:', {
-      section,
-      hasSdk: !!sdk,
-      sdkUtils: !!sdk?.utils,
-      openPageMethod: !!sdk?.utils?.openPage,
-      sections: Object.keys(sections)
-    });
-
     if (!section || !sdk) {
-      console.log('B2B Auth: No section or SDK available');
       return;
     }
 
     if (sections[section]) {
-      console.log('B2B Auth: Opening section:', section, 'with page:', sections[section]);
       params.delete('section');
       window.history.replaceState({}, '', `${window.location.pathname}${params}`);
-      
-      try {
-        sdk.utils?.openPage(sections[section]);
-        console.log('B2B Auth: openPage called successfully');
-      } catch (error) {
-        console.error('B2B Auth: Error calling openPage:', error);
-      }
-    } else {
-      console.log('B2B Auth: Unknown section:', section);
+      sdk.utils?.openPage(sections[section]);
     }
   }, [searchParams, sdk]);
 
   useEffect(() => {
+    // Skip on server side
+    if (typeof window === 'undefined') {
+      return;
+    }
+
     if (sdk && token && token !== sdk.utils?.user.getB2BToken()) {
       void sdk.utils?.user.loginWithB2BStorefrontToken(token);
     }

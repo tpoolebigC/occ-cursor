@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { 
   EyeIcon, 
-  DocumentDuplicateIcon, 
+  Copy, 
   ChevronUpIcon, 
   ChevronDownIcon,
   ChevronLeftIcon,
@@ -11,7 +11,7 @@ import {
   ClockIcon,
   CheckCircleIcon,
   XCircleIcon
-} from '@heroicons/react/24/outline';
+} from 'lucide-react';
 
 interface Quote {
   id: string;
@@ -373,7 +373,7 @@ export function QuoteList({
                         title="Copy quote number"
                         onClick={() => navigator.clipboard.writeText(quote.quoteNumber)}
                       >
-                        <DocumentDuplicateIcon className="h-4 w-4" />
+                        <Copy className="h-4 w-4" />
                       </button>
                     </div>
                   </td>

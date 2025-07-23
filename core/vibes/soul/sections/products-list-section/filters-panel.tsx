@@ -195,6 +195,7 @@ export function FiltersPanelInner({
                     options={filter.options}
                     type="multiple"
                     value={optimisticParams[filter.paramName] ?? []}
+                    colorScheme="light"
                   />
                 </AccordionItem>
               );

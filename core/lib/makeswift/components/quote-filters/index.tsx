@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { FunnelIcon } from '@heroicons/react/24/outline';
+import { FunnelIcon } from 'lucide-react';
 
 interface QuoteFiltersProps {
   className?: string;

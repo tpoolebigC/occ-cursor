@@ -27,6 +27,11 @@ export function B2BScript({
   useB2BCart(cartId);
 
   useEffect(() => {
+    // Skip on server side
+    if (typeof window === 'undefined') {
+      return;
+    }
+
     // Only load scripts if they haven't been loaded yet
     if (scriptRef.current || configRef.current) {
       return;

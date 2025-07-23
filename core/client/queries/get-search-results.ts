@@ -3,7 +3,7 @@ import { ResultOf } from 'gql.tada';
 
 import { ProductCardFragment } from '~/components/product-card/fragment';
 import { AlgoliaHit } from '~/data-transformers/algolia-search-results-transformer';
-import algoliaClient from '~/lib/algolia/client';
+import { algoliaClient, searchSingleIndex } from '~/lib/algolia';
 
 interface ProductSearchResponse {
   hits: AlgoliaHit[];
@@ -90,8 +90,8 @@ export const getSearchResults = cache(async (searchTerm: string) => {
   const selectedCurrency = 'USD'; // TODO: use selected storefront currency
 
   try {
-    const algoliaResults = await algoliaClient.searchSingleIndex<AlgoliaHit>({
-      indexName: process.env.NEXT_PUBLIC_ALGOLIA_INDEXNAME || '',
+    const algoliaResults = await searchSingleIndex<AlgoliaHit>({
+              indexName: process.env.ALGOLIA_INDEX_NAME || '',
       searchParams: {
         query: searchTerm,
         hitsPerPage: 5,
@@ -103,22 +103,26 @@ export const getSearchResults = cache(async (searchTerm: string) => {
       let priceValue = 0;
       
       // Try different price fields in order of preference
-      if (hit.default_price) {
+      if (hit.default_price !== undefined && hit.default_price !== null) {
         // Handle both string and number types
         priceValue = typeof hit.default_price === 'string' 
           ? parseFloat(hit.default_price) || 0
-          : hit.default_price;
-      } else if (hit.prices && hit.prices[selectedCurrency]) {
-        priceValue = hit.prices[selectedCurrency];
-      } else if (hit.calculated_prices && hit.calculated_prices[selectedCurrency]) {
-        priceValue = hit.calculated_prices[selectedCurrency];
-      } else if (hit.retail_prices && hit.retail_prices[selectedCurrency]) {
-        priceValue = hit.retail_prices[selectedCurrency];
+          : Number(hit.default_price) || 0;
+      } else if (hit.prices && typeof hit.prices === 'object' && hit.prices.price && hit.prices.price.value) {
+        // Handle the actual data structure: prices.price.value
+        priceValue = Number(hit.prices.price.value) || 0;
+      } else if (hit.prices && typeof hit.prices === 'object' && hit.prices[selectedCurrency]) {
+        priceValue = Number(hit.prices[selectedCurrency]) || 0;
+      } else if (hit.calculated_prices && typeof hit.calculated_prices === 'object' && hit.calculated_prices[selectedCurrency]) {
+        priceValue = Number(hit.calculated_prices[selectedCurrency]) || 0;
+      } else if (hit.retail_prices && typeof hit.retail_prices === 'object' && hit.retail_prices[selectedCurrency]) {
+        priceValue = Number(hit.retail_prices[selectedCurrency]) || 0;
       }
       
       // Ensure we have a valid price
       if (isNaN(priceValue) || priceValue <= 0) {
-        console.warn(`⚠️ [Algolia] Invalid price for product ${hit.objectID}:`, priceValue);
+        const productId = hit.objectID || 'unknown';
+        console.warn(`⚠️ [Algolia] Invalid price for product ${productId}:`, priceValue);
         priceValue = 0;
       }
 

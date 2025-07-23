@@ -24,6 +24,10 @@ export function useB2BAuth(token?: string) {
   const sdk = useSDK();
 
   useEffect(() => {
+    // Skip on server side
+    if (typeof window === 'undefined') {
+      return;
+    }
     sdk?.callbacks?.addEventListener('on-logout', handleLogout);
 
     return () => {
@@ -32,6 +36,11 @@ export function useB2BAuth(token?: string) {
   }, [sdk]);
 
   useEffect(() => {
+    // Skip on server side
+    if (typeof window === 'undefined') {
+      return;
+    }
+
     const params = new URLSearchParams(searchParams);
     const section = params.get('section');
 
@@ -65,6 +74,11 @@ export function useB2BAuth(token?: string) {
   }, [searchParams, sdk]);
 
   useEffect(() => {
+    // Skip on server side
+    if (typeof window === 'undefined') {
+      return;
+    }
+
     if (sdk && token && token !== sdk.utils?.user.getB2BToken()) {
       void sdk.utils?.user.loginWithB2BStorefrontToken(token);
     }

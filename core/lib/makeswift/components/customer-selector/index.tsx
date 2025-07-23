@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { ChevronDownIcon } from '@heroicons/react/24/outline';
+import { ChevronDown } from 'lucide-react';
 
 interface Customer {
   id: string;
@@ -99,7 +99,7 @@ export function CustomerSelector({
         <span className={selectedCustomer ? 'text-gray-900' : 'text-gray-500'}>
           {selectedCustomer ? getDisplayText(selectedCustomer) : placeholder}
         </span>
-        <ChevronDownIcon className="h-5 w-5 text-gray-400" />
+        <ChevronDown className="h-4 w-4 text-gray-400" />
       </button>
 
       {/* Dropdown */}

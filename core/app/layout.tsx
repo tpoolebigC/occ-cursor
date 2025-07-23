@@ -1,7 +1,7 @@
 import { ReactNode } from 'react';
 import type { Metadata } from 'next';
 import { Providers } from './providers';
-import './globals.css';
+import '../globals.css';
 
 interface RootLayoutProps {
   children: ReactNode;

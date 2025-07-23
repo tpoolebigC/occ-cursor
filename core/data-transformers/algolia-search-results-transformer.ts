@@ -20,7 +20,7 @@ export interface AlgoliaHit {
     url_thumbnail: string;
   }>;
   categories_without_path: string[];
-  default_price: string;
+  default_price: string | number;
   prices: Record<string, number>;
   sales_prices: Record<string, number>;
   calculated_prices: Record<string, number>;
@@ -65,22 +65,26 @@ export async function algoliaResultsTransformer(
     let priceValue = 0;
     
     // Try different price fields in order of preference
-    if (hit.default_price) {
+    if (hit.default_price !== undefined && hit.default_price !== null) {
       // Handle both string and number types
       priceValue = typeof hit.default_price === 'string' 
         ? parseFloat(hit.default_price) || 0
-        : hit.default_price;
-    } else if (hit.prices && hit.prices[selectedCurrency]) {
-      priceValue = hit.prices[selectedCurrency];
-    } else if (hit.calculated_prices && hit.calculated_prices[selectedCurrency]) {
-      priceValue = hit.calculated_prices[selectedCurrency];
-    } else if (hit.retail_prices && hit.retail_prices[selectedCurrency]) {
-      priceValue = hit.retail_prices[selectedCurrency];
+        : Number(hit.default_price) || 0;
+    } else if (hit.prices && typeof hit.prices === 'object' && hit.prices.price && hit.prices.price.value) {
+      // Handle the actual data structure: prices.price.value
+      priceValue = Number(hit.prices.price.value) || 0;
+    } else if (hit.prices && typeof hit.prices === 'object' && hit.prices[selectedCurrency]) {
+      priceValue = Number(hit.prices[selectedCurrency]) || 0;
+    } else if (hit.calculated_prices && typeof hit.calculated_prices === 'object' && hit.calculated_prices[selectedCurrency]) {
+      priceValue = Number(hit.calculated_prices[selectedCurrency]) || 0;
+    } else if (hit.retail_prices && typeof hit.retail_prices === 'object' && hit.retail_prices[selectedCurrency]) {
+      priceValue = Number(hit.retail_prices[selectedCurrency]) || 0;
     }
     
     // Ensure we have a valid price
     if (isNaN(priceValue) || priceValue <= 0) {
-      console.warn(`⚠️ [Algolia] Invalid price for product ${hit.objectID}:`, priceValue);
+      const productId = hit.objectID || 'unknown';
+      console.warn(`⚠️ [Algolia] Invalid price for product ${productId}:`, priceValue);
       priceValue = 0;
     }
 
@@ -181,4 +185,90 @@ export async function algoliaResultsTransformer(
   }
 
   return results;
+}
+
+// Transform Algolia hits into Catalyst product format
+export function transformAlgoliaSearchResults(
+  hits: AlgoliaHit[],
+  currencyCode: string = 'USD'
+): QuickSearchProduct[] {
+  return hits.map((hit) => {
+    // Fix price extraction - handle different possible price structures
+    let priceValue = 0;
+    
+    // Try different price fields in order of preference
+    if (hit.default_price !== undefined && hit.default_price !== null) {
+      // Handle both string and number types
+      priceValue = typeof hit.default_price === 'string' 
+        ? parseFloat(hit.default_price) || 0
+        : Number(hit.default_price) || 0;
+    } else if (hit.prices && typeof hit.prices === 'object' && hit.prices.price && hit.prices.price.value) {
+      // Handle the actual data structure: prices.price.value
+      priceValue = Number(hit.prices.price.value) || 0;
+    } else if (hit.prices && typeof hit.prices === 'object' && hit.prices[currencyCode]) {
+      priceValue = Number(hit.prices[currencyCode]) || 0;
+    } else if (hit.calculated_prices && typeof hit.calculated_prices === 'object' && hit.calculated_prices[currencyCode]) {
+      priceValue = Number(hit.calculated_prices[currencyCode]) || 0;
+    } else if (hit.retail_prices && typeof hit.retail_prices === 'object' && hit.retail_prices[currencyCode]) {
+      priceValue = Number(hit.retail_prices[currencyCode]) || 0;
+    }
+    
+    // Ensure we have a valid price
+    if (isNaN(priceValue) || priceValue <= 0) {
+      const productId = hit.objectID || 'unknown';
+      console.warn(`⚠️ [Algolia] Invalid price for product ${productId}:`, priceValue);
+      priceValue = 0;
+    }
+
+    return {
+      entityId: hit.objectID,
+      name: hit.name,
+      path: hit.url,
+      defaultImage: {
+        altText: hit.product_images.find((img) => img.is_thumbnail)?.description || '',
+        url: hit.product_images.find((img) => img.is_thumbnail)?.url_thumbnail || '',
+      },
+      categories: {
+        edges: (hit.categories?.lvl0 || hit.categories_without_path || []).map((categoryName) => ({
+          node: {
+            name: categoryName,
+            path: `/${categoryName.replaceAll(' ', '-').toLowerCase()}`,
+          },
+        })),
+      },
+      brand: {
+        name: hit.brand_name || '',
+        path: hit.brand_name ? `/${hit.brand_name.replaceAll(' ', '-').toLowerCase()}` : '',
+      },
+      reviewSummary: null,
+      prices: {
+        price: {
+          value: priceValue,
+          currencyCode: currencyCode,
+        },
+        basePrice: {
+          value: priceValue,
+          currencyCode: currencyCode,
+        },
+        retailPrice: {
+          value: priceValue,
+          currencyCode: currencyCode,
+        },
+        salePrice: {
+          value: priceValue,
+          currencyCode: currencyCode,
+        },
+        priceRange: {
+          min: {
+            value: priceValue,
+            currencyCode: currencyCode,
+          },
+          max: {
+            value: priceValue,
+            currencyCode: currencyCode,
+          },
+        },
+      },
+    };
+  });
 } 

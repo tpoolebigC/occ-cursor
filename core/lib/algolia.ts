@@ -1,12 +1,12 @@
 import { algoliasearch } from 'algoliasearch';
 import { createFetchRequester } from '@algolia/requester-fetch';
 
-const appId = process.env.NEXT_PUBLIC_ALGOLIA_APP_ID;
-const searchApiKey = process.env.NEXT_PUBLIC_ALGOLIA_APP_KEY;
-const indexName = process.env.NEXT_PUBLIC_ALGOLIA_INDEXNAME || 'products';
+const appId = process.env.ALGOLIA_APPLICATION_ID;
+const searchApiKey = process.env.ALGOLIA_SEARCH_API_KEY;
+const indexName = process.env.ALGOLIA_INDEX_NAME || 'products';
 
 if (!appId || !searchApiKey) {
-  throw new Error('Missing Algolia environment variables: NEXT_PUBLIC_ALGOLIA_APP_ID and NEXT_PUBLIC_ALGOLIA_APP_KEY are required');
+  throw new Error('Missing Algolia environment variables: ALGOLIA_APPLICATION_ID and ALGOLIA_SEARCH_API_KEY are required');
 }
 
 // Create the Algolia client with fetch requester
@@ -99,9 +99,7 @@ export const debugIndex = async () => {
     
     const searchResult = await algoliaClient.search([{
       indexName,
-      params: {
-        hitsPerPage: 5
-      }
+      hitsPerPage: 5
     }]);
     
     const firstResult = searchResult.results[0];
@@ -119,14 +117,13 @@ export const debugIndex = async () => {
         objectID: (firstResult as any).hits[0].objectID,
         name: (firstResult as any).hits[0].name,
         brand_name: (firstResult as any).hits[0].brand_name,
-        categories_without_path: (firstResult as any).hits[0].categories_without_path,
-        default_price: (firstResult as any).hits[0].default_price,
-        availableKeys: Object.keys((firstResult as any).hits[0])
-      } : 'No hits found'
+        categories: (firstResult as any).hits[0].categories_without_path
+      } : null
     });
     
+    console.log('✅ [Algolia Debug] Index inspection complete');
   } catch (error) {
-    console.error('❌ [Algolia Debug] Error:', error);
+    console.error('❌ [Algolia Debug] Error inspecting index:', error);
   }
 };
 
