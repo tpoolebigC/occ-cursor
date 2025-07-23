@@ -262,214 +262,358 @@ export const algoliaClient = algoliasearch(appId, searchApiKey, {
 Create `core/lib/algolia/faceted-search.ts`:
 
 ```typescript
-import { algoliaClient } from './client';
+import algoliasearch from 'algoliasearch';
+import { cache } from 'react';
 
-export interface FacetedSearchParams {
+import algoliaClient from './client';
+import { searchResultsTransformer } from '../../data-transformers/search-results-transformer';
+
+// Algolia index name
+const INDEX_NAME = process.env.NEXT_PUBLIC_ALGOLIA_INDEXNAME || 'products';
+
+// Sort mapping from BigCommerce to Algolia
+const SORT_MAPPING = {
+  featured: 'featured',
+  newest: 'created_at_desc',
+  best_selling: 'sales_count_desc',
+  a_to_z: 'name_asc',
+  z_to_a: 'name_desc',
+  best_reviewed: 'rating_desc',
+  lowest_price: 'price_asc',
+  highest_price: 'price_desc',
+  relevance: 'relevance',
+} as const;
+
+interface AlgoliaSearchParams {
   term?: string;
-  category_ids?: string[];
-  brand?: string;
-  price_min?: number;
-  price_max?: number;
-  in_stock?: boolean;
   page?: number;
-  sort?: string;
+  limit?: number;
+  sort?: keyof typeof SORT_MAPPING;
+  brand?: string[];
+  category?: number;
+  categoryIn?: number[];
+  minPrice?: number;
+  maxPrice?: number;
+  minRating?: number;
+  maxRating?: number;
+  isFeatured?: boolean;
+  stock?: string[];
+  shipping?: string[];
+  [key: string]: any;
 }
 
-export interface FacetedSearchResult {
-  products: any[];
-  facets: any;
-  totalResults: number;
-  pageInfo: {
-    hasNextPage: boolean;
-    hasPreviousPage: boolean;
-    currentPage: number;
-    totalPages: number;
-  };
-}
-
-export async function fetchFacetedSearch(params: FacetedSearchParams): Promise<FacetedSearchResult> {
-  const {
-    term = '',
-    category_ids = [],
-    brand,
-    price_min,
-    price_max,
-    in_stock,
-    page = 1,
-    sort = 'relevance'
-  } = params;
-
-  const hitsPerPage = 12;
-  const offset = (page - 1) * hitsPerPage;
-
-  // Build filters
-  const filters: string[] = [];
-  
-  // Only apply category filters if there's a search term
-  if (term && category_ids.length > 0) {
-    const categoryFilter = category_ids.map(id => `category_ids:${id}`).join(' OR ');
-    filters.push(`(${categoryFilter})`);
-  }
-  
-  if (brand) {
-    filters.push(`brand_name:"${brand}"`);
-  }
-  
-  if (price_min !== undefined || price_max !== undefined) {
-    let priceFilter = 'default_price:';
-    if (price_min !== undefined && price_max !== undefined) {
-      priceFilter += `${price_min}..${price_max}`;
-    } else if (price_min !== undefined) {
-      priceFilter += `${price_min}..`;
-    } else {
-      priceFilter += `..${price_max}`;
-    }
-    filters.push(priceFilter);
-  }
-  
-  if (in_stock !== undefined) {
-    filters.push(`in_stock:${in_stock}`);
-  }
-
-  // Build search parameters
-  const searchParams: any = {
-    query: term,
-    hitsPerPage,
-    page: page - 1, // Algolia uses 0-based pagination
-    facets: ['categories_without_path', 'brand_name', 'default_price', 'in_stock'],
-    facetFilters: filters.length > 0 ? filters : undefined,
-    attributesToRetrieve: [
-      'name', 'brand_name', 'sku', 'url', 'image_url', 'product_images',
-      'description', 'is_visible', 'in_stock', 'categories_without_path',
-      'category_ids', 'variants', 'default_price', 'prices', 'objectID'
-    ]
-  };
-
-  // Handle sorting
-  if (sort === 'price_asc') {
-    searchParams.sortFacetBy = 'price';
-  } else if (sort === 'price_desc') {
-    searchParams.sortFacetBy = 'price';
-  } else if (sort === 'name_asc') {
-    searchParams.sortFacetBy = 'name';
-  } else if (sort === 'name_desc') {
-    searchParams.sortFacetBy = 'name';
-  }
-
+// Build mappings between entityIds and actual facet values
+async function buildFacetMappings(index: any) {
   try {
-    const results = await algoliaClient.search([{
-      indexName: process.env.NEXT_PUBLIC_ALGOLIA_INDEXNAME || 'products',
-      ...searchParams
+    // Get facet data to build mappings
+    const facetResults = await index.search([{
+      indexName: INDEX_NAME,
+      query: '*',
+      facets: ['categories_without_path', 'brand_name'],
+      hitsPerPage: 0, // We only need facets, not hits
     }]);
     
-    const firstResult = results.results[0];
-    if (!firstResult || 'hits' in firstResult === false) {
-      throw new Error('Invalid search result from Algolia');
+    const searchResult = facetResults.results[0];
+    const facets = searchResult.facets || {};
+    
+    // Build category mappings
+    const categoryMappings: Record<number, string> = {};
+    if (facets.categories_without_path) {
+      Object.keys(facets.categories_without_path).forEach((categoryName, index) => {
+        categoryMappings[index + 1] = categoryName; // entityId starts at 1
+      });
     }
     
-    // Transform Algolia results to Catalyst format
-    const transformedProducts = (firstResult as any).hits.map((hit: any) => ({
-      entityId: parseInt(hit.objectID),
-      name: hit.name,
-      brand: {
-        entityId: hit.brand_id || 0,
-        name: hit.brand_name || ''
-      },
-      sku: hit.sku || '',
-      path: hit.url || '',
-      defaultImage: {
-        url: hit.image_url || '',
-        altText: hit.name || ''
-      },
-      images: hit.product_images?.map((img: any) => ({
-        url: img.url_thumbnail || img.url || '',
-        altText: hit.name || ''
-      })) || [],
-      prices: {
-        price: {
-          value: hit.default_price || 0,
-          currencyCode: 'USD'
-        },
-        salePrice: {
-          value: hit.sales_prices?.USD || 0,
-          currencyCode: 'USD'
-        },
-        retailPrice: {
-          value: hit.retail_prices?.USD || 0,
-          currencyCode: 'USD'
-        }
-      },
-      inventoryLevel: hit.inventory || 0,
-      inventoryTracking: hit.inventory_tracking || 'none',
-      availabilityV2: {
-        status: hit.in_stock ? 'Available' : 'Unavailable'
-      },
-      categories: hit.categories_without_path?.map((cat: string) => ({
-        entityId: 0,
-        name: cat,
-        path: `/${cat.toLowerCase().replace(/\s+/g, '-')}/`
-      })) || []
-    }));
-
-    // Build facets from search results if Algolia facets are empty
-    let facets = (firstResult as any).facets || {};
-    if (Object.keys(facets).length === 0 && (firstResult as any).hits.length > 0) {
-      facets = buildFacetsFromResults((firstResult as any).hits);
+    // Build brand mappings
+    const brandMappings: Record<number, string> = {};
+    if (facets.brand_name) {
+      Object.keys(facets.brand_name).forEach((brandName, index) => {
+        brandMappings[index + 1] = brandName; // entityId starts at 1
+      });
     }
-
-    const totalResults = (firstResult as any).nbHits;
-    const totalPages = Math.ceil(totalResults / hitsPerPage);
-
+    
+    console.log('🔍 [Algolia] Built facet mappings:', {
+      categories: categoryMappings,
+      brands: brandMappings
+    });
+    
     return {
-      products: transformedProducts,
-      facets,
-      totalResults,
-      pageInfo: {
-        hasNextPage: page < totalPages,
-        hasPreviousPage: page > 1,
-        currentPage: page,
-        totalPages
-      }
+      categories: categoryMappings,
+      brands: brandMappings
     };
   } catch (error) {
-    console.error('Algolia search error:', error);
-    throw error;
+    console.error('❌ [Algolia] Error building facet mappings:', error);
+    return {
+      categories: {},
+      brands: {}
+    };
   }
 }
 
-function buildFacetsFromResults(hits: any[]) {
-  const facets: any = {};
-  
-  // Build category facets
-  const categories = new Map<string, number>();
-  hits.forEach(hit => {
-    hit.categories_without_path?.forEach((cat: string) => {
-      categories.set(cat, (categories.get(cat) || 0) + 1);
-    });
-  });
-  
-  if (categories.size > 0) {
-    facets.categories_without_path = {};
-    categories.forEach((count, category) => {
-      facets.categories_without_path[category] = count;
-    });
-  }
-  
-  // Build brand facets
-  const brands = new Map<string, number>();
-  hits.forEach(hit => {
-    if (hit.brand_name) {
-      brands.set(hit.brand_name, (brands.get(hit.brand_name) || 0) + 1);
+export const fetchAlgoliaFacetedSearch = cache(
+  async (params: AlgoliaSearchParams): Promise<AlgoliaSearchResult> => {
+    console.log('🔍 [Algolia] Starting faceted search with params:', JSON.stringify(params, null, 2));
+    
+    if (!algoliaClient) {
+      throw new Error('Algolia client is not initialized');
     }
-  });
-  
-  if (brands.size > 0) {
-    facets.brand_name = {};
-    brands.forEach((count, brand) => {
-      facets.brand_name[brand] = count;
+    
+    // In algoliasearch v5, we need to use the search method directly
+    // The client itself is the search function
+    const index = algoliaClient;
+    
+    // Create mappings for entityIds to actual values
+    // We'll need to get the facet data first to build these mappings
+    const facetMappings = await buildFacetMappings(index);
+    
+    // Extract search parameters
+    const {
+      term = '',
+      page = 0,
+      limit = 9,
+      sort = 'featured',
+      brand,
+      category,
+      categoryIn,
+      minPrice,
+      maxPrice,
+      minRating,
+      maxRating,
+      isFeatured,
+      stock,
+      shipping,
+      ...additionalParams
+    } = params;
+
+    // Build Algolia search parameters
+    const searchParams: any = {
+      query: term || '*', // Use wildcard for empty search terms
+      page,
+      hitsPerPage: limit,
+      facets: [
+        'categories_without_path', 
+        'brand_name', 
+        'default_price', 
+        'in_stock',
+        'is_visible'
+      ],
+      facetFilters: [],
+      numericFilters: [],
+      filters: '',
+    };
+
+    // Handle brand filters
+    if (brand && brand.length > 0) {
+      // Map entityIds back to actual brand names
+      const brandNames = brand.map(id => facetMappings.brands[id]).filter(Boolean);
+      if (brandNames.length > 0) {
+        searchParams.facetFilters.push(`brand_name:${brandNames.join(',')}`);
+      }
+    }
+
+    // Handle category filters
+    if (categoryIn && categoryIn.length > 0) {
+      // Map entityIds back to actual category names
+      const categoryNames = categoryIn.map(id => facetMappings.categories[id]).filter(Boolean);
+      if (categoryNames.length > 0) {
+        searchParams.facetFilters.push(`categories_without_path:${categoryNames.join(',')}`);
+      }
+    }
+
+    // Handle price filters
+    if (minPrice || maxPrice) {
+      const priceFilter = [];
+      if (minPrice) priceFilter.push(`default_price >= ${minPrice}`);
+      if (maxPrice) priceFilter.push(`default_price <= ${maxPrice}`);
+      searchParams.numericFilters.push(priceFilter.join(' AND '));
+    }
+
+    // Handle stock filters
+    if (stock && stock.includes('in_stock')) {
+      searchParams.facetFilters.push('in_stock:true');
+    }
+
+    // Handle additional product attributes
+    Object.entries(additionalParams).forEach(([key, values]) => {
+      if (key.startsWith('attr_') && values && Array.isArray(values)) {
+        const attributeName = key.replace('attr_', '');
+        searchParams.facetFilters.push(`${attributeName}:${values.join(',')}`);
+      }
     });
+
+    console.log('🔍 [Algolia] Faceted search params:', JSON.stringify(searchParams, null, 2));
+
+    try {
+      // In algoliasearch v5, we need to use the correct search format
+      // Only pass valid Algolia parameters
+      const algoliaSearchParams = {
+        page: searchParams.page,
+        hitsPerPage: searchParams.hitsPerPage,
+        facets: searchParams.facets,
+        facetFilters: searchParams.facetFilters,
+        numericFilters: searchParams.numericFilters,
+        filters: searchParams.filters
+      };
+      
+      console.log('🔍 [Algolia] Final search params being sent to Algolia:', JSON.stringify({
+        indexName: INDEX_NAME,
+        query: term,
+        ...algoliaSearchParams
+      }, null, 2));
+      
+      const results = await index.search([{
+        indexName: INDEX_NAME,
+        query: term || '*', // Ensure we use wildcard for empty terms
+        ...algoliaSearchParams
+      }]);
+      
+      // Get the first result (we're only searching one index)
+      const searchResult = results.results[0];
+      
+      if (!searchResult || 'hits' in searchResult === false) {
+        throw new Error('Invalid search result from Algolia');
+      }
+
+      // Transform the results to match Catalyst format
+      const transformedHits = (searchResult as any).hits.map((hit: any) => ({
+        entityId: parseInt(hit.objectID),
+        name: hit.name,
+        brand: {
+          entityId: hit.brand_id || 0,
+          name: hit.brand_name || ''
+        },
+        sku: hit.sku || '',
+        path: hit.url || '',
+        defaultImage: {
+          url: hit.image_url || '',
+          altText: hit.name || ''
+        },
+        images: hit.product_images?.map((img: any) => ({
+          url: img.url_thumbnail || img.url || '',
+          altText: hit.name || ''
+        })) || [],
+        prices: {
+          price: {
+            value: hit.default_price || 0,
+            currencyCode: 'USD'
+          },
+          salePrice: {
+            value: hit.sales_prices?.USD || 0,
+            currencyCode: 'USD'
+          },
+          retailPrice: {
+            value: hit.retail_prices?.USD || 0,
+            currencyCode: 'USD'
+          }
+        },
+        inventoryLevel: hit.inventory || 0,
+        inventoryTracking: hit.inventory_tracking || 'none',
+        availabilityV2: {
+          status: hit.in_stock ? 'Available' : 'Unavailable'
+        },
+        categories: hit.categories_without_path?.map((cat: string) => ({
+          entityId: 0,
+          name: cat,
+          path: `/${cat.toLowerCase().replace(/\s+/g, '-')}/`
+        })) || []
+      }));
+
+      // Build facets from Algolia facets or search results
+      const facets = buildFacetsFromAlgoliaFacets((searchResult as any).facets || {}, params);
+
+      return {
+        facets: {
+          items: facets
+        },
+        products: {
+          collectionInfo: {
+            totalItems: (searchResult as any).nbHits
+          },
+          pageInfo: {
+            hasNextPage: (searchResult as any).page < (searchResult as any).nbPages - 1,
+            hasPreviousPage: (searchResult as any).page > 0,
+            startCursor: `page_${(searchResult as any).page}`,
+            endCursor: `page_${(searchResult as any).page + 1}`
+          },
+          items: transformedHits
+        }
+      };
+    } catch (error) {
+      console.error('❌ [Algolia] Faceted search error:', error);
+      throw error;
+    }
   }
-  
+);
+
+function buildFacetsFromAlgoliaFacets(algoliaFacets: any, params: AlgoliaSearchParams) {
+  console.log('🔍 [Algolia] Processing facets:', Object.keys(algoliaFacets));
+  const facets = [];
+
+  // Extract categories from Algolia facets
+  if (algoliaFacets?.categories_without_path) {
+    const categoryFacet = {
+      __typename: 'CategorySearchFilter',
+      name: 'Category',
+      isCollapsedByDefault: false,
+      displayProductCount: true,
+      categories: Object.entries(algoliaFacets.categories_without_path).map(([name, count], index) => ({
+        entityId: index + 1, // Give each category a unique entityId
+        name,
+        isSelected: false, // TODO: implement selection logic
+        productCount: count as number,
+        subCategories: [],
+      })),
+    };
+    facets.push(categoryFacet);
+  }
+
+  // Extract brands from Algolia facets
+  if (algoliaFacets?.brand_name) {
+    const brandFacet = {
+      __typename: 'BrandSearchFilter',
+      name: 'Brand',
+      isCollapsedByDefault: false,
+      displayProductCount: true,
+      brands: Object.entries(algoliaFacets.brand_name).map(([name, count], index) => ({
+        entityId: index + 1, // Give each brand a unique entityId
+        name,
+        isSelected: params.brand?.includes(name) || false,
+        productCount: count as number,
+      })),
+    };
+    facets.push(brandFacet);
+  }
+
+  // Extract price from Algolia facets (using default_price)
+  if (algoliaFacets?.default_price) {
+    const priceFacet = {
+      __typename: 'PriceSearchFilter',
+      name: 'Price',
+      isCollapsedByDefault: false,
+      displayProductCount: true,
+      selected: {
+        minPrice: params.minPrice || 0,
+        maxPrice: params.maxPrice || 0,
+      },
+    };
+    facets.push(priceFacet);
+  }
+
+  // Extract availability from Algolia facets (using in_stock)
+  if (algoliaFacets?.in_stock) {
+    const availabilityFacet = {
+      __typename: 'OtherSearchFilter',
+      name: 'IN STOCK',
+      isCollapsedByDefault: false,
+      displayProductCount: true,
+      isInStock: {
+        isSelected: params.stock?.includes('in_stock') || false,
+        productCount: algoliaFacets.in_stock.true || 0,
+      },
+    };
+    facets.push(availabilityFacet);
+  }
+
   return facets;
 }
 ```
@@ -949,6 +1093,42 @@ Your Algolia index should support hierarchical categories like:
 **Import Errors**
 - Verify package installation: `npm install algoliasearch@^5.33.0 @algolia/requester-fetch@^5.33.0`
 - Check import paths match your project structure
+
+### Recent Fixes (Latest Updates)
+
+**Facet Selection Bug - All Facets Selected Together**
+- **Problem**: Clicking one facet selected all facets in the group
+- **Root Cause**: All categories/brands had the same `entityId: 0`
+- **Fix**: Updated `buildFacetsFromAlgoliaFacets()` to assign unique entityIds:
+  ```typescript
+  // Before (❌ All facets had same ID)
+  entityId: 0
+  
+  // After (✅ Each facet gets unique ID)
+  entityId: index + 1
+  ```
+
+**Zero Results After Facet Selection**
+- **Problem**: After fixing facet selection, filtered results showed zero for everything
+- **Root Cause**: EntityIds (1, 2, 3) didn't map to actual category/brand names
+- **Fix**: Added `buildFacetMappings()` function to map entityIds back to actual values:
+  ```typescript
+  // Map entityIds back to actual category names
+  const categoryNames = categoryIn.map(id => facetMappings.categories[id]).filter(Boolean);
+  if (categoryNames.length > 0) {
+    searchParams.facetFilters.push(`categories_without_path:${categoryNames.join(',')}`);
+  }
+  ```
+
+**Filter Parsers Missing Cases**
+- **Problem**: ToggleGroup and Rating filter types weren't handled properly
+- **Fix**: Added missing cases to `getFilterParsers()`:
+  ```typescript
+  case 'toggle-group':
+    return { ...acc, [filter.paramName]: parseAsArrayOf(parseAsString) };
+  case 'rating':
+    return { ...acc, [filter.paramName]: parseAsArrayOf(parseAsString) };
+  ```
 
 ### Debug Commands
 
