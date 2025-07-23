@@ -1,42 +1,82 @@
-# Contributing to Catalyst
-Thanks for showing interest in contributing!
+# Contributing to OCC-Cursor
 
-The following is a set of guidelines for contributing to Catalyst. These are just guidelines, not rules. Use your best judgment, and feel free to propose changes to this document in a pull request.
+Thank you for your interest in contributing to OCC-Cursor! This document provides guidelines and information for contributors.
 
-#### Table of Contents
+## Code of Conduct
 
-How Can I Contribute?
-  * [Pull Requests](#pull-requests)
-  * [Issues / Bugs](#issues--bugs)
-  * [Other Ways to Contribute](#other-ways-to-contribute)
+This project and everyone participating in it is governed by our Code of Conduct. By participating, you are expected to uphold this code.
 
-Styleguides
-  * [Git Commit Messages](#git-commit-messages)
+## How Can I Contribute?
 
-## Pull Requests
+### Reporting Bugs
 
-First ensure that your feature isn't already being developed or considered (see open PRs and issues). 
-If it is, please consider contributing to those initiatives.
+- Use the GitHub issue tracker
+- Include detailed steps to reproduce the bug
+- Include your environment details (OS, Node.js version, etc.)
+- Include error messages and stack traces
 
-## Issues / Bugs
- 
-* Please include a clear, specific title and replicable description.
+### Suggesting Enhancements
 
-* Please include your environment, OS, and any exceptions/backtraces that occur. The more
-information that is given, the more likely we can debug and fix the issue.
+- Use the GitHub issue tracker
+- Describe the enhancement clearly
+- Explain why this enhancement would be useful
+- Include mockups or examples if applicable
 
-**If you find a security bug, please do not post as an issue. Send directly to security@bigcommerce.com 
-instead.**
+### Pull Requests
 
-## Other Ways to Contribute
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Make your changes
+4. Add tests if applicable
+5. Commit your changes (`git commit -m 'Add some amazing feature'`)
+6. Push to the branch (`git push origin feature/amazing-feature`)
+7. Open a Pull Request
 
-* Consider reporting bugs, contributing to test coverage, or helping spread the word about Catalyst.
+## Development Setup
 
-## Git Commit Messages
+1. Clone the repository
+2. Install dependencies: `pnpm install`
+3. Copy `.env.example` to `.env.local` and configure
+4. Run the development server: `pnpm dev`
 
-* Use the present tense ("Add feature" not "Added feature")
-* Use the imperative mood ("Move cursor to..." not "Moves cursor to...")
-* Limit the first line to 72 characters or less
-* Reference pull requests and external links liberally
+## Code Style
 
-Thank you again for your interest in contributing to Catalyst!
+- Follow the existing code style
+- Use TypeScript for all new code
+- Add JSDoc comments for public functions
+- Follow ESLint rules
+
+## Testing
+
+- Write tests for new features
+- Ensure all tests pass before submitting PR
+- Run `pnpm test` to execute tests
+
+## Commit Messages
+
+Use conventional commit format:
+
+```
+type(scope): description
+
+[optional body]
+
+[optional footer]
+```
+
+Types:
+- `feat`: New feature
+- `fix`: Bug fix
+- `docs`: Documentation changes
+- `style`: Code style changes
+- `refactor`: Code refactoring
+- `test`: Adding tests
+- `chore`: Maintenance tasks
+
+## License
+
+By contributing, you agree that your contributions will be licensed under the same license as the project.
+
+## Questions?
+
+If you have questions about contributing, please open an issue or contact the maintainers.

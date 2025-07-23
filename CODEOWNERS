@@ -1,0 +1,29 @@
+# Global owners - these people will be the default owners for everything in
+# the repo. Unless a later match takes precedence, they will be requested for
+# review when someone opens a pull request.
+* @tpoolebigC
+
+# Core Algolia integration files
+/core/lib/algolia/ @tpoolebigC
+/core/data-transformers/algolia-search-results-transformer.ts @tpoolebigC
+/ALGOLIA_INTEGRATION_GUIDE.md @tpoolebigC
+/ALGOLIA_INDEX_CONFIGURATION.md @tpoolebigC
+
+# B2B integration files
+/core/b2b/ @tpoolebigC
+/core/lib/cart/ @tpoolebigC
+/docs/CART_MERGE_SOLUTION.md @tpoolebigC
+
+# Core configuration files
+/package.json @tpoolebigC
+/pnpm-lock.yaml @tpoolebigC
+/.env.example @tpoolebigC
+/tsconfig.json @tpoolebigC
+/next.config.js @tpoolebigC
+
+# Documentation
+/docs/ @tpoolebigC
+*.md @tpoolebigC
+
+# GitHub configuration
+/.github/ @tpoolebigC 
