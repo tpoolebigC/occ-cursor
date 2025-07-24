@@ -17,6 +17,36 @@
   --contrast-400: 0 0% 64%;
   --contrast-500: 0 0% 45%;
 
+  /* Font family variables */
+  --font-family-heading: 'Inter', system-ui, sans-serif;
+  --font-family-body: 'Inter', system-ui, sans-serif;
+  --font-family-mono: 'Roboto Mono', monospace;
+
+  /* Button styling variables */
+  --button-focus: hsl(var(--primary));
+  --button-font-family: var(--font-family-body);
+  --button-primary-background: hsl(var(--primary));
+  --button-primary-background-hover: color-mix(in oklab, hsl(var(--primary)), white 75%);
+  --button-primary-text: hsl(var(--background));
+  --button-primary-border: hsl(var(--primary));
+  --button-secondary-background: hsl(var(--foreground));
+  --button-secondary-background-hover: hsl(var(--background));
+  --button-secondary-text: hsl(var(--background));
+  --button-secondary-border: hsl(var(--foreground));
+  --button-tertiary-background: hsl(var(--background));
+  --button-tertiary-background-hover: hsl(var(--contrast-100));
+  --button-tertiary-text: hsl(var(--foreground));
+  --button-tertiary-border: hsl(var(--contrast-200));
+  --button-ghost-background: transparent;
+  --button-ghost-background-hover: hsl(var(--foreground) / 5%);
+  --button-ghost-text: hsl(var(--foreground));
+  --button-ghost-border: transparent;
+  --button-loader-icon: hsl(var(--foreground));
+  --button-danger-background: color-mix(in oklab, hsl(var(--error)), white 30%);
+  --button-danger-background-hover: color-mix(in oklab, hsl(var(--error)), white 75%);
+  --button-danger-foreground: hsl(var(--foreground));
+  --button-danger-border: color-mix(in oklab, hsl(var(--error)), white 30%);
+
   /* Search popup styling */
   --nav-search-background: hsl(0 0% 100%);
   --nav-search-border: hsl(0 0% 90%);
@@ -49,6 +79,57 @@
   --toggle-group-light-on-text: hsl(var(--background));
   --toggle-group-light-off-border-hover: hsl(var(--contrast-200));
   --toggle-group-light-off-background-hover: hsl(var(--contrast-100));
+}
+
+/* Base color styles */
+@layer base {
+  body {
+    background-color: hsl(var(--background)) !important;
+    color: hsl(var(--foreground)) !important;
+  }
+  
+  h1, h2, h3, h4, h5, h6 {
+    color: hsl(var(--foreground)) !important;
+    font-family: var(--font-family-heading) !important;
+  }
+  
+  p, span, div {
+    color: hsl(var(--foreground)) !important;
+    font-family: var(--font-family-body) !important;
+  }
+  
+  button {
+    background-color: hsl(var(--primary)) !important;
+    color: hsl(var(--background)) !important;
+  }
+  
+  button:hover {
+    background-color: color-mix(in oklab, hsl(var(--primary)), black 15%) !important;
+  }
+
+  /* Force product card styling */
+  [class*="product-card"] {
+    background-color: hsl(var(--background)) !important;
+  }
+
+  [class*="product-card"] [class*="title"] {
+    color: hsl(var(--foreground)) !important;
+  }
+
+  [class*="product-card"] [class*="price"] {
+    color: hsl(var(--foreground)) !important;
+  }
+
+  /* Force button styling */
+  [class*="button"] {
+    background-color: hsl(var(--primary)) !important;
+    color: hsl(var(--background)) !important;
+  }
+
+  /* Force text colors */
+  [class*="text-"] {
+    color: hsl(var(--foreground)) !important;
+  }
 }
 
 /* Dark mode support */
@@ -93,6 +174,31 @@
     --toggle-group-dark-on-text: hsl(var(--foreground));
     --toggle-group-dark-off-border-hover: hsl(var(--contrast-400));
     --toggle-group-dark-off-background-hover: hsl(var(--contrast-500));
+
+    /* Dark mode button styling variables */
+    --button-focus: hsl(var(--primary));
+    --button-font-family: var(--font-family-body);
+    --button-primary-background: hsl(var(--primary));
+    --button-primary-background-hover: color-mix(in oklab, hsl(var(--primary)), white 75%);
+    --button-primary-text: hsl(var(--background));
+    --button-primary-border: hsl(var(--primary));
+    --button-secondary-background: hsl(var(--foreground));
+    --button-secondary-background-hover: hsl(var(--background));
+    --button-secondary-text: hsl(var(--background));
+    --button-secondary-border: hsl(var(--foreground));
+    --button-tertiary-background: hsl(var(--background));
+    --button-tertiary-background-hover: hsl(var(--contrast-100));
+    --button-tertiary-text: hsl(var(--foreground));
+    --button-tertiary-border: hsl(var(--contrast-200));
+    --button-ghost-background: transparent;
+    --button-ghost-background-hover: hsl(var(--foreground) / 5%);
+    --button-ghost-text: hsl(var(--foreground));
+    --button-ghost-border: transparent;
+    --button-loader-icon: hsl(var(--foreground));
+    --button-danger-background: color-mix(in oklab, hsl(var(--error)), white 30%);
+    --button-danger-background-hover: color-mix(in oklab, hsl(var(--error)), white 75%);
+    --button-danger-foreground: hsl(var(--foreground));
+    --button-danger-border: color-mix(in oklab, hsl(var(--error)), white 30%);
   }
 }
 
