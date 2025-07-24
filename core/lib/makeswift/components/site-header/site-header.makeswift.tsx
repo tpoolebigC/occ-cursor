@@ -18,7 +18,6 @@ export const COMPONENT_TYPE = 'catalyst-makeswift-header';
 
 const banner = Shape({
   label: 'Banner',
-  layout: Shape.Layout.Popover,
   type: {
     show: Checkbox({ label: 'Show banner', defaultValue: false }),
     allowClose: Checkbox({ label: 'Allow banner to close', defaultValue: true }),
@@ -46,7 +45,6 @@ const logoGroup = (
 
 const logo = Shape({
   label: 'Logo',
-  layout: Shape.Layout.Popover,
   type: {
     desktop: logoGroup('Desktop', { width: 200, height: 40 }),
     mobile: logoGroup('Mobile', { width: 100, height: 40 }),

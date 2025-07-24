@@ -8,7 +8,6 @@ export const COMPONENT_TYPE = 'catalyst-makeswift-footer';
 
 const logo = Shape({
   label: 'Logo',
-  layout: Shape.Layout.Popover,
   type: {
     show: Checkbox({ label: 'Show logo', defaultValue: true }),
     src: Image({ label: 'Logo' }),

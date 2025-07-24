@@ -1,6 +1,7 @@
 'use client'
 
-import { useState } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
+import { useState, useEffect } from 'react'
 import { ChevronDown } from 'lucide-react'
 
 interface CatalogSortProps {
@@ -9,20 +10,46 @@ interface CatalogSortProps {
 
 export default function CatalogSort({ onSortChange }: CatalogSortProps) {
   const [isOpen, setIsOpen] = useState(false)
-  const [selectedSort, setSelectedSort] = useState('name-asc')
+  const [selectedSort, setSelectedSort] = useState('relevance')
+  const router = useRouter()
+  const searchParams = useSearchParams()
 
   const sortOptions = [
+    { value: 'relevance', label: 'Relevance' },
     { value: 'name-asc', label: 'Name A-Z' },
     { value: 'name-desc', label: 'Name Z-A' },
-    { value: 'price-asc', label: 'Price Low to High' },
-    { value: 'price-desc', label: 'Price High to Low' },
+    { value: 'lowest_price', label: 'Price Low to High' },
+    { value: 'highest_price', label: 'Price High to Low' },
     { value: 'newest', label: 'Newest First' },
-    { value: 'popular', label: 'Most Popular' }
+    { value: 'best_selling', label: 'Best Selling' }
   ]
+
+  // Initialize selected sort from URL params
+  useEffect(() => {
+    const sortParam = searchParams.get('sort')
+    if (sortParam) {
+      setSelectedSort(sortParam)
+    }
+  }, [searchParams])
 
   const handleSortChange = (value: string) => {
     setSelectedSort(value)
     setIsOpen(false)
+    
+    // Update URL parameters
+    const newSearchParams = new URLSearchParams(searchParams.toString())
+    newSearchParams.set('sort', value)
+    
+    // Preserve the search term
+    const term = searchParams.get('term')
+    if (term) {
+      newSearchParams.set('term', term)
+    }
+    
+    const url = `/search?${newSearchParams.toString()}`
+    router.push(url)
+    
+    // Call the callback if provided
     onSortChange?.(value)
   }
 
