@@ -4,7 +4,7 @@ import { cache } from 'react';
 import { Streamable } from '@/vibes/soul/lib/streamable';
 import { HeaderSection } from '@/vibes/soul/sections/header-section';
 import { GetLinksAndSectionsQuery, LayoutQuery } from '~/app/[locale]/(default)/page-data';
-import { getSessionCustomerAccessToken } from '~/auth';
+import { auth, getSessionCustomerAccessToken } from '~/auth';
 import { client } from '~/client';
 import { graphql, readFragment } from '~/client/graphql';
 import { revalidate } from '~/client/revalidate-target';
@@ -74,8 +74,12 @@ export const Header = async () => {
   const locale = await getLocale();
 
   const data = await getHeaderData();
+  const session = await auth();
 
   const logo = data.settings ? logoTransformer(data.settings) : '';
+
+  // Determine account href based on user type
+  const accountHref = session?.b2bToken ? '/?section=orders' : '/login';
 
   const locales = routing.locales.map((enabledLocales) => ({
     id: enabledLocales,
@@ -140,7 +144,7 @@ export const Header = async () => {
   return (
     <HeaderSection
       navigation={{
-        accountHref: '/login',
+        accountHref,
         accountLabel: t('Icons.account'),
         cartHref: '/cart',
         cartLabel: t('Icons.cart'),

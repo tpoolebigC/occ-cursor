@@ -1,9 +1,11 @@
 import { Metadata } from 'next';
 import { getFormatter, getTranslations, setRequestLocale } from 'next-intl/server';
+import { redirect } from 'next/navigation';
 
 import { Streamable } from '@/vibes/soul/lib/streamable';
 import { Cart as CartComponent, CartEmptyState } from '@/vibes/soul/sections/cart';
 import { CartAnalyticsProvider } from '~/app/[locale]/(default)/cart/_components/cart-analytics-provider';
+import { auth } from '~/auth';
 import { getCartId } from '~/lib/cart';
 import { exists } from '~/lib/utils';
 
@@ -58,6 +60,29 @@ export default async function Cart({ params }: Props) {
   const { locale } = await params;
 
   setRequestLocale(locale);
+
+  // Check B2B session but don't redirect - let cart merge handle synchronization
+  const session = await auth();
+  const isB2BUser = !!session?.b2bToken;
+  
+  console.log('Cart page session check:', {
+    hasSession: !!session,
+    hasB2bToken: !!session?.b2bToken,
+    cartId: session?.user?.cartId,
+    isB2BUser,
+    sessionKeys: session ? Object.keys(session) : [],
+    userKeys: session?.user ? Object.keys(session.user) : []
+  });
+
+  // If B2B user, log the session details for debugging
+  if (isB2BUser) {
+    console.log('🔄 B2B user accessing cart - session details:', {
+      sessionExists: !!session,
+      b2bTokenExists: !!session?.b2bToken,
+      cartId: session?.user?.cartId,
+      userEmail: session?.user?.email
+    });
+  }
 
   const t = await getTranslations('Cart');
   const format = await getFormatter();

@@ -14,55 +14,70 @@ interface ScriptRendererProps {
 }
 
 export const ScriptManagerScripts = ({ scripts, strategy }: ScriptRendererProps) => {
-  if (!scripts?.edges) return null;
+  try {
+    if (!scripts?.edges) return null;
 
-  const scriptNodes = removeEdgesAndNodes(scripts);
+    const scriptNodes = removeEdgesAndNodes(scripts);
 
-  return (
-    <>
-      {scriptNodes
-        .map((script) => {
-          const scriptProps: ComponentProps<typeof Script> = {
-            strategy,
-          };
+    if (!Array.isArray(scriptNodes) || scriptNodes.length === 0) {
+      return null;
+    }
 
-          // Handle external scripts (SrcScript)
-          if (script.__typename === 'SrcScript' && script.src) {
-            scriptProps.src = script.src;
-
-            // Add integrity hashes if provided
-            if (script.integrityHashes.length > 0) {
-              scriptProps.integrity = script.integrityHashes
-                .map((hashObj) => hashObj.hash)
-                .join(' ');
-              scriptProps.crossOrigin = 'anonymous';
-            }
-          }
-
-          // Handle inline scripts (InlineScript)
-          if (script.__typename === 'InlineScript' && script.scriptTag) {
-            const scriptMatch = /<script[^>]*>([\s\S]*?)<\/script>/i.exec(script.scriptTag);
-
-            if (scriptMatch?.[1]) {
-              scriptProps.dangerouslySetInnerHTML = {
-                __html: scriptMatch[1],
+    return (
+      <>
+        {scriptNodes
+          .map((script) => {
+            try {
+              const scriptProps: ComponentProps<typeof Script> = {
+                strategy,
               };
+
+              // Handle external scripts (SrcScript)
+              if (script?.__typename === 'SrcScript' && script.src) {
+                scriptProps.src = script.src;
+
+                // Add integrity hashes if provided
+                if (script.integrityHashes?.length > 0) {
+                  scriptProps.integrity = script.integrityHashes
+                    .map((hashObj) => hashObj?.hash)
+                    .filter(Boolean)
+                    .join(' ');
+                  scriptProps.crossOrigin = 'anonymous';
+                }
+              }
+
+              // Handle inline scripts (InlineScript)
+              if (script?.__typename === 'InlineScript' && script.scriptTag) {
+                const scriptMatch = /<script[^>]*>([\s\S]*?)<\/script>/i.exec(script.scriptTag);
+
+                if (scriptMatch?.[1]) {
+                  scriptProps.dangerouslySetInnerHTML = {
+                    __html: scriptMatch[1],
+                  };
+                }
+              }
+
+              scriptProps.id = `bc-script-${script?.entityId || Math.random()}`;
+
+              // Return null for invalid scripts (will be filtered out)
+              if (!scriptProps.src && !scriptProps.dangerouslySetInnerHTML) {
+                return null;
+              }
+
+              return scriptProps;
+            } catch (error) {
+              console.warn('Error processing script:', error);
+              return null;
             }
-          }
-
-          scriptProps.id = `bc-script-${script.entityId}`;
-
-          // Return null for invalid scripts (will be filtered out)
-          if (!scriptProps.src && !scriptProps.dangerouslySetInnerHTML) {
-            return null;
-          }
-
-          return scriptProps;
-        })
-        .filter((scriptProps): scriptProps is ComponentProps<typeof Script> => scriptProps !== null)
-        .map((scriptProps) => {
-          return <Script key={scriptProps.id} {...scriptProps} />;
-        })}
-    </>
-  );
+          })
+          .filter((scriptProps): scriptProps is ComponentProps<typeof Script> => scriptProps !== null)
+          .map((scriptProps) => {
+            return <Script key={scriptProps.id} {...scriptProps} />;
+          })}
+      </>
+    );
+  } catch (error) {
+    console.warn('Error in ScriptManagerScripts:', error);
+    return null;
+  }
 };

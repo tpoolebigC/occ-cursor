@@ -189,6 +189,16 @@ async function loginWithJwt(credentials: unknown): Promise<User | null> {
   };
 }
 
+// configure NextAuth cookies to work inside of the Makeswift Builder's canvas
+const partitionedCookie = (name?: string) => ({
+  name,
+  options: {
+    sameSite: 'lax' as const,
+    secure: process.env.NODE_ENV === 'production',
+    partitioned: true,
+  },
+});
+
 const config = {
   // Explicitly setting this value to be undefined. We want the library to handle CSRF checks when taking sensitive actions.
   // When handling sensitive actions like sign in, sign out, etc., the library will automatically check for CSRF tokens.
@@ -197,6 +207,23 @@ const config = {
   // Set this environment variable if you want to trust the host when using `next build` & `next start`.
   // Otherwise, this will be controlled by process.env.NODE_ENV within the library.
   trustHost: process.env.AUTH_TRUST_HOST === 'true' ? true : undefined,
+  cookies: {
+    sessionToken: {
+      name: 'next-auth.session-token',
+      options: {
+        sameSite: 'lax' as const,
+        secure: process.env.NODE_ENV === 'production',
+        httpOnly: true,
+        path: '/',
+      },
+    },
+    callbackUrl: partitionedCookie(),
+    csrfToken: partitionedCookie(),
+    pkceCodeVerifier: partitionedCookie(),
+    state: partitionedCookie(),
+    nonce: partitionedCookie(),
+    webauthnChallenge: partitionedCookie(),
+  },
   session: {
     strategy: 'jwt',
   },

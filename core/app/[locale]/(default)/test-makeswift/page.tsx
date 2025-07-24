@@ -4,8 +4,8 @@ interface Props {
   params: Promise<{ locale: string }>;
 }
 
-export default async function Home({ params }: Props) {
+export default async function TestMakeswiftPage({ params }: Props) {
   const { locale } = await params;
 
-  return <Page path="/" locale={locale} />;
-}
+  return <Page path="/test-makeswift" locale={locale} />;
+} 

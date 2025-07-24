@@ -25,12 +25,22 @@ type Props = NextLinkProps & PrefetchOptions;
  */
 export const Link = forwardRef<ComponentRef<'a'>, Props>(
   ({ href, prefetch = 'hover', prefetchKind = 'auto', children, className, ...rest }, ref) => {
-    const router = useRouter();
+    let router;
+    let prefetchEnabled = false;
+    
+    try {
+      router = useRouter();
+      prefetchEnabled = true;
+    } catch (error) {
+      // If i18n context is not available, disable prefetching but still render the link
+      console.warn('i18n context not available for Link component, prefetching disabled');
+    }
+    
     const [prefetched, setPrefetched] = useReducer(() => true, false);
-    const computedPrefetch = computePrefetchProp({ prefetch, prefetchKind });
+    const computedPrefetch = prefetchEnabled ? computePrefetchProp({ prefetch, prefetchKind }) : false;
 
     const triggerPrefetch = () => {
-      if (prefetched) {
+      if (prefetched || !prefetchEnabled || !router) {
         return;
       }
 
@@ -53,8 +63,8 @@ export const Link = forwardRef<ComponentRef<'a'>, Props>(
       <NavLink
         className={className}
         href={href}
-        onMouseEnter={prefetch === 'hover' ? triggerPrefetch : undefined}
-        onTouchStart={prefetch === 'hover' ? triggerPrefetch : undefined}
+        onMouseEnter={prefetch === 'hover' && prefetchEnabled ? triggerPrefetch : undefined}
+        onTouchStart={prefetch === 'hover' && prefetchEnabled ? triggerPrefetch : undefined}
         prefetch={computedPrefetch}
         ref={ref}
         {...rest}

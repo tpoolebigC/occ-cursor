@@ -46,4 +46,5 @@ import './site-theme/register';
 import './slideshow/slideshow.makeswift';
 import './sticky-sidebar/sticky-sidebar.makeswift';
 import './subscribe-section/subscribe-section.makeswift';
+import './test-component/test-component.makeswift';
 import './top-customers-table/top-customers-table.makeswift'; 

@@ -16,11 +16,11 @@ export const MakeswiftButton = forwardRef(
     const baseClasses = 'inline-flex items-center justify-center font-semibold border transition-colors';
     
     const variantClasses = {
-      primary: 'bg-green-500 text-white border-green-500 hover:bg-green-600',
-      secondary: 'bg-gray-800 text-white border-gray-800 hover:bg-gray-700',
-      tertiary: 'bg-white text-gray-800 border-gray-300 hover:bg-gray-50',
-      ghost: 'bg-transparent text-gray-800 border-transparent hover:bg-gray-100',
-      danger: 'bg-red-500 text-white border-red-500 hover:bg-red-600',
+      primary: 'bg-[hsl(var(--primary))] text-white border-[hsl(var(--primary))] hover:bg-[hsl(var(--primary)/0.9)]',
+      secondary: 'bg-[hsl(var(--foreground))] text-[hsl(var(--background))] border-[hsl(var(--foreground))] hover:bg-[hsl(var(--foreground)/0.9)]',
+      tertiary: 'bg-[hsl(var(--background))] text-[hsl(var(--foreground))] border-[hsl(var(--contrast-300))] hover:bg-[hsl(var(--contrast-100))]',
+      ghost: 'bg-transparent text-[hsl(var(--foreground))] border-transparent hover:bg-[hsl(var(--contrast-100))]',
+      danger: 'bg-[hsl(var(--error))] text-white border-[hsl(var(--error))] hover:bg-[hsl(var(--error)/0.9)]',
     };
 
     const sizeClasses = {

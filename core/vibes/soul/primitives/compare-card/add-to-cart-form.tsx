@@ -58,8 +58,15 @@ export function AddToCartForm({
   });
 
   useEffect(() => {
-    if (lastResult?.status === 'success') {
-      toast.success(successMessage);
+    if (lastResult?.status === 'success' && successMessage) {
+      // Handle the new success message format
+      if (typeof successMessage === 'object' && successMessage !== null && 'message' in successMessage) {
+        const messageObj = successMessage as { message: string; cartLink?: boolean };
+        toast.success(messageObj.message);
+      } else {
+        // Fallback for old format
+        toast.success(successMessage as string);
+      }
 
       // This is needed to refresh the Data Cache after the product has been added to the cart.
       // The cart id is not picked up after the first time the cart is created/updated.

@@ -355,7 +355,7 @@
       "increaseQuantity": "Increase quantity",
       "decreaseQuantity": "Decrease quantity",
       "emptySelectPlaceholder": "Select an option",
-      "successMessage": "{cartItems, plural, =1 {1 item} other {# items}} added to <cartLink> your cart</cartLink>",
+      "successMessage": "{cartItems, plural, =1 {1 item} other {# items}} added to your cart",
       "missingCart": "Cart not found. Please try again later!",
       "unknownError": "Unknown error. Please try again later.",
       "variantRequiredError": "This product requires options to be selected in order to add to the cart.",

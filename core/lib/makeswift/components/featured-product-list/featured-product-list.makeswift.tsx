@@ -1,4 +1,4 @@
-import { Shape, TextInput, Link } from '@makeswift/runtime/controls';
+import { TextInput, Select, Number, Checkbox } from '@makeswift/runtime/controls';
 import { runtime } from '~/lib/makeswift/runtime';
 import { MakeswiftFeaturedProductList } from './featured-product-list.client';
 
@@ -9,27 +9,51 @@ runtime.registerComponent(MakeswiftFeaturedProductList, {
   label: 'Featured Product List',
   props: {
     title: TextInput({ 
-      label: 'Title', 
+      label: 'Section Title', 
       defaultValue: 'Featured Products' 
     }),
     description: TextInput({ 
-      label: 'Description', 
-      defaultValue: 'Discover our handpicked selection of featured products.' 
+      label: 'Section Description', 
+      defaultValue: 'Discover our handpicked selection of premium products.' 
     }),
-    cta: Shape({
-      label: 'Call to Action',
-      type: {
-        label: TextInput({ label: 'Button Text', defaultValue: 'Shop All' }),
-        href: Link({ label: 'Button Link' }),
-      },
+    maxProducts: Number({ 
+      label: 'Maximum Products to Show', 
+      defaultValue: 8 
     }),
-    emptyStateTitle: TextInput({ 
-      label: 'Empty State Title', 
-      defaultValue: 'No featured products found' 
+    showPricing: Checkbox({
+      label: 'Show Product Pricing',
+      defaultValue: true,
     }),
-    emptyStateSubtitle: TextInput({ 
-      label: 'Empty State Subtitle', 
-      defaultValue: 'Check back later for new featured products.' 
+    showRatings: Checkbox({
+      label: 'Show Product Ratings',
+      defaultValue: true,
+    }),
+    layout: Select({
+      label: 'Layout',
+      options: [
+        { label: 'Grid', value: 'grid' },
+        { label: 'List', value: 'list' },
+        { label: 'Masonry', value: 'masonry' },
+      ],
+      defaultValue: 'grid',
+    }),
+    columns: Select({
+      label: 'Columns (Desktop)',
+      options: [
+        { label: '2 Columns', value: '2' },
+        { label: '3 Columns', value: '3' },
+        { label: '4 Columns', value: '4' },
+        { label: '5 Columns', value: '5' },
+      ],
+      defaultValue: '4',
+    }),
+    ctaText: TextInput({ 
+      label: 'CTA Button Text', 
+      defaultValue: 'View All Products' 
+    }),
+    ctaLink: TextInput({ 
+      label: 'CTA Button Link', 
+      defaultValue: '/shop-all' 
     }),
   },
 }); 

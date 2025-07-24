@@ -165,14 +165,11 @@ export const addToCart = async (
     return {
       lastResult: submission.reply(),
       fields: prevState.fields,
-      successMessage: t.rich('successMessage', {
-        cartItems: quantity,
-        cartLink: (chunks) => (
-          <Link className="underline" href="/cart" prefetch="viewport" prefetchKind="full">
-            {chunks}
-          </Link>
-        ),
-      }),
+      successMessage: {
+        type: 'success',
+        message: t('successMessage', { cartItems: quantity }),
+        cartLink: true,
+      },
     };
   } catch (error) {
     // eslint-disable-next-line no-console

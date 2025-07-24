@@ -5,7 +5,7 @@ import { parseWithZod } from '@conform-to/zod';
 import { getLocale, getTranslations } from 'next-intl/server';
 import { z } from 'zod';
 
-import { redirect } from '~/i18n/routing';
+import { redirect } from 'next/navigation';
 import { getCartId } from '~/lib/cart';
 
 export const redirectToCheckout = async (
@@ -23,5 +23,5 @@ export const redirectToCheckout = async (
     return submission.reply({ formErrors: [t('cartNotFound')] });
   }
 
-  return redirect({ href: '/checkout', locale });
+  return redirect(`/${locale}/checkout`);
 };
