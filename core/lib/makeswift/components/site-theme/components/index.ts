@@ -8,7 +8,7 @@ import { logo } from './logo';
 import { priceLabel } from './price-label';
 import { productCard } from './product-card';
 import { section } from './section';
-import { slideshow } from './slide-show';
+import { slideShow } from './slide-show';
 
 export default {
   accordion,
@@ -21,5 +21,5 @@ export default {
   priceLabel,
   productCard,
   section,
-  slideshow,
+  slideShow,
 };

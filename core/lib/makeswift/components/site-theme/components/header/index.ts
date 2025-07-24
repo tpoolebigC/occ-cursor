@@ -5,7 +5,6 @@ import { nav } from './nav';
 
 export const header = Shape({
   label: 'Header',
-  layout: Shape.Layout.Popover,
   type: {
     banner,
     nav,

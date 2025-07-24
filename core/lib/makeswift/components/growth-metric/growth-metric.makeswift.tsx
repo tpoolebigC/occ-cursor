@@ -1,6 +1,6 @@
 'use client';
 
-import { Style, NumberInput, TextInput } from '@makeswift/runtime/controls';
+import { Style, Number, TextInput } from '@makeswift/runtime/controls';
 import { runtime } from '~/lib/makeswift/runtime';
 import GrowthMetric from './index';
 
@@ -21,11 +21,11 @@ runtime.registerComponent(MakeswiftGrowthMetric, {
   label: 'Buyer Portal / Growth Metric',
   props: {
     className: Style(),
-    currentValue: NumberInput({ 
+    currentValue: Number({ 
       label: 'Current value', 
       defaultValue: 13.6 
     }),
-    previousValue: NumberInput({ 
+    previousValue: Number({ 
       label: 'Previous value', 
       defaultValue: 8.2 
     }),

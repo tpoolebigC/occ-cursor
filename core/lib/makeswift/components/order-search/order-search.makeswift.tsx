@@ -1,6 +1,6 @@
 'use client';
 
-import { Style, TextInput, Checkbox, NumberInput } from '@makeswift/runtime/controls';
+import { Style, TextInput, Checkbox, Number } from '@makeswift/runtime/controls';
 import { runtime } from '~/lib/makeswift/runtime';
 import { OrderSearch } from './index';
 
@@ -28,7 +28,7 @@ runtime.registerComponent(MakeswiftOrderSearch, {
       label: 'Enable search', 
       defaultValue: true 
     }),
-    debounceMs: NumberInput({ 
+          debounceMs: Number({ 
       label: 'Debounce delay (ms)', 
       defaultValue: 300 
     }),

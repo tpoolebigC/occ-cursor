@@ -1,6 +1,6 @@
 'use client';
 
-import { Style, NumberInput } from '@makeswift/runtime/controls';
+import { Style, Number } from '@makeswift/runtime/controls';
 import { runtime } from '~/lib/makeswift/runtime';
 import RevenueChart from './index';
 
@@ -18,9 +18,9 @@ runtime.registerComponent(MakeswiftRevenueChart, {
   label: 'Buyer Portal / Revenue Chart',
   props: {
     className: Style(),
-    height: NumberInput({ 
-      label: 'Chart height', 
-      defaultValue: 200 
+    height: Number({
+      label: 'Chart height',
+      defaultValue: 300,
     }),
   },
 }); 

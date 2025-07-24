@@ -1,6 +1,6 @@
 'use client';
 
-import { Style, NumberInput, Checkbox } from '@makeswift/runtime/controls';
+import { Style, Number, Checkbox } from '@makeswift/runtime/controls';
 import { runtime } from '~/lib/makeswift/runtime';
 import CatalogGrid from './index';
 
@@ -19,7 +19,7 @@ runtime.registerComponent(MakeswiftCatalogGrid, {
   label: 'Buyer Portal / Catalog Grid',
   props: {
     className: Style(),
-    itemsPerPage: NumberInput({ 
+    itemsPerPage: Number({ 
       label: 'Items per page', 
       defaultValue: 12 
     }),

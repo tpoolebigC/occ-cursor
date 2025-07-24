@@ -39,4 +39,7 @@ export function AccordionsSkeleton({ className }: { className?: string }) {
       ))}
     </div>
   );
-} 
+}
+
+// Re-export Accordion for Makeswift compatibility
+export { Accordion }; 

@@ -1,4 +1,4 @@
-import { Color, Shape } from '@makeswift/runtime/controls';
+import { Color, Shape, Checkbox, Select } from '@makeswift/runtime/controls';
 
 import { FontFamily, type FontFamilyCssVar } from '~/lib/makeswift/controls/font-tokens';
 import { hsl } from '~/lib/makeswift/utils/color';
@@ -18,7 +18,6 @@ const elementGroup = (
 ) =>
   Shape({
     label,
-    layout: Shape.Layout.Popover,
     type: {
       fontFamily: FontFamily({ label: 'Font', defaultValue: defaults.fontFamily }),
       text: Color({ label: 'Text', defaultValue: defaults.text }),
@@ -33,7 +32,6 @@ const elementGroup = (
 
 const button = Shape({
   label: 'Button',
-  layout: Shape.Layout.Popover,
   type: {
     icon: Color({ label: 'Icon', defaultValue: hsl(colors.foreground) }),
     iconHover: Color({ label: 'Icon hover', defaultValue: hsl(colors.foreground) }),
@@ -44,7 +42,6 @@ const button = Shape({
 
 const menu = Shape({
   label: 'Menu',
-  layout: Shape.Layout.Popover,
   type: {
     background: Color({ label: 'Background', defaultValue: hsl(colors.background) }),
     border: Color({ label: 'Border', defaultValue: hsl(colors.foreground, 0.05) }),
@@ -53,7 +50,6 @@ const menu = Shape({
 
 const mobile = Shape({
   label: 'Mobile',
-  layout: Shape.Layout.Popover,
   type: {
     background: Color({ label: 'Background', defaultValue: hsl(colors.background) }),
     divider: Color({ label: 'Divider', defaultValue: hsl(colors.contrast[100]) }),
@@ -77,7 +73,6 @@ const mobile = Shape({
 
 const search = Shape({
   label: 'Search',
-  layout: Shape.Layout.Popover,
   type: {
     background: Color({ label: 'Background', defaultValue: hsl(colors.background) }),
     border: Color({ label: 'Border', defaultValue: hsl(colors.foreground, 0.05) }),
@@ -90,7 +85,6 @@ const search = Shape({
 
 const searchResult = Shape({
   label: 'Search result',
-  layout: Shape.Layout.Popover,
   type: {
     title: Color({ label: 'Title', defaultValue: hsl(colors.foreground) }),
     titleFontFamily: FontFamily({ label: 'Title font', defaultValue: FontFamily.Accent }),
@@ -106,7 +100,6 @@ const searchResult = Shape({
 
 const cartCount = Shape({
   label: 'Cart count',
-  layout: Shape.Layout.Popover,
   type: {
     text: Color({ label: 'Text', defaultValue: hsl(colors.background) }),
     background: Color({ label: 'Background', defaultValue: hsl(colors.foreground) }),
@@ -115,7 +108,6 @@ const cartCount = Shape({
 
 const locale = Shape({
   label: 'Locale',
-  layout: Shape.Layout.Popover,
   type: {
     background: Color({ label: 'Background', defaultValue: hsl(colors.background) }),
     link: elementGroup('Link', {
@@ -131,38 +123,19 @@ const locale = Shape({
 
 export const nav = Shape({
   label: 'Navigation',
-  layout: Shape.Layout.Popover,
   type: {
-    background: Color({ label: 'Background', defaultValue: hsl(colors.background) }),
-    floatingBorder: Color({ label: 'Floating border', defaultValue: hsl(colors.foreground, 0.1) }),
-    focus: Color({ label: 'Focus', defaultValue: hsl(colors.primary) }),
-    link: elementGroup('Link', {
-      fontFamily: FontFamily.Body,
-      text: hsl(colors.foreground),
-      textHover: hsl(colors.foreground),
-      background: 'transparent',
-      backgroundHover: hsl(colors.contrast[100]),
+    showLogo: Checkbox({ label: 'Show logo', defaultValue: true }),
+    showSearch: Checkbox({ label: 'Show search', defaultValue: true }),
+    showCart: Checkbox({ label: 'Show cart', defaultValue: true }),
+    showAccount: Checkbox({ label: 'Show account', defaultValue: true }),
+    sticky: Checkbox({ label: 'Sticky header', defaultValue: false }),
+    colorScheme: Select({
+      label: 'Color scheme',
+      options: [
+        { value: 'light', label: 'Light' },
+        { value: 'dark', label: 'Dark' },
+      ],
+      defaultValue: 'light',
     }),
-    group: elementGroup('Group', {
-      fontFamily: FontFamily.Body,
-      text: hsl(colors.foreground),
-      textHover: hsl(colors.foreground),
-      background: 'transparent',
-      backgroundHover: hsl(colors.contrast[100]),
-    }),
-    subLink: elementGroup('Sub-link', {
-      fontFamily: FontFamily.Body,
-      text: hsl(colors.contrast[500]),
-      textHover: hsl(colors.foreground),
-      background: 'transparent',
-      backgroundHover: hsl(colors.contrast[100]),
-    }),
-    button,
-    menu,
-    mobile,
-    search,
-    searchResult,
-    cartCount,
-    locale,
   },
 });

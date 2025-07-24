@@ -1,4 +1,4 @@
-import { Color, Number, Shape } from '@makeswift/runtime/controls';
+import { Color, Number, Shape, Checkbox, Select } from '@makeswift/runtime/controls';
 
 import { hsl } from '~/lib/makeswift/utils/color';
 
@@ -14,7 +14,7 @@ const colorGroup = (
 ) =>
   Shape({
     label,
-    layout: Shape.Layout.Inline,
+    
     type: {
       background: Color({ label: 'Background', defaultValue: defaults.background }),
       text: Color({ label: 'Text', defaultValue: defaults.text }),
@@ -24,19 +24,28 @@ const colorGroup = (
 
 export const card = Shape({
   label: 'Card',
-  layout: Shape.Layout.Popover,
   type: {
-    borderRadius: Number({ label: 'Border radius', suffix: 'px', defaultValue: 16 }),
-    focus: Color({ label: 'Focus', defaultValue: hsl(colors.primary) }),
-    light: colorGroup('Light', {
-      background: hsl(colors.contrast[100]),
-      text: hsl(colors.foreground),
-      icon: hsl(colors.foreground),
+    showImage: Checkbox({ label: 'Show image', defaultValue: true }),
+    showTitle: Checkbox({ label: 'Show title', defaultValue: true }),
+    showDescription: Checkbox({ label: 'Show description', defaultValue: true }),
+    showPrice: Checkbox({ label: 'Show price', defaultValue: true }),
+    showButton: Checkbox({ label: 'Show button', defaultValue: true }),
+    aspectRatio: Select({
+      label: 'Aspect ratio',
+      options: [
+        { value: '1:1', label: 'Square' },
+        { value: '5:6', label: '5:6' },
+        { value: '3:4', label: '3:4' },
+      ],
+      defaultValue: '5:6',
     }),
-    dark: colorGroup('Dark', {
-      background: hsl(colors.contrast[500]),
-      text: hsl(colors.background),
-      icon: hsl(colors.background),
+    colorScheme: Select({
+      label: 'Color scheme',
+      options: [
+        { value: 'light', label: 'Light' },
+        { value: 'dark', label: 'Dark' },
+      ],
+      defaultValue: 'light',
     }),
   },
 });

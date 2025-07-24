@@ -1,4 +1,4 @@
-import { Color, Shape } from '@makeswift/runtime/controls';
+import { Color, Shape, Checkbox, Number, Select } from '@makeswift/runtime/controls';
 
 import { hsl } from '~/lib/makeswift/utils/color';
 
@@ -13,7 +13,7 @@ const colorGroup = (
 ) =>
   Shape({
     label,
-    layout: Shape.Layout.Inline,
+    
     type: {
       button: Color({ label: 'Button', defaultValue: defaults.button }),
       scrollbar: Color({ label: 'Scrollbar', defaultValue: defaults.scrollbar }),
@@ -22,16 +22,21 @@ const colorGroup = (
 
 export const carousel = Shape({
   label: 'Carousel',
-  layout: Shape.Layout.Popover,
   type: {
-    focus: Color({ label: 'Focus', defaultValue: hsl(colors.primary) }),
-    light: colorGroup('Light', {
-      button: hsl(colors.foreground),
-      scrollbar: hsl(colors.foreground),
-    }),
-    dark: colorGroup('Dark', {
-      button: hsl(colors.background),
-      scrollbar: hsl(colors.background),
+    showButtons: Checkbox({ label: 'Show buttons', defaultValue: true }),
+    showScrollbar: Checkbox({ label: 'Show scrollbar', defaultValue: true }),
+    hideOverflow: Checkbox({ label: 'Hide overflow', defaultValue: true }),
+    autoplay: Checkbox({ label: 'Autoplay', defaultValue: false }),
+    autoplaySpeed: Number({ label: 'Autoplay speed (ms)', defaultValue: 3000 }),
+    loop: Checkbox({ label: 'Loop', defaultValue: true }),
+    align: Select({
+      label: 'Alignment',
+      options: [
+        { value: 'start', label: 'Start' },
+        { value: 'center', label: 'Center' },
+        { value: 'end', label: 'End' },
+      ],
+      defaultValue: 'start',
     }),
   },
 });

@@ -1,6 +1,6 @@
 'use client';
 
-import { Style, NumberInput, TextInput } from '@makeswift/runtime/controls';
+import { Style, Number, TextInput } from '@makeswift/runtime/controls';
 import { runtime } from '~/lib/makeswift/runtime';
 import OrdersMetric from './index';
 
@@ -21,11 +21,11 @@ runtime.registerComponent(MakeswiftOrdersMetric, {
   label: 'Buyer Portal / Orders Metric',
   props: {
     className: Style(),
-    currentValue: NumberInput({ 
+    currentValue: Number({ 
       label: 'Current value', 
       defaultValue: 342 
     }),
-    previousValue: NumberInput({ 
+    previousValue: Number({ 
       label: 'Previous value', 
       defaultValue: 298 
     }),

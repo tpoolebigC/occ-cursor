@@ -1,4 +1,4 @@
-import { Color, Shape } from '@makeswift/runtime/controls';
+import { Color, Shape, TextInput, Number, Image } from '@makeswift/runtime/controls';
 
 import { FontFamily } from '~/lib/makeswift/controls/font-tokens';
 import { hsl } from '~/lib/makeswift/utils/color';
@@ -7,10 +7,10 @@ import { colors } from '../base-colors';
 
 export const logo = Shape({
   label: 'Logo',
-  layout: Shape.Layout.Popover,
   type: {
-    fontFamily: FontFamily({ label: 'Font', defaultValue: FontFamily.Heading }),
-    text: Color({ label: 'Text', defaultValue: hsl(colors.foreground) }),
-    focus: Color({ label: 'Focus', defaultValue: hsl(colors.primary) }),
+    src: Image({ label: 'Logo' }),
+    alt: TextInput({ label: 'Alt text', defaultValue: 'Logo' }),
+    width: Number({ label: 'Width', suffix: 'px', defaultValue: 200 }),
+    height: Number({ label: 'Height', suffix: 'px', defaultValue: 40 }),
   },
 });

@@ -1,9 +1,9 @@
-import { Number, Shape } from '@makeswift/runtime/controls';
+import { Number, Shape, Select } from '@makeswift/runtime/controls';
 
 const widthGroup = (label: string) =>
   Shape({
     label,
-    layout: Shape.Layout.Inline,
+    
     type: {
       medium: Number({ label: 'Medium', suffix: 'px', defaultValue: 768 }),
       lg: Number({ label: 'Large', suffix: 'px', defaultValue: 1024 }),
@@ -14,8 +14,36 @@ const widthGroup = (label: string) =>
 
 export const section = Shape({
   label: 'Section',
-  layout: Shape.Layout.Popover,
   type: {
-    maxWidth: widthGroup('Max width'),
+    padding: Select({
+      label: 'Padding',
+      options: [
+        { value: 'none', label: 'None' },
+        { value: 'sm', label: 'Small' },
+        { value: 'md', label: 'Medium' },
+        { value: 'lg', label: 'Large' },
+        { value: 'xl', label: 'Extra Large' },
+      ],
+      defaultValue: 'md',
+    }),
+    maxWidth: Select({
+      label: 'Max width',
+      options: [
+        { value: 'none', label: 'None' },
+        { value: 'sm', label: 'Small' },
+        { value: 'md', label: 'Medium' },
+        { value: 'lg', label: 'Large' },
+        { value: 'xl', label: 'Extra Large' },
+      ],
+      defaultValue: 'lg',
+    }),
+    colorScheme: Select({
+      label: 'Color scheme',
+      options: [
+        { value: 'light', label: 'Light' },
+        { value: 'dark', label: 'Dark' },
+      ],
+      defaultValue: 'light',
+    }),
   },
 });

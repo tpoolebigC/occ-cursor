@@ -1,6 +1,6 @@
 'use client';
 
-import { Style, NumberInput, TextInput } from '@makeswift/runtime/controls';
+import { Style, Number, TextInput } from '@makeswift/runtime/controls';
 import { runtime } from '~/lib/makeswift/runtime';
 import RevenueMetric from './index';
 
@@ -21,11 +21,11 @@ runtime.registerComponent(MakeswiftRevenueMetric, {
   label: 'Buyer Portal / Revenue Metric',
   props: {
     className: Style(),
-    currentValue: NumberInput({ 
+    currentValue: Number({ 
       label: 'Current value', 
       defaultValue: 125000 
     }),
-    previousValue: NumberInput({ 
+    previousValue: Number({ 
       label: 'Previous value', 
       defaultValue: 110000 
     }),

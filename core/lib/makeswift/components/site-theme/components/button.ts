@@ -1,4 +1,4 @@
-import { Color, Shape } from '@makeswift/runtime/controls';
+import { Color, Shape, TextInput, Link, Select } from '@makeswift/runtime/controls';
 
 import { FontFamily } from '~/lib/makeswift/controls/font-tokens';
 import { hsl } from '~/lib/makeswift/utils/color';
@@ -16,7 +16,7 @@ const colorGroup = (
 ) =>
   Shape({
     label,
-    layout: Shape.Layout.Inline,
+    
     type: {
       background: Color({ label: 'Background', defaultValue: defaults.background }),
       backgroundHover: Color({ label: 'Background hover', defaultValue: defaults.backgroundHover }),
@@ -27,33 +27,35 @@ const colorGroup = (
 
 export const button = Shape({
   label: 'Button',
-  layout: Shape.Layout.Popover,
   type: {
-    fontFamily: FontFamily({ label: 'Font', defaultValue: FontFamily.Body }),
-    primary: colorGroup('Primary', {
-      background: hsl(colors.primary),
-      backgroundHover: hsl(colors.primaryMix.white[75]),
-      foreground: hsl(colors.foreground),
-      border: hsl(colors.primary),
+    text: TextInput({ label: 'Text', defaultValue: 'Button' }),
+    href: Link({ label: 'Link' }),
+    variant: Select({
+      label: 'Variant',
+      options: [
+        { value: 'primary', label: 'Primary' },
+        { value: 'secondary', label: 'Secondary' },
+        { value: 'outline', label: 'Outline' },
+        { value: 'ghost', label: 'Ghost' },
+      ],
+      defaultValue: 'primary',
     }),
-    secondary: colorGroup('Secondary', {
-      background: hsl(colors.foreground),
-      backgroundHover: hsl(colors.background),
-      foreground: hsl(colors.background),
-      border: hsl(colors.foreground),
+    size: Select({
+      label: 'Size',
+      options: [
+        { value: 'sm', label: 'Small' },
+        { value: 'md', label: 'Medium' },
+        { value: 'lg', label: 'Large' },
+      ],
+      defaultValue: 'md',
     }),
-    tertiary: colorGroup('Tertiary', {
-      background: hsl(colors.background),
-      backgroundHover: hsl(colors.contrast[100]),
-      foreground: hsl(colors.foreground),
-      border: hsl(colors.contrast[200]),
+    colorScheme: Select({
+      label: 'Color scheme',
+      options: [
+        { value: 'light', label: 'Light' },
+        { value: 'dark', label: 'Dark' },
+      ],
+      defaultValue: 'light',
     }),
-    ghost: colorGroup('Ghost', {
-      background: 'transparent',
-      backgroundHover: hsl(colors.foreground, 0.05),
-      foreground: hsl(colors.foreground),
-      border: 'transparent',
-    }),
-    focus: Color({ label: 'Focus', defaultValue: hsl(colors.primary) }),
   },
 });

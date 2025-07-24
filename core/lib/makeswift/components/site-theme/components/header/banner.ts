@@ -1,4 +1,4 @@
-import { Color, Shape } from '@makeswift/runtime/controls';
+import { Color, Shape, Checkbox, TextInput } from '@makeswift/runtime/controls';
 
 import { hsl } from '~/lib/makeswift/utils/color';
 
@@ -19,11 +19,11 @@ const closeButton = Shape({
 
 export const banner = Shape({
   label: 'Banner',
-  layout: Shape.Layout.Popover,
   type: {
-    background: Color({ label: 'Background', defaultValue: hsl(colors.primary) }),
-    text: Color({ label: 'Text', defaultValue: hsl(colors.foreground) }),
-    focus: Color({ label: 'Focus', defaultValue: hsl(colors.foreground) }),
-    close: closeButton,
+    show: Checkbox({ label: 'Show banner', defaultValue: false }),
+    allowClose: Checkbox({ label: 'Allow close', defaultValue: true }),
+    text: TextInput({ label: 'Banner text', defaultValue: 'Special offer!' }),
+    backgroundColor: Color({ label: 'Background color', defaultValue: '#000000' }),
+    textColor: Color({ label: 'Text color', defaultValue: '#ffffff' }),
   },
 });

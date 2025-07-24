@@ -17,7 +17,6 @@ const colorGroup = (
 ) =>
   Shape({
     label,
-    layout: Shape.Layout.Inline,
     type: {
       titleText: Color({ label: 'Title text', defaultValue: defaults.titleText }),
       titleTextHover: Color({ label: 'Title text hover', defaultValue: defaults.titleTextHover }),
@@ -29,7 +28,6 @@ const colorGroup = (
 
 export const accordion = Shape({
   label: 'Accordion',
-  layout: Shape.Layout.Popover,
   type: {
     titleFontFamily: FontFamily({ label: 'Title font', defaultValue: FontFamily.Accent }),
     contentFontFamily: FontFamily({ label: 'Content font', defaultValue: FontFamily.Body }),

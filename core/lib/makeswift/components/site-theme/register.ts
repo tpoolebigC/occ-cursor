@@ -15,7 +15,6 @@ runtime.registerComponent(MakeswiftSiteTheme, {
   props: {
     fontTokens: Shape({
       label: 'Fonts',
-      layout: Shape.Layout.Popover,
       type: fontFamilyTokens,
     }),
     components: Shape({

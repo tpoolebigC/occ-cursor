@@ -1,4 +1,4 @@
-import { Color, Shape } from '@makeswift/runtime/controls';
+import { Color, Shape, Checkbox, Select } from '@makeswift/runtime/controls';
 
 import { hsl } from '~/lib/makeswift/utils/color';
 
@@ -13,7 +13,7 @@ const colorGroup = (
 ) =>
   Shape({
     label,
-    layout: Shape.Layout.Inline,
+    
     type: {
       text: Color({ label: 'Text', defaultValue: defaults.text }),
       saleText: Color({ label: 'Sale text', defaultValue: defaults.saleText }),
@@ -21,16 +21,18 @@ const colorGroup = (
   });
 
 export const priceLabel = Shape({
-  label: 'Price label',
-  layout: Shape.Layout.Popover,
+  label: 'Price Label',
   type: {
-    light: colorGroup('Light', {
-      text: hsl(colors.foreground),
-      saleText: hsl(colors.foreground),
-    }),
-    dark: colorGroup('Dark', {
-      text: hsl(colors.background),
-      saleText: hsl(colors.background),
+    showOriginalPrice: Checkbox({ label: 'Show original price', defaultValue: true }),
+    showSalePrice: Checkbox({ label: 'Show sale price', defaultValue: true }),
+    showCurrency: Checkbox({ label: 'Show currency', defaultValue: true }),
+    colorScheme: Select({
+      label: 'Color scheme',
+      options: [
+        { value: 'light', label: 'Light' },
+        { value: 'dark', label: 'Dark' },
+      ],
+      defaultValue: 'light',
     }),
   },
 });
