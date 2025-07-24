@@ -1,50 +1,48 @@
-import { ReactRuntime } from '@makeswift/runtime/react';
-import { MakeswiftComponentType } from '@makeswift/runtime';
-
+import { Number, Checkbox, TextInput } from '@makeswift/runtime/controls';
+import { runtime } from '~/lib/makeswift/runtime';
 import { BuyerPortalStatsClient } from './buyer-portal-stats.client';
 
-export const runtime = ReactRuntime.createComponent(
-  BuyerPortalStatsClient,
-  {
-    type: MakeswiftComponentType.Container,
-    label: 'Buyer Portal Stats',
-    props: {
-      columns: {
-        type: 'number',
-        defaultValue: 4,
-      },
-      showActiveOrders: {
-        type: 'boolean',
-        defaultValue: true,
-      },
-      showMonthlyRevenue: {
-        type: 'boolean',
-        defaultValue: true,
-      },
-      showPendingQuotes: {
-        type: 'boolean',
-        defaultValue: true,
-      },
-      showTotalProducts: {
-        type: 'boolean',
-        defaultValue: true,
-      },
-      activeOrdersCount: {
-        type: 'number',
-        defaultValue: 3,
-      },
-      monthlyRevenue: {
-        type: 'string',
-        defaultValue: '$12,450',
-      },
-      pendingQuotesCount: {
-        type: 'number',
-        defaultValue: 2,
-      },
-      totalProductsCount: {
-        type: 'number',
-        defaultValue: 15,
-      },
-    },
-  }
-); 
+export const COMPONENT_TYPE = 'catalyst-buyer-portal-stats';
+
+runtime.registerComponent(BuyerPortalStatsClient, {
+  type: COMPONENT_TYPE,
+  label: 'Buyer Portal Stats',
+  props: {
+    columns: Number({
+      label: 'Number of Columns',
+      defaultValue: 4,
+    }),
+    showActiveOrders: Checkbox({
+      label: 'Show Active Orders',
+      defaultValue: true,
+    }),
+    showMonthlyRevenue: Checkbox({
+      label: 'Show Monthly Revenue',
+      defaultValue: true,
+    }),
+    showPendingQuotes: Checkbox({
+      label: 'Show Pending Quotes',
+      defaultValue: true,
+    }),
+    showTotalProducts: Checkbox({
+      label: 'Show Total Products',
+      defaultValue: true,
+    }),
+    activeOrdersCount: Number({
+      label: 'Active Orders Count (Fallback)',
+      defaultValue: 3,
+    }),
+    monthlyRevenue: TextInput({
+      label: 'Monthly Revenue (Fallback)',
+      defaultValue: '$12,450',
+    }),
+    pendingQuotesCount: Number({
+      label: 'Pending Quotes Count (Fallback)',
+      defaultValue: 2,
+    }),
+    totalProductsCount: Number({
+      label: 'Total Products Count (Fallback)',
+      defaultValue: 15,
+    }),
+  },
+}); 

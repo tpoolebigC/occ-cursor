@@ -1,50 +1,48 @@
-import { ReactRuntime } from '@makeswift/runtime/react';
-import { MakeswiftComponentType } from '@makeswift/runtime';
-
+import { Checkbox, TextInput } from '@makeswift/runtime/controls';
+import { runtime } from '~/lib/makeswift/runtime';
 import { BuyerPortalQuickActionsClient } from './buyer-portal-quick-actions.client';
 
-export const runtime = ReactRuntime.createComponent(
-  BuyerPortalQuickActionsClient,
-  {
-    type: MakeswiftComponentType.Container,
-    label: 'Buyer Portal Quick Actions',
-    props: {
-      showCreateQuote: {
-        type: 'boolean',
-        defaultValue: true,
-      },
-      showBrowseCatalog: {
-        type: 'boolean',
-        defaultValue: true,
-      },
-      showAccountSettings: {
-        type: 'boolean',
-        defaultValue: true,
-      },
-      createQuoteText: {
-        type: 'string',
-        defaultValue: 'Create New Quote',
-      },
-      createQuoteDescription: {
-        type: 'string',
-        defaultValue: 'Request pricing for products',
-      },
-      browseCatalogText: {
-        type: 'string',
-        defaultValue: 'Browse Catalog',
-      },
-      browseCatalogDescription: {
-        type: 'string',
-        defaultValue: 'View available products',
-      },
-      accountSettingsText: {
-        type: 'string',
-        defaultValue: 'Account Settings',
-      },
-      accountSettingsDescription: {
-        type: 'string',
-        defaultValue: 'Manage customer information',
-      },
-    },
-  }
-); 
+export const COMPONENT_TYPE = 'catalyst-buyer-portal-quick-actions';
+
+runtime.registerComponent(BuyerPortalQuickActionsClient, {
+  type: COMPONENT_TYPE,
+  label: 'Buyer Portal Quick Actions',
+  props: {
+    showCreateQuote: Checkbox({
+      label: 'Show Create Quote',
+      defaultValue: true,
+    }),
+    showBrowseCatalog: Checkbox({
+      label: 'Show Browse Catalog',
+      defaultValue: true,
+    }),
+    showAccountSettings: Checkbox({
+      label: 'Show Account Settings',
+      defaultValue: true,
+    }),
+    createQuoteText: TextInput({
+      label: 'Create Quote Text',
+      defaultValue: 'Create New Quote',
+    }),
+    createQuoteDescription: TextInput({
+      label: 'Create Quote Description',
+      defaultValue: 'Request pricing for products',
+    }),
+    browseCatalogText: TextInput({
+      label: 'Browse Catalog Text',
+      defaultValue: 'Browse Catalog',
+    }),
+    browseCatalogDescription: TextInput({
+      label: 'Browse Catalog Description',
+      defaultValue: 'View available products',
+    }),
+    accountSettingsText: TextInput({
+      label: 'Account Settings Text',
+      defaultValue: 'Account Settings',
+    }),
+    accountSettingsDescription: TextInput({
+      label: 'Account Settings Description',
+      defaultValue: 'Manage customer information',
+    }),
+  },
+}); 
