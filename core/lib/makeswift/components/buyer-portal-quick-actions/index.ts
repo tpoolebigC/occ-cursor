@@ -1,0 +1,1 @@
+export { BuyerPortalQuickActionsClient as BuyerPortalQuickActions } from './buyer-portal-quick-actions.client'; 
