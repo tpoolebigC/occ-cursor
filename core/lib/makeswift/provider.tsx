@@ -3,7 +3,7 @@
 import { ReactRuntimeProvider, RootStyleRegistry } from '@makeswift/runtime/next';
 
 import { runtime } from '~/lib/makeswift/runtime';
-import '~/lib/makeswift/components';
+import '~/lib/makeswift/register-components';
 
 export function MakeswiftProvider({
   children,

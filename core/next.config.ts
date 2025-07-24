@@ -88,6 +88,13 @@ export default async (): Promise<NextConfig> => {
     },
     // default URL generation in BigCommerce uses trailing slash
     trailingSlash: process.env.TRAILING_SLASH !== 'false',
+    // Configure images for Makeswift and BigCommerce
+    images: {
+      domains: [
+        'storage.googleapis.com', // Makeswift images
+        ...settings.urls.cdnUrls.map(url => url.replace('https://', '').replace('http://', '')), // BigCommerce CDN
+      ],
+    },
     // eslint-disable-next-line @typescript-eslint/require-await
     async headers() {
       const cdnLinks = settings.urls.cdnUrls.map((url) => ({

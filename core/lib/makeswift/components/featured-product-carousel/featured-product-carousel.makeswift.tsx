@@ -1,4 +1,4 @@
-import { Shape, TextInput, Link } from '@makeswift/runtime/controls';
+import { Shape, TextInput, Link, Select, Number } from '@makeswift/runtime/controls';
 import { runtime } from '~/lib/makeswift/runtime';
 import { MakeswiftFeaturedProductCarousel } from './featured-product-carousel.client';
 
@@ -15,6 +15,19 @@ runtime.registerComponent(MakeswiftFeaturedProductCarousel, {
     description: TextInput({ 
       label: 'Description', 
       defaultValue: 'Check out our latest arrivals.' 
+    }),
+    productGroup: Select({
+      label: 'Product Group',
+      defaultValue: 'newest',
+      options: [
+        { label: 'Newest Products', value: 'newest' },
+        { label: 'Best Selling Products', value: 'best-selling' },
+        { label: 'Featured Products', value: 'featured' },
+      ],
+    }),
+    maxProducts: Number({
+      label: 'Maximum Products',
+      defaultValue: 12,
     }),
     cta: Shape({
       label: 'Call to Action',

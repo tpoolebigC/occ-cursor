@@ -16,6 +16,15 @@ runtime.registerComponent(MakeswiftFeaturedProductList, {
       label: 'Section Description', 
       defaultValue: 'Discover our handpicked selection of premium products.' 
     }),
+    productGroup: Select({
+      label: 'Product Group',
+      defaultValue: 'featured',
+      options: [
+        { label: 'Featured Products', value: 'featured' },
+        { label: 'Best Selling Products', value: 'best-selling' },
+        { label: 'Newest Products', value: 'newest' },
+      ],
+    }),
     maxProducts: Number({ 
       label: 'Maximum Products to Show', 
       defaultValue: 8 
