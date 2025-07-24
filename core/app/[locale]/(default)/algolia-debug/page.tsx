@@ -46,9 +46,9 @@ export default async function AlgoliaDebugPage() {
       <div className="mb-6">
         <h2 className="text-xl font-semibold mb-2">Environment Variables</h2>
         <div className="bg-gray-100 p-4 rounded text-sm">
-          <p><strong>APP_ID:</strong> {process.env.NEXT_PUBLIC_ALGOLIA_APP_ID ? 'SET' : 'NOT SET'}</p>
-          <p><strong>APP_KEY:</strong> {process.env.NEXT_PUBLIC_ALGOLIA_APP_KEY ? 'SET' : 'NOT SET'}</p>
-          <p><strong>INDEX_NAME:</strong> {process.env.NEXT_PUBLIC_ALGOLIA_INDEXNAME || 'products'}</p>
+          <p><strong>APP_ID:</strong> {process.env.ALGOLIA_APPLICATION_ID ? 'SET' : 'NOT SET'}</p>
+          <p><strong>APP_KEY:</strong> {process.env.ALGOLIA_SEARCH_API_KEY ? 'SET' : 'NOT SET'}</p>
+          <p><strong>INDEX_NAME:</strong> {process.env.ALGOLIA_INDEX_NAME || 'products'}</p>
         </div>
       </div>
     </div>

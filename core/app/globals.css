@@ -4,6 +4,19 @@
 
 /* Custom CSS variables for search results styling */
 :root {
+  /* Main color variables */
+  --primary: 96 100% 68%;
+  --accent: 96 100% 68%;
+  --success: 142 76% 36%;
+  --error: 0 84% 60%;
+  --background: 0 0% 100%;
+  --foreground: 0 0% 7%;
+  --contrast-100: 0 0% 96%;
+  --contrast-200: 0 0% 90%;
+  --contrast-300: 0 0% 83%;
+  --contrast-400: 0 0% 64%;
+  --contrast-500: 0 0% 45%;
+
   /* Search popup styling */
   --nav-search-background: hsl(0 0% 100%);
   --nav-search-border: hsl(0 0% 90%);
@@ -41,6 +54,19 @@
 /* Dark mode support */
 @media (prefers-color-scheme: dark) {
   :root {
+    /* Dark mode color variables */
+    --primary: 96 100% 68%;
+    --accent: 96 100% 68%;
+    --success: 142 76% 36%;
+    --error: 0 84% 60%;
+    --background: 0 0% 7%;
+    --foreground: 0 0% 100%;
+    --contrast-100: 0 0% 10%;
+    --contrast-200: 0 0% 20%;
+    --contrast-300: 0 0% 30%;
+    --contrast-400: 0 0% 40%;
+    --contrast-500: 0 0% 50%;
+
     --nav-search-background: hsl(0 0% 10%);
     --nav-search-border: hsl(0 0% 20%);
     --nav-search-divider: hsl(0 0% 20%);
