@@ -58,18 +58,18 @@ export function Button({
       {...props}
       aria-busy={loading}
       className={clsx(
-        'relative z-0 inline-flex h-fit cursor-pointer select-none items-center justify-center overflow-hidden border text-center font-[family-name:var(--button-font-family,var(--font-family-body))] font-semibold leading-normal after:absolute after:inset-0 after:-z-10 after:-translate-x-[105%] after:duration-300 after:[animation-timing-function:cubic-bezier(0,0.25,0,1)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--button-focus,hsl(var(--primary)))] focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-30',
+        'relative z-0 inline-flex h-fit cursor-pointer select-none items-center justify-center overflow-hidden border text-center font-[family-name:var(--font-family-body)] font-semibold leading-normal after:absolute after:inset-0 after:-z-10 after:-translate-x-[105%] after:duration-300 after:[animation-timing-function:cubic-bezier(0,0.25,0,1)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(var(--primary))] focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-30',
         {
           primary:
-            'border-[var(--button-primary-border,hsl(var(--primary)))] bg-[var(--button-primary-background,hsl(var(--primary)))] text-[var(--button-primary-text,hsl(var(--foreground)))] after:bg-[var(--button-primary-background-hover,color-mix(in_oklab,hsl(var(--primary)),white_75%))]',
+            'border-[hsl(var(--primary))] bg-[hsl(var(--primary))] text-[hsl(var(--foreground))] after:bg-[color-mix(in_oklab,hsl(var(--primary)),white_75%)]',
           secondary:
-            'border-[var(--button-secondary-border,hsl(var(--foreground)))] bg-[var(--button-secondary-background,hsl(var(--foreground)))] text-[var(--button-secondary-text,hsl(var(--background)))] after:bg-[var(--button-secondary-background-hover,hsl(var(--background)))]',
+            'border-[hsl(var(--foreground))] bg-[hsl(var(--foreground))] text-[hsl(var(--background))] after:bg-[hsl(var(--background))]',
           tertiary:
-            'border-[var(--button-tertiary-border,hsl(var(--contrast-200)))] bg-[var(--button-tertiary-background,hsl(var(--background)))] text-[var(--button-tertiary-text,hsl(var(--foreground)))] after:bg-[var(--button-tertiary-background-hover,hsl(var(--contrast-100)))]',
+            'border-[hsl(var(--contrast-200))] bg-[hsl(var(--background))] text-[hsl(var(--foreground))] after:bg-[hsl(var(--contrast-100))]',
           ghost:
-            'border-[var(--button-ghost-border,transparent)] bg-[var(--button-ghost-background,transparent)] text-[var(--button-ghost-text,hsl(var(--foreground)))] after:bg-[var(--button-ghost-background-hover,hsl(var(--foreground)/5%))]',
+            'border-transparent bg-transparent text-[hsl(var(--foreground))] after:bg-[hsl(var(--foreground)/5%)]',
           danger:
-            'border-[var(--button-danger-border,color-mix(in_oklab,hsl(var(--error)),white_30%))] bg-[var(--button-danger-background,color-mix(in_oklab,hsl(var(--error)),white_30%))] text-[var(--button-danger-foreground)] after:bg-[var(--button-danger-background-hover,color-mix(in_oklab,hsl(var(--error)),white_75%))]',
+            'border-[color-mix(in_oklab,hsl(var(--error)),white_30%)] bg-[color-mix(in_oklab,hsl(var(--error)),white_30%)] text-[hsl(var(--foreground))] after:bg-[color-mix(in_oklab,hsl(var(--error)),white_75%)]',
         }[variant],
         {
           pill: 'rounded-full after:rounded-full',
@@ -122,7 +122,7 @@ export function Button({
         <Loader2
           className={clsx(
             'animate-spin',
-            variant === 'tertiary' && 'text-[var(--button-loader-icon,hsl(var(--foreground)))]',
+            variant === 'tertiary' && 'text-[hsl(var(--foreground))]',
           )}
         />
       </span>

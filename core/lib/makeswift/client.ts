@@ -7,9 +7,12 @@ import { defaultLocale } from '~/i18n/routing';
 
 import { runtime } from './runtime';
 
-strict(process.env.MAKESWIFT_SITE_API_KEY, 'MAKESWIFT_SITE_API_KEY is required');
+// Only check for the API key on the server side
+if (typeof window === 'undefined') {
+  strict(process.env.MAKESWIFT_SITE_API_KEY, 'MAKESWIFT_SITE_API_KEY is required');
+}
 
-export const client = new Makeswift(process.env.MAKESWIFT_SITE_API_KEY, {
+export const client = new Makeswift(process.env.MAKESWIFT_SITE_API_KEY || '', {
   runtime,
   apiOrigin: process.env.MAKESWIFT_API_ORIGIN,
 });

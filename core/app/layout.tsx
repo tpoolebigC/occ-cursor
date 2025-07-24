@@ -1,7 +1,6 @@
 import { ReactNode } from 'react';
 import type { Metadata } from 'next';
 import { Providers } from './providers';
-import '../globals.css';
 
 interface RootLayoutProps {
   children: ReactNode;
@@ -17,12 +16,10 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: RootLayoutProps) {
   return (
-    <html lang="en">
-      <body>
-        <Providers>
-          {children}
-        </Providers>
-      </body>
-    </html>
+    <>
+      <Providers>
+        {children}
+      </Providers>
+    </>
   );
 } 

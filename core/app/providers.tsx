@@ -5,7 +5,6 @@ import { usePathname } from 'next/navigation';
 
 import { Toaster } from '@/vibes/soul/primitives/toaster';
 import { SearchProvider } from '~/lib/search';
-import { SiteTheme } from '~/lib/makeswift/components/site-theme';
 
 export function Providers({ children }: PropsWithChildren) {
   const pathname = usePathname();
@@ -13,7 +12,6 @@ export function Providers({ children }: PropsWithChildren) {
 
   return (
     <SearchProvider>
-      <SiteTheme />
       <Toaster position="top-right" />
       {children}
     </SearchProvider>

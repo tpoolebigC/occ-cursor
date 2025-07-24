@@ -2,140 +2,29 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Custom CSS variables for search results styling */
+/* Essential CSS variables for Makeswift theming */
 :root {
-  /* Main color variables */
-  --primary: 96 100% 68%;
-  --accent: 96 100% 68%;
-  --success: 142 76% 36%;
-  --error: 0 84% 60%;
-  --background: 0 0% 100%;
-  --foreground: 0 0% 7%;
-  --contrast-100: 0 0% 96%;
-  --contrast-200: 0 0% 90%;
-  --contrast-300: 0 0% 83%;
-  --contrast-400: 0 0% 64%;
-  --contrast-500: 0 0% 45%;
-
   /* Font family variables */
   --font-family-heading: 'Inter', system-ui, sans-serif;
   --font-family-body: 'Inter', system-ui, sans-serif;
   --font-family-mono: 'Roboto Mono', monospace;
-
-  /* Button styling variables */
-  --button-focus: hsl(var(--primary));
-  --button-font-family: var(--font-family-body);
-  --button-primary-background: hsl(var(--primary));
-  --button-primary-background-hover: color-mix(in oklab, hsl(var(--primary)), white 75%);
-  --button-primary-text: hsl(var(--background));
-  --button-primary-border: hsl(var(--primary));
-  --button-secondary-background: hsl(var(--foreground));
-  --button-secondary-background-hover: hsl(var(--background));
-  --button-secondary-text: hsl(var(--background));
-  --button-secondary-border: hsl(var(--foreground));
-  --button-tertiary-background: hsl(var(--background));
-  --button-tertiary-background-hover: hsl(var(--contrast-100));
-  --button-tertiary-text: hsl(var(--foreground));
-  --button-tertiary-border: hsl(var(--contrast-200));
-  --button-ghost-background: transparent;
-  --button-ghost-background-hover: hsl(var(--foreground) / 5%);
-  --button-ghost-text: hsl(var(--foreground));
-  --button-ghost-border: transparent;
-  --button-loader-icon: hsl(var(--foreground));
-  --button-danger-background: color-mix(in oklab, hsl(var(--error)), white 30%);
-  --button-danger-background-hover: color-mix(in oklab, hsl(var(--error)), white 75%);
-  --button-danger-foreground: hsl(var(--foreground));
-  --button-danger-border: color-mix(in oklab, hsl(var(--error)), white 30%);
-
-  /* Search popup styling */
-  --nav-search-background: hsl(0 0% 100%);
-  --nav-search-border: hsl(0 0% 90%);
-  --nav-search-divider: hsl(0 0% 90%);
-  --nav-search-icon: hsl(0 0% 45%);
-  --nav-search-empty-title: hsl(0 0% 10%);
-  --nav-search-empty-subtitle: hsl(0 0% 45%);
-  
-  /* Search result styling */
-  --nav-search-result-title: hsl(0 0% 10%);
-  --nav-search-result-title-font-family: var(--font-family-mono);
-  --nav-search-result-link-text: hsl(0 0% 45%);
-  --nav-search-result-link-text-hover: hsl(0 0% 10%);
-  --nav-search-result-link-background: transparent;
-  --nav-search-result-link-background-hover: hsl(0 0% 95%);
-  
-  /* Product card styling in search results */
-  --nav-search-product-title: hsl(0 0% 10%);
-  --nav-search-product-price: hsl(0 0% 10%);
-  --nav-search-product-background: transparent;
-  --nav-search-product-background-hover: hsl(0 0% 95%);
-
-  /* Toggle group styling for facet filters */
-  --toggle-group-light-focus: hsl(var(--primary));
-  --toggle-group-light-border: hsl(var(--contrast-100));
-  --toggle-group-light-on-border: hsl(var(--foreground));
-  --toggle-group-light-on-background: hsl(var(--foreground));
-  --toggle-group-light-off-background: hsl(var(--background));
-  --toggle-group-light-off-text: hsl(var(--foreground));
-  --toggle-group-light-on-text: hsl(var(--background));
-  --toggle-group-light-off-border-hover: hsl(var(--contrast-200));
-  --toggle-group-light-off-background-hover: hsl(var(--contrast-100));
 }
 
-/* Base color styles */
+/* Base styles that work with Makeswift */
 @layer base {
   body {
-    background-color: hsl(var(--background)) !important;
-    color: hsl(var(--foreground)) !important;
+    font-family: var(--font-family-body);
   }
   
   h1, h2, h3, h4, h5, h6 {
-    color: hsl(var(--foreground)) !important;
-    font-family: var(--font-family-heading) !important;
-  }
-  
-  p, span, div {
-    color: hsl(var(--foreground)) !important;
-    font-family: var(--font-family-body) !important;
-  }
-  
-  button {
-    background-color: hsl(var(--primary)) !important;
-    color: hsl(var(--background)) !important;
-  }
-  
-  button:hover {
-    background-color: color-mix(in oklab, hsl(var(--primary)), black 15%) !important;
-  }
-
-  /* Force product card styling */
-  [class*="product-card"] {
-    background-color: hsl(var(--background)) !important;
-  }
-
-  [class*="product-card"] [class*="title"] {
-    color: hsl(var(--foreground)) !important;
-  }
-
-  [class*="product-card"] [class*="price"] {
-    color: hsl(var(--foreground)) !important;
-  }
-
-  /* Force button styling */
-  [class*="button"] {
-    background-color: hsl(var(--primary)) !important;
-    color: hsl(var(--background)) !important;
-  }
-
-  /* Force text colors */
-  [class*="text-"] {
-    color: hsl(var(--foreground)) !important;
+    font-family: var(--font-family-heading);
   }
 }
 
 /* Dark mode support */
 @media (prefers-color-scheme: dark) {
   :root {
-    /* Dark mode color variables */
+    /* Dark mode color variables - these will be overridden by Makeswift BaseColors */
     --primary: 96 100% 68%;
     --accent: 96 100% 68%;
     --success: 142 76% 36%;
@@ -147,110 +36,5 @@
     --contrast-300: 0 0% 30%;
     --contrast-400: 0 0% 40%;
     --contrast-500: 0 0% 50%;
-
-    --nav-search-background: hsl(0 0% 10%);
-    --nav-search-border: hsl(0 0% 20%);
-    --nav-search-divider: hsl(0 0% 20%);
-    --nav-search-icon: hsl(0 0% 60%);
-    --nav-search-empty-title: hsl(0 0% 90%);
-    --nav-search-empty-subtitle: hsl(0 0% 60%);
-    
-    --nav-search-result-title: hsl(0 0% 90%);
-    --nav-search-result-link-text: hsl(0 0% 60%);
-    --nav-search-result-link-text-hover: hsl(0 0% 90%);
-    --nav-search-result-link-background-hover: hsl(0 0% 20%);
-    
-    --nav-search-product-title: hsl(0 0% 90%);
-    --nav-search-product-price: hsl(0 0% 90%);
-    --nav-search-product-background-hover: hsl(0 0% 20%);
-
-    /* Toggle group dark mode styling */
-    --toggle-group-dark-focus: hsl(var(--primary));
-    --toggle-group-dark-border: hsl(var(--contrast-500));
-    --toggle-group-dark-on-border: hsl(var(--background));
-    --toggle-group-dark-on-background: hsl(var(--background));
-    --toggle-group-dark-off-background: hsl(var(--foreground));
-    --toggle-group-dark-off-text: hsl(var(--background));
-    --toggle-group-dark-on-text: hsl(var(--foreground));
-    --toggle-group-dark-off-border-hover: hsl(var(--contrast-400));
-    --toggle-group-dark-off-background-hover: hsl(var(--contrast-500));
-
-    /* Dark mode button styling variables */
-    --button-focus: hsl(var(--primary));
-    --button-font-family: var(--font-family-body);
-    --button-primary-background: hsl(var(--primary));
-    --button-primary-background-hover: color-mix(in oklab, hsl(var(--primary)), white 75%);
-    --button-primary-text: hsl(var(--background));
-    --button-primary-border: hsl(var(--primary));
-    --button-secondary-background: hsl(var(--foreground));
-    --button-secondary-background-hover: hsl(var(--background));
-    --button-secondary-text: hsl(var(--background));
-    --button-secondary-border: hsl(var(--foreground));
-    --button-tertiary-background: hsl(var(--background));
-    --button-tertiary-background-hover: hsl(var(--contrast-100));
-    --button-tertiary-text: hsl(var(--foreground));
-    --button-tertiary-border: hsl(var(--contrast-200));
-    --button-ghost-background: transparent;
-    --button-ghost-background-hover: hsl(var(--foreground) / 5%);
-    --button-ghost-text: hsl(var(--foreground));
-    --button-ghost-border: transparent;
-    --button-loader-icon: hsl(var(--foreground));
-    --button-danger-background: color-mix(in oklab, hsl(var(--error)), white 30%);
-    --button-danger-background-hover: color-mix(in oklab, hsl(var(--error)), white 75%);
-    --button-danger-foreground: hsl(var(--foreground));
-    --button-danger-border: color-mix(in oklab, hsl(var(--error)), white 30%);
   }
-}
-
-/* Ensure search results have proper background and contrast */
-.search-results-container {
-  background: var(--nav-search-background);
-  border: 1px solid var(--nav-search-border);
-  border-radius: 0.5rem;
-  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
-}
-
-/* Navigation search results styling */
-[data-radix-navigation-menu-viewport] {
-  background: var(--nav-search-background) !important;
-  border: 1px solid var(--nav-search-border) !important;
-  border-radius: 0.5rem !important;
-  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04) !important;
-}
-
-/* Search form styling */
-.nav-search-form {
-  background: var(--nav-search-background);
-  border: 1px solid var(--nav-search-border);
-  border-radius: 0.5rem;
-}
-
-/* Search input styling */
-.nav-search-input {
-  background: transparent;
-  color: var(--nav-search-empty-title);
-}
-
-.nav-search-input::placeholder {
-  color: var(--nav-search-empty-subtitle);
-}
-
-/* Product card styling in search results */
-.search-product-card {
-  background: var(--nav-search-product-background);
-  transition: background-color 0.2s ease;
-}
-
-.search-product-card:hover {
-  background: var(--nav-search-product-background-hover);
-}
-
-.search-product-title {
-  color: var(--nav-search-product-title);
-  font-weight: 600;
-}
-
-.search-product-price {
-  color: var(--nav-search-product-price);
-  font-weight: 500;
 } 

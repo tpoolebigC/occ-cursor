@@ -1,12 +1,13 @@
 import { Analytics } from '@vercel/analytics/react';
 import { SpeedInsights } from '@vercel/speed-insights/next';
 import { clsx } from 'clsx';
-import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { NextIntlClientProvider } from 'next-intl';
 import { setRequestLocale } from 'next-intl/server';
 import { NuqsAdapter } from 'nuqs/adapters/next/app';
 import { cache, PropsWithChildren } from 'react';
+import type { Metadata } from 'next';
+import { draftMode } from 'next/headers';
 
 import '../../globals.css';
 
@@ -23,6 +24,8 @@ import { ScriptManagerScripts, ScriptsFragment } from '~/components/scripts';
 import { routing } from '~/i18n/routing';
 import { getToastNotification } from '~/lib/server-toast';
 import { B2BLoader } from '~/b2b/loader';
+import { MakeswiftProvider } from '~/lib/makeswift/provider';
+import { SiteTheme } from '~/lib/makeswift/components/site-theme';
 
 const RootLayoutMetadataQuery = graphql(
   `
@@ -49,15 +52,11 @@ const RootLayoutMetadataQuery = graphql(
   [WebAnalyticsFragment, ScriptsFragment],
 );
 
-const fetchRootLayoutMetadata = cache(async () => {
-  return await client.fetch({
+export async function generateMetadata(): Promise<Metadata> {
+  const { data } = await client.fetch({
     document: RootLayoutMetadataQuery,
     fetchOptions: { next: { revalidate } },
   });
-});
-
-export async function generateMetadata(): Promise<Metadata> {
-  const { data } = await fetchRootLayoutMetadata();
 
   const storeName = data.site.settings?.storeName ?? '';
 
@@ -101,8 +100,12 @@ interface Props extends PropsWithChildren {
 export default async function RootLayout({ params, children }: Props) {
   const { locale } = await params;
 
-  const { data } = await fetchRootLayoutMetadata();
+  const { data } = await client.fetch({
+    document: RootLayoutMetadataQuery,
+    fetchOptions: { next: { revalidate } },
+  });
   const toastNotificationCookieData = await getToastNotification();
+  const draft = await draftMode();
 
   if (!routing.locales.includes(locale)) {
     notFound();
@@ -121,16 +124,19 @@ export default async function RootLayout({ params, children }: Props) {
         />
       </head>
       <body className="flex min-h-screen flex-col">
+        <SiteTheme />
         <NextIntlClientProvider>
           <NuqsAdapter>
             <AnalyticsProvider channelId={data.channel.entityId} settings={data.site.settings}>
-              <Providers>
-                {toastNotificationCookieData && (
-                  <CookieNotifications {...toastNotificationCookieData} />
-                )}
-                <B2BLoader />
-                {children}
-              </Providers>
+              <MakeswiftProvider previewMode={draft.isEnabled}>
+                <Providers>
+                  {toastNotificationCookieData && (
+                    <CookieNotifications {...toastNotificationCookieData} />
+                  )}
+                  <B2BLoader />
+                  {children}
+                </Providers>
+              </MakeswiftProvider>
             </AnalyticsProvider>
           </NuqsAdapter>
         </NextIntlClientProvider>
