@@ -2,9 +2,9 @@
 
 import { useState } from 'react';
 
-import { useB2BQuoteEnabled } from '~/b2b/use-b2b-quote-enabled';
-import { useSDK } from '~/b2b/use-b2b-sdk';
-import { useB2bShoppingListEnabled } from '~/b2b/use-b2b-shopping-list-enabled';
+import { useB2BQuoteEnabled } from '~/features/b2b/hooks/use-b2b-quote-enabled';
+import { useB2BSDK } from '~/features/b2b/hooks/use-b2b-sdk';
+import { useB2BShoppingListEnabled } from '~/features/b2b/hooks/use-b2b-shopping-list-enabled';
 
 import { Field } from '../vibes/soul/sections/product-detail/schema';
 
@@ -24,7 +24,7 @@ interface Data {
 export const useAddToQuote = () => {
   const isQuotesEnabled = useB2BQuoteEnabled();
   const [isAddingToQuote, setLoading] = useState(false);
-  const sdk = useSDK();
+  const sdk = useB2BSDK();
 
   const addProductsToQuote = async ({ selectedOptions, productId, quantity }: Data) => {
     setLoading(true);
@@ -32,7 +32,7 @@ export const useAddToQuote = () => {
     try {
       await sdk?.utils?.quote?.addProducts([
         {
-          productEntityId: Number(productId),
+          productId: Number(productId),
           quantity,
           selectedOptions: selectedOptions.map(mapToB2BProductOptions),
         },
@@ -50,16 +50,16 @@ export const useAddToQuote = () => {
 };
 
 export const useAddToShoppingList = () => {
-  const isShoppingListEnabled = useB2bShoppingListEnabled();
+  const isShoppingListEnabled = useB2BShoppingListEnabled();
   const [isAddingToShoppingList, setLoading] = useState(false);
-  const sdk = useSDK();
+  const sdk = useB2BSDK();
 
   const addProductToShoppingList = async ({ selectedOptions, productId, quantity }: Data) => {
     setLoading(true);
 
     try {
       await sdk?.utils?.shoppingList?.addProductFromPage({
-        productEntityId: Number(productId),
+        productId: Number(productId),
         quantity,
         selectedOptions: selectedOptions.map(mapToB2BProductOptions),
       });

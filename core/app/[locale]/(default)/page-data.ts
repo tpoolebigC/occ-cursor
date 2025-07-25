@@ -1,6 +1,6 @@
 import { cache } from 'react';
 
-import { client } from '~/client';
+import { serverClient as client } from '~/client/server-client';
 import { graphql } from '~/client/graphql';
 import { revalidate } from '~/client/revalidate-target';
 import { FeaturedProductsCarouselFragment } from '~/components/featured-products-carousel/fragment';

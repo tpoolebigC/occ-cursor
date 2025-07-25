@@ -55,11 +55,58 @@ export async function mergeCarts(existingCartId: string, newB2BCartId: string): 
     }
 
     // Prepare line items for the new cart
-    const lineItems = existingCart.lineItems.physicalItems.map((item) => ({
-      productEntityId: item.productEntityId,
-      quantity: item.quantity,
-      selectedOptions: item.selectedOptions || [],
-    }));
+    const lineItems = existingCart.lineItems.physicalItems.map((item) => {
+      // Transform selectedOptions to the expected format
+      const selectedOptions: any = {};
+      
+      if (item.selectedOptions && Array.isArray(item.selectedOptions)) {
+        item.selectedOptions.forEach((option: any) => {
+          if (option.__typename === 'CartSelectedCheckboxOption') {
+            if (!selectedOptions.multipleChoices) selectedOptions.multipleChoices = [];
+            selectedOptions.multipleChoices.push({
+              optionEntityId: option.entityId,
+              optionValueEntityId: option.valueEntityId,
+            });
+          } else if (option.__typename === 'CartSelectedDateFieldOption') {
+            if (!selectedOptions.dateFields) selectedOptions.dateFields = [];
+            selectedOptions.dateFields.push({
+              optionEntityId: option.entityId,
+              date: option.date,
+            });
+          } else if (option.__typename === 'CartSelectedFileUploadOption') {
+            if (!selectedOptions.fileUploads) selectedOptions.fileUploads = [];
+            selectedOptions.fileUploads.push({
+              optionEntityId: option.entityId,
+              file: option.file,
+            });
+          } else if (option.__typename === 'CartSelectedMultiLineTextFieldOption') {
+            if (!selectedOptions.multiLineTextFields) selectedOptions.multiLineTextFields = [];
+            selectedOptions.multiLineTextFields.push({
+              optionEntityId: option.entityId,
+              text: option.text,
+            });
+          } else if (option.__typename === 'CartSelectedNumberFieldOption') {
+            if (!selectedOptions.numberFields) selectedOptions.numberFields = [];
+            selectedOptions.numberFields.push({
+              optionEntityId: option.entityId,
+              number: option.number,
+            });
+          } else if (option.__typename === 'CartSelectedTextFieldOption') {
+            if (!selectedOptions.textFields) selectedOptions.textFields = [];
+            selectedOptions.textFields.push({
+              optionEntityId: option.entityId,
+              text: option.text,
+            });
+          }
+        });
+      }
+
+      return {
+        productEntityId: item.productEntityId,
+        quantity: item.quantity,
+        selectedOptions,
+      };
+    });
 
     // Add all items from the existing cart to the new B2B cart
     const addCartLineItemResponse = await addCartLineItem(newB2BCartId, {
@@ -85,9 +132,62 @@ export async function mergeCarts(existingCartId: string, newB2BCartId: string): 
     if (backup) {
       console.log('🔄 Attempting to restore cart from backup...');
       try {
+        // Transform backup items to the expected format
+        const backupLineItems = backup.items.map((item: any) => {
+          const selectedOptions: any = {};
+          
+          if (item.selectedOptions && Array.isArray(item.selectedOptions)) {
+            item.selectedOptions.forEach((option: any) => {
+              if (option.__typename === 'CartSelectedCheckboxOption') {
+                if (!selectedOptions.multipleChoices) selectedOptions.multipleChoices = [];
+                selectedOptions.multipleChoices.push({
+                  optionEntityId: option.entityId,
+                  optionValueEntityId: option.valueEntityId,
+                });
+              } else if (option.__typename === 'CartSelectedDateFieldOption') {
+                if (!selectedOptions.dateFields) selectedOptions.dateFields = [];
+                selectedOptions.dateFields.push({
+                  optionEntityId: option.entityId,
+                  date: option.date,
+                });
+              } else if (option.__typename === 'CartSelectedFileUploadOption') {
+                if (!selectedOptions.fileUploads) selectedOptions.fileUploads = [];
+                selectedOptions.fileUploads.push({
+                  optionEntityId: option.entityId,
+                  file: option.file,
+                });
+              } else if (option.__typename === 'CartSelectedMultiLineTextFieldOption') {
+                if (!selectedOptions.multiLineTextFields) selectedOptions.multiLineTextFields = [];
+                selectedOptions.multiLineTextFields.push({
+                  optionEntityId: option.entityId,
+                  text: option.text,
+                });
+              } else if (option.__typename === 'CartSelectedNumberFieldOption') {
+                if (!selectedOptions.numberFields) selectedOptions.numberFields = [];
+                selectedOptions.numberFields.push({
+                  optionEntityId: option.entityId,
+                  number: option.number,
+                });
+              } else if (option.__typename === 'CartSelectedTextFieldOption') {
+                if (!selectedOptions.textFields) selectedOptions.textFields = [];
+                selectedOptions.textFields.push({
+                  optionEntityId: option.entityId,
+                  text: option.text,
+                });
+              }
+            });
+          }
+
+          return {
+            productEntityId: item.productEntityId,
+            quantity: item.quantity,
+            selectedOptions,
+          };
+        });
+
         // Add backup items to the new cart
         const addCartLineItemResponse = await addCartLineItem(newB2BCartId, {
-          lineItems: backup.items,
+          lineItems: backupLineItems,
         });
         assertAddCartLineItemErrors(addCartLineItemResponse);
         console.log('✅ Successfully restored cart from backup');

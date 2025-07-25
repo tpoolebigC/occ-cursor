@@ -200,7 +200,7 @@ export function ProductDetailForm<F extends Field>({
             quantity={Number(quantityControl.value) || 1}
             selectedOptions={fields
               .filter((f) => f.name !== 'quantity')
-              .map((f) => ({ field: f, value: formFields[f.name].value }))}
+              .map((f) => ({ field: f, value: formFields[f.name]?.value }))}
           />
         </div>
       </form>

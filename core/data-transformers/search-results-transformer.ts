@@ -168,9 +168,9 @@ export const searchResultsTransformer = async (
       priceValue = typeof hit.default_price === 'string' 
         ? parseFloat(hit.default_price) || 0
         : Number(hit.default_price) || 0;
-    } else if (hit.prices && typeof hit.prices === 'object' && hit.prices.price && hit.prices.price.value) {
+    } else if (hit.prices && typeof hit.prices === 'object' && hit.prices.price && typeof hit.prices.price === 'object' && 'value' in hit.prices.price) {
       // Handle the actual data structure: prices.price.value
-      priceValue = Number(hit.prices.price.value) || 0;
+      priceValue = Number((hit.prices.price as any).value) || 0;
     } else if (hit.prices && typeof hit.prices === 'object' && hit.prices[selectedCurrency]) {
       priceValue = Number(hit.prices[selectedCurrency]) || 0;
     } else if (hit.calculated_prices && typeof hit.calculated_prices === 'object' && hit.calculated_prices[selectedCurrency]) {
@@ -195,9 +195,9 @@ export const searchResultsTransformer = async (
         url: hit.defaultImage.url,
         altText: hit.defaultImage.altText || hit.name,
       } : hit.product_images && hit.product_images.length > 0 ? {
-        url: hit.product_images.find(img => img.is_thumbnail)?.url_thumbnail || hit.product_images[0].url_thumbnail,
-        altText: hit.product_images.find(img => img.is_thumbnail)?.description || hit.product_images[0].description || hit.name,
-      } : hit.variants && hit.variants.length > 0 && hit.variants[0].image_url ? {
+        url: hit.product_images.find(img => img.is_thumbnail)?.url_thumbnail || hit.product_images[0]?.url_thumbnail || '',
+        altText: hit.product_images.find(img => img.is_thumbnail)?.description || hit.product_images[0]?.description || hit.name,
+      } : hit.variants && hit.variants.length > 0 && hit.variants[0]?.image_url ? {
         url: hit.variants[0].image_url,
         altText: hit.name,
       } : null,

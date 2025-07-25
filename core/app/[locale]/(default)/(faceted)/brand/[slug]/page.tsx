@@ -34,7 +34,7 @@ const createBrandSearchParamsLoader = cache(
     const brandSearch = await fetchFacetedSearch(cachedBrand, undefined, customerAccessToken);
     const brandFacets = brandSearch.facets.items.filter(
       (facet) => facet.__typename !== 'BrandSearchFilter',
-    );
+    ) as any;
     const transformedBrandFacets = await facetsTransformer({
       refinedFacets: brandFacets,
       allFacets: brandFacets,
@@ -173,8 +173,8 @@ export default async function Brand(props: Props) {
     );
 
     const transformedFacets = await facetsTransformer({
-      refinedFacets,
-      allFacets,
+      refinedFacets: refinedFacets as any,
+      allFacets: allFacets as any,
       searchParams: { ...searchParams, ...parsedSearchParams },
     });
 

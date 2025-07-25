@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 import { getSessionCustomerAccessToken } from '~/auth';
-import { client } from '~/client';
+import { serverClient as client } from '~/client/server-client';
 import { graphql, ResultOf } from '~/client/graphql';
 import { MakeswiftProductFragment } from '~/lib/makeswift/utils/use-bc-product-to-vibes-product/fragment';
 

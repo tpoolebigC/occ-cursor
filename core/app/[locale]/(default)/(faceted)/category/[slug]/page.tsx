@@ -36,7 +36,7 @@ const createCategorySearchParamsLoader = cache(
     const categorySearch = await fetchFacetedSearch(cachedCategory, undefined, customerAccessToken);
     const categoryFacets = categorySearch.facets.items.filter(
       (facet) => facet.__typename !== 'CategorySearchFilter',
-    );
+    ) as any;
     const transformedCategoryFacets = await facetsTransformer({
       refinedFacets: categoryFacets,
       allFacets: categoryFacets,
@@ -190,8 +190,8 @@ export default async function Category(props: Props) {
     );
 
     const transformedFacets = await facetsTransformer({
-      refinedFacets,
-      allFacets,
+      refinedFacets: refinedFacets as any,
+      allFacets: allFacets as any,
       searchParams: { ...searchParams, ...parsedSearchParams },
     });
 

@@ -5,7 +5,7 @@ import { Streamable } from '@/vibes/soul/lib/streamable';
 import { HeaderSection } from '@/vibes/soul/sections/header-section';
 import { GetLinksAndSectionsQuery, LayoutQuery } from '~/app/[locale]/(default)/page-data';
 import { auth, getSessionCustomerAccessToken } from '~/auth';
-import { client } from '~/client';
+import { serverClient as client } from '~/client/server-client';
 import { graphql, readFragment } from '~/client/graphql';
 import { revalidate } from '~/client/revalidate-target';
 import { TAGS } from '~/client/tags';
@@ -32,19 +32,25 @@ const GetCartCountQuery = graphql(`
 `);
 
 const getCartCount = cache(async (cartId: string, customerAccessToken?: string) => {
-  const response = await client.fetch({
-    document: GetCartCountQuery,
-    variables: { cartId },
-    customerAccessToken,
-    fetchOptions: {
-      cache: 'no-store',
-      next: {
-        tags: [TAGS.cart],
+  try {
+    const response = await client.fetch({
+      document: GetCartCountQuery,
+      variables: { cartId },
+      customerAccessToken,
+      fetchOptions: {
+        cache: 'no-store',
+        next: {
+          tags: [TAGS.cart],
+        },
       },
-    },
-  });
+    });
 
-  return response.data.site.cart?.lineItems.totalQuantity ?? null;
+    return response.data.site.cart?.lineItems.totalQuantity ?? null;
+  } catch (error) {
+    // If there's an invalid token error, return null instead of throwing
+    console.warn('Cart count fetch failed:', error);
+    return null;
+  }
 });
 
 const getHeaderLinks = cache(async (customerAccessToken?: string) => {

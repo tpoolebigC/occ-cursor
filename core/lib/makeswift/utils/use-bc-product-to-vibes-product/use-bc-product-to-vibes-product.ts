@@ -1,7 +1,8 @@
 import { useFormatter } from 'next-intl';
 import { string, z } from 'zod';
 
-import { CardProduct } from '@/vibes/soul/primitives/product-card';
+// CardProduct type moved to Product interface
+// import { CardProduct } from '@/vibes/soul/primitives/product-card';
 import { pricesTransformer } from '~/data-transformers/prices-transformer';
 
 const priceSchema = z.object({
@@ -30,6 +31,7 @@ export const BcProductSchema = z.object({
 });
 
 export type BcProductSchema = z.infer<typeof BcProductSchema>;
+export type CardProduct = BcProductSchema;
 
 export function useBcProductToVibesProduct(): (product: BcProductSchema) => CardProduct {
   const format = useFormatter();

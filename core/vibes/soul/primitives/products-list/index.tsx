@@ -1,12 +1,12 @@
 'use client';
 
-import { type Product } from '@bigcommerce/catalyst-client';
+import { type BcProductSchema } from '~/lib/makeswift/utils/use-bc-product-to-vibes-product/use-bc-product-to-vibes-product';
 import { clsx } from 'clsx';
 
-import { ProductCard } from '../product-card';
+import { ProductCard, mapBcProductToProduct } from '../product-card';
 
 interface ProductsListProps {
-  products: Product[];
+  products: BcProductSchema[];
   className?: string;
 }
 
@@ -14,7 +14,7 @@ export function ProductsList({ products, className }: ProductsListProps) {
   return (
     <div className={clsx('grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4', className)}>
       {products.map((product) => (
-        <ProductCard key={product.entityId} product={product} />
+        <ProductCard key={product.entityId} product={mapBcProductToProduct(product)} />
       ))}
     </div>
   );

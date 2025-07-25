@@ -13,7 +13,7 @@ import {
   AlgoliaHit,
   algoliaResultsTransformer,
 } from '~/data-transformers/search-results-transformer';
-import algoliaClient from '~/lib/algolia/client';
+import algoliaClient from '~/features/algolia/services/client';
 
 export async function search(
   prevState: {

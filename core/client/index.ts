@@ -1,61 +1,53 @@
+/**
+ * Client-safe BigCommerce client configuration
+ * 
+ * This file contains a client-safe version of the BigCommerce client.
+ * For server-side functionality, import from './server-client' instead.
+ */
+
 import { BigCommerceAuthError, createClient } from '@bigcommerce/catalyst-client';
-import { headers } from 'next/headers';
-// eslint-disable-next-line @typescript-eslint/no-restricted-imports
-import { redirect } from 'next/navigation';
-import { getLocale as getServerLocale } from 'next-intl/server';
 
 import { getChannelIdFromLocale } from '../channels.config';
 import { backendUserAgent } from '../userAgent';
 
-const getLocale = async () => {
-  try {
-    const locale = await getServerLocale();
+// Check if we're in a browser environment
+const isBrowser = typeof window !== 'undefined';
 
-    return locale;
-  } catch {
-    /**
-     * Next-intl `getLocale` only works on the server, and when middleware has run.
-     *
-     * Instances when `getLocale` will not work:
-     * - Requests in middlewares
-     * - Requests in `generateStaticParams`
-     * - Request in api routes
-     * - Requests in static sites without `setRequestLocale`
-     */
+// For client-side, we need to ensure we have valid configuration
+const getClientConfig = () => {
+  const storefrontToken = process.env.BIGCOMMERCE_STOREFRONT_TOKEN ?? '';
+  const storeHash = process.env.BIGCOMMERCE_STORE_HASH ?? '';
+  const channelId = process.env.BIGCOMMERCE_CHANNEL_ID ?? '1';
+  
+  // Validate required fields
+  if (!storefrontToken || !storeHash || !channelId) {
+    console.warn('Missing BigCommerce configuration for client-side usage');
   }
+  
+  return {
+    storefrontToken,
+    storeHash,
+    channelId,
+  };
 };
 
+const config = getClientConfig();
+
 export const client = createClient({
-  storefrontToken: process.env.BIGCOMMERCE_STOREFRONT_TOKEN ?? '',
-  storeHash: process.env.BIGCOMMERCE_STORE_HASH ?? '',
-  channelId: process.env.BIGCOMMERCE_CHANNEL_ID,
+  storefrontToken: config.storefrontToken,
+  storeHash: config.storeHash,
+  channelId: config.channelId,
   backendUserAgentExtensions: backendUserAgent,
   logger:
     (process.env.NODE_ENV !== 'production' && process.env.CLIENT_LOGGER !== 'false') ||
     process.env.CLIENT_LOGGER === 'true',
   getChannelId: async (defaultChannelId: string) => {
-    const locale = await getLocale();
-
-    // We use the default channelId as a fallback, but it is not ideal in some scenarios.
-    return getChannelIdFromLocale(locale) ?? defaultChannelId;
+    // Client-safe version - use provided channelId or default
+    return config.channelId || defaultChannelId;
   },
   beforeRequest: async (fetchOptions) => {
-    // We can't serialize a `Headers` object within this method so we have to opt into using a plain object
+    // Client-safe version - minimal headers
     const requestHeaders: Record<string, string> = {};
-    const locale = await getLocale();
-
-    if (fetchOptions?.cache && ['no-store', 'no-cache'].includes(fetchOptions.cache)) {
-      const ipAddress = (await headers()).get('X-Forwarded-For');
-
-      if (ipAddress) {
-        requestHeaders['X-Forwarded-For'] = ipAddress;
-        requestHeaders['True-Client-IP'] = ipAddress;
-      }
-    }
-
-    if (locale) {
-      requestHeaders['Accept-Language'] = locale;
-    }
 
     return {
       headers: requestHeaders,
@@ -63,7 +55,8 @@ export const client = createClient({
   },
   onError: (error, queryType) => {
     if (error instanceof BigCommerceAuthError && queryType === 'query') {
-      redirect('/api/auth/signout');
+      // Client-safe error handling - log instead of redirect
+      console.error('BigCommerce auth error:', error);
     }
   },
 });

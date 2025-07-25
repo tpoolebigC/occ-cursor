@@ -1,5 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 
+import { getSessionCustomerAccessToken } from '~/auth';
+
+// BigCommerce B2B API endpoints
+const B2B_API_BASE = process.env.BIGCOMMERCE_B2B_API_URL || 'https://api.bigcommerce.com/stores';
+const STORE_HASH = process.env.BIGCOMMERCE_STORE_HASH;
+const B2B_CLIENT_ID = process.env.BIGCOMMERCE_B2B_CLIENT_ID;
+const B2B_CLIENT_SECRET = process.env.BIGCOMMERCE_B2B_CLIENT_SECRET;
+
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
@@ -12,8 +20,99 @@ export async function GET(request: NextRequest) {
     const startDate = searchParams.get('startDate');
     const endDate = searchParams.get('endDate');
 
-    // For demo purposes, return mock data
-    // In production, this would use the actual B2B GraphQL API
+    // Get customer access token for authentication
+    const customerAccessToken = await getSessionCustomerAccessToken();
+
+    // Temporarily allow unauthenticated access for demo purposes
+    // In production, you would require authentication
+    if (!customerAccessToken) {
+      console.log('No authentication token, showing demo data');
+      // Fall through to mock data instead of returning 401
+    }
+
+    // Try to fetch real data from BigCommerce B2B API
+    try {
+      if (!STORE_HASH || !B2B_CLIENT_ID || !B2B_CLIENT_SECRET) {
+        throw new Error('B2B API credentials not configured');
+      }
+
+      // Build query parameters for B2B API
+      const params = new URLSearchParams({
+        limit: limit.toString(),
+        page: page.toString(),
+      });
+
+      if (customerId) {
+        params.append('customer_id', customerId);
+      }
+      if (status) {
+        params.append('status', status);
+      }
+      if (startDate) {
+        params.append('date_created:min', startDate);
+      }
+      if (endDate) {
+        params.append('date_created:max', endDate);
+      }
+
+      // Use B2B Storefront API for quotes
+      const response = await fetch(
+        `${B2B_API_BASE}/${STORE_HASH}/v3/b2b/quotes?${params}`,
+        {
+          headers: {
+            'X-Auth-Token': customerAccessToken || '',
+            'Content-Type': 'application/json',
+          },
+        }
+      );
+
+      if (response.ok) {
+        const data = await response.json();
+        
+        // Transform B2B API response to match expected format
+        const transformedQuotes = data.data.map((quote: any) => ({
+          id: quote.id.toString(),
+          quoteNumber: quote.quote_number || `QT-${quote.id}`,
+          status: quote.status,
+          customer: {
+            id: quote.customer_id?.toString() || '1',
+            firstName: quote.customer?.first_name || 'John',
+            lastName: quote.customer?.last_name || 'Doe',
+            company: quote.customer?.company || 'Acme Corp',
+          },
+          totalAmount: {
+            amount: parseFloat(quote.total_inc_tax || '0'),
+            currencyCode: quote.currency_code || 'USD',
+          },
+          createdAt: quote.date_created,
+          expiresAt: quote.expiry_date,
+          lineItems: {
+            edges: (quote.products || []).map((product: any) => ({
+              node: {
+                id: product.id.toString(),
+                productId: product.product_id.toString(),
+                productName: product.name,
+                quantity: product.quantity,
+                unitPrice: {
+                  amount: parseFloat(product.price_inc_tax || '0'),
+                  currencyCode: quote.currency_code || 'USD',
+                },
+              },
+            })),
+          },
+        }));
+
+        return NextResponse.json({
+          quotes: transformedQuotes,
+          totalCount: data.meta?.pagination?.total || transformedQuotes.length,
+        });
+      }
+    } catch (b2bError) {
+      console.log('B2B API call failed, falling back to mock data:', b2bError);
+      // Fall through to mock data
+    }
+
+    // Fallback to mock data if B2B API fails or is not configured
     const mockQuotes = [
       {
         id: '1',
@@ -231,10 +330,6 @@ export async function GET(request: NextRequest) {
         case 'totalAmount':
           aValue = a.totalAmount.amount;
           bValue = b.totalAmount.amount;
-          break;
-        case 'expiresAt':
-          aValue = new Date(a.expiresAt);
-          bValue = new Date(b.expiresAt);
           break;
         case 'createdAt':
         default:

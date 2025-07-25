@@ -47,11 +47,14 @@ export const addToCart = async (
 
     return {
       lastResult: submission.reply(),
-      successMessage: {
-        type: 'success',
-        message: t('successMessage', { cartItems: quantity }),
-        cartLink: true,
-      },
+      successMessage: t.rich('successMessage', {
+        cartItems: quantity,
+        cartLink: (chunks) => (
+          <Link className="underline" href="/cart" prefetch="viewport" prefetchKind="full">
+            {chunks}
+          </Link>
+        ),
+      }),
     };
   } catch (error) {
     // eslint-disable-next-line no-console

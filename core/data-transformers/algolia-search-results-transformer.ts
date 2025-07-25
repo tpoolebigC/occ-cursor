@@ -70,9 +70,9 @@ export async function algoliaResultsTransformer(
       priceValue = typeof hit.default_price === 'string' 
         ? parseFloat(hit.default_price) || 0
         : Number(hit.default_price) || 0;
-    } else if (hit.prices && typeof hit.prices === 'object' && hit.prices.price && hit.prices.price.value) {
+    } else if (hit.prices && typeof hit.prices === 'object' && hit.prices.price && typeof hit.prices.price === 'object' && 'value' in hit.prices.price) {
       // Handle the actual data structure: prices.price.value
-      priceValue = Number(hit.prices.price.value) || 0;
+      priceValue = Number((hit.prices.price as any).value) || 0;
     } else if (hit.prices && typeof hit.prices === 'object' && hit.prices[selectedCurrency]) {
       priceValue = Number(hit.prices[selectedCurrency]) || 0;
     } else if (hit.calculated_prices && typeof hit.calculated_prices === 'object' && hit.calculated_prices[selectedCurrency]) {
@@ -202,9 +202,9 @@ export function transformAlgoliaSearchResults(
       priceValue = typeof hit.default_price === 'string' 
         ? parseFloat(hit.default_price) || 0
         : Number(hit.default_price) || 0;
-    } else if (hit.prices && typeof hit.prices === 'object' && hit.prices.price && hit.prices.price.value) {
+    } else if (hit.prices && typeof hit.prices === 'object' && hit.prices.price && typeof hit.prices.price === 'object' && 'value' in hit.prices.price) {
       // Handle the actual data structure: prices.price.value
-      priceValue = Number(hit.prices.price.value) || 0;
+      priceValue = Number((hit.prices.price as any).value) || 0;
     } else if (hit.prices && typeof hit.prices === 'object' && hit.prices[currencyCode]) {
       priceValue = Number(hit.prices[currencyCode]) || 0;
     } else if (hit.calculated_prices && typeof hit.calculated_prices === 'object' && hit.calculated_prices[currencyCode]) {

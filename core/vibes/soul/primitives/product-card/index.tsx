@@ -1,12 +1,16 @@
-import { clsx } from 'clsx';
+import { type ReactNode } from 'react';
 
 import { Badge } from '@/vibes/soul/primitives/badge';
 import { Price, PriceLabel } from '@/vibes/soul/primitives/price-label';
 import * as Skeleton from '@/vibes/soul/primitives/skeleton';
 import { Image } from '~/components/image';
 import { Link } from '~/components/link';
+import { clsx } from 'clsx';
 
 import { Compare } from './compare';
+
+// Import the BcProductSchema type
+import { type BcProductSchema } from '~/lib/makeswift/utils/use-bc-product-to-vibes-product/use-bc-product-to-vibes-product';
 
 export interface Product {
   id: string;
@@ -17,6 +21,28 @@ export interface Product {
   subtitle?: string;
   badge?: string;
   rating?: number;
+}
+
+/**
+ * Maps BcProductSchema to Product interface for compatibility
+ */
+export function mapBcProductToProduct(bcProduct: BcProductSchema): Product {
+  return {
+    id: bcProduct.entityId.toString(),
+    title: bcProduct.name,
+    href: bcProduct.path,
+    image: bcProduct.defaultImage ? {
+      src: bcProduct.defaultImage.url,
+      alt: bcProduct.defaultImage.altText || bcProduct.name,
+    } : undefined,
+    price: bcProduct.prices ? {
+      value: bcProduct.prices.price.value,
+      currencyCode: bcProduct.prices.price.currencyCode,
+    } as any : undefined,
+    subtitle: bcProduct.brand?.name,
+    badge: undefined,
+    rating: undefined,
+  };
 }
 
 export interface ProductCardProps {

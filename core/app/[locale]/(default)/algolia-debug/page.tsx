@@ -1,5 +1,5 @@
-import { debugAlgoliaIndex } from '~/lib/algolia/debug-index';
-import { fetchAlgoliaFacetedSearch } from '~/lib/algolia/faceted-search';
+import { debugAlgoliaIndex } from '~/features/algolia/services/debug-index';
+import { fetchAlgoliaFacetedSearch } from '~/features/algolia/services/faceted-search';
 
 export default async function AlgoliaDebugPage() {
   // Debug the index

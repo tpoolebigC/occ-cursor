@@ -1,9 +1,9 @@
 import { type Font, MakeswiftApiHandler } from '@makeswift/runtime/next/server';
 import { strict } from 'assert';
 
-import { runtime } from '~/lib/makeswift/runtime';
+import { runtime } from '~/features/makeswift/utils/runtime';
 
-import '~/lib/makeswift/components';
+import '~/features/makeswift/components';
 
 strict(process.env.MAKESWIFT_SITE_API_KEY, 'MAKESWIFT_SITE_API_KEY is required');
 

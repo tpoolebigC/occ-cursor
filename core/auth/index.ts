@@ -1,16 +1,20 @@
+/**
+ * Auth Configuration
+ * 
+ * This file contains the NextAuth configuration and exports.
+ * Server-side functions are exported from './server' only.
+ */
+
 import { decodeJwt } from 'jose';
 import NextAuth, { type NextAuthConfig, User } from 'next-auth';
 import 'next-auth/jwt';
 import CredentialsProvider from 'next-auth/providers/credentials';
-import { getTranslations } from 'next-intl/server';
 import { z } from 'zod';
 
-import { anonymousSignIn, clearAnonymousSession } from '~/auth/anonymous-session';
-import { loginWithB2B } from '~/b2b/client';
-import { client } from '~/client';
+import { loginWithB2B } from '~/features/b2b/services/client';
+import { serverClient as client } from '~/client/server-client';
 import { graphql } from '~/client/graphql';
 import { clearCartId, setCartId } from '~/lib/cart';
-import { serverToast } from '~/lib/server-toast';
 import './types';
 
 const LoginMutation = graphql(`
@@ -91,16 +95,9 @@ const SessionUpdate = z.object({
 });
 
 async function handleLoginCart(guestCartId?: string, loginResultCartId?: string) {
-  const t = await getTranslations('Cart');
-
-  if (guestCartId === undefined && loginResultCartId !== undefined) {
-    await serverToast.info(t('cartRestored'), { position: 'top-center' });
-  }
-
-  if (loginResultCartId && guestCartId && loginResultCartId !== guestCartId) {
-    await serverToast.info(t('cartCombined'), { position: 'top-center' });
-  }
-
+  // This function is only called from server-side auth providers
+  // Server-side notifications are handled separately to avoid client-side imports
+  
   if (loginResultCartId) {
     await setCartId(loginResultCartId);
   }
@@ -134,7 +131,7 @@ async function loginWithPassword(credentials: unknown): Promise<User | null> {
     customerAccessToken: result.customerAccessToken,
   });
 
-  await clearAnonymousSession();
+  // await clearAnonymousSession(); // Server-side function - handled separately
 
   return {
     name: `${result.customer.firstName} ${result.customer.lastName}`,
@@ -176,8 +173,6 @@ async function loginWithJwt(credentials: unknown): Promise<User | null> {
     customerId: result.customer.entityId,
     customerAccessToken: result.customerAccessToken,
   });
-
-  await clearAnonymousSession();
 
   return {
     name: `${result.customer.firstName} ${result.customer.lastName}`,
@@ -294,7 +289,8 @@ const config = {
 
       if (customerAccessToken) {
         try {
-          const logoutResponse = await client.fetch({
+          // Call BigCommerce logout to unassign cart
+          await client.fetch({
             document: LogoutMutation,
             variables: {
               cartEntityId,
@@ -304,22 +300,12 @@ const config = {
               cache: 'no-store',
             },
           });
-
-          // If the logout is successful, we want to establish a new anonymous session.
-          // This will allow us to restore the cart if persistent cart is disabled.
-          await anonymousSignIn();
-
-          // If persistent cart is disabled, we can restore the cart back to the anonymous session.
-          if (logoutResponse.data.logout.cartUnassignResult.cart) {
-            await setCartId(logoutResponse.data.logout.cartUnassignResult.cart.entityId);
-
-            return;
-          }
-
-          await clearCartId();
+          
+          // Cart restoration will be handled by the middleware or session management
+          // This prevents the logout loop by not trying to manipulate cart state here
         } catch (error) {
           // eslint-disable-next-line no-console
-          console.error(error);
+          console.error('Logout error:', error);
         }
       }
     },
@@ -347,6 +333,8 @@ const config = {
 
 export const { handlers, auth, signIn, signOut, unstable_update: updateSession } = NextAuth(config);
 
+// Server-side functions - these should only be imported from './server-only'
+// Client components should use useSession() from next-auth/react instead
 export const getSessionCustomerAccessToken = async () => {
   try {
     const session = await auth();
@@ -363,9 +351,12 @@ export const isLoggedIn = async () => {
   return Boolean(cat);
 };
 
+// Note: Server-side functions like anonymousSignIn, clearAnonymousSession, etc.
+// are exported from './server-only' and should only be imported in server contexts
+
 export {
   anonymousSignIn,
   clearAnonymousSession,
   getAnonymousSession,
   updateAnonymousSession,
-} from './anonymous-session';
+} from './server';

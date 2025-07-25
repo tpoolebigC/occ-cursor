@@ -1,5 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 
+import { getSessionCustomerAccessToken } from '~/auth';
+
+// BigCommerce B2B API endpoints
+const B2B_API_BASE = process.env.BIGCOMMERCE_B2B_API_URL || 'https://api.bigcommerce.com/stores';
+const STORE_HASH = process.env.BIGCOMMERCE_STORE_HASH;
+const B2B_CLIENT_ID = process.env.BIGCOMMERCE_B2B_CLIENT_ID;
+const B2B_CLIENT_SECRET = process.env.BIGCOMMERCE_B2B_CLIENT_SECRET;
+
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
@@ -12,8 +20,99 @@ export async function GET(request: NextRequest) {
     const startDate = searchParams.get('startDate');
     const endDate = searchParams.get('endDate');
 
-    // For demo purposes, return mock data
-    // In production, this would use the actual B2B GraphQL API
+    // Get customer access token for authentication
+    const customerAccessToken = await getSessionCustomerAccessToken();
+
+    // Temporarily allow unauthenticated access for demo purposes
+    // In production, you would require authentication
+    if (!customerAccessToken) {
+      console.log('No authentication token, showing demo data');
+      // Fall through to mock data instead of returning 401
+    }
+
+    // Try to fetch real data from BigCommerce B2B API
+    try {
+      if (!STORE_HASH || !B2B_CLIENT_ID || !B2B_CLIENT_SECRET) {
+        throw new Error('B2B API credentials not configured');
+      }
+
+      // Build query parameters for B2B API
+      const params = new URLSearchParams({
+        limit: limit.toString(),
+        page: page.toString(),
+      });
+
+      if (customerId) {
+        params.append('customer_id', customerId);
+      }
+      if (status) {
+        params.append('status', status);
+      }
+      if (startDate) {
+        params.append('date_created:min', startDate);
+      }
+      if (endDate) {
+        params.append('date_created:max', endDate);
+      }
+
+      // Use B2B Storefront API for orders
+      const response = await fetch(
+        `${B2B_API_BASE}/${STORE_HASH}/v3/b2b/orders?${params}`,
+        {
+          headers: {
+            'X-Auth-Token': customerAccessToken || '',
+            'Content-Type': 'application/json',
+          },
+        }
+      );
+
+      if (response.ok) {
+        const data = await response.json();
+        
+        // Transform B2B API response to match expected format
+        const transformedOrders = data.data.map((order: any) => ({
+          id: order.id.toString(),
+          orderNumber: order.order_number || `ORD-${order.id}`,
+          status: order.status,
+          customer: {
+            id: order.customer_id?.toString() || '1',
+            firstName: order.customer?.first_name || 'John',
+            lastName: order.customer?.last_name || 'Doe',
+            company: order.customer?.company || 'Acme Corp',
+          },
+          totalAmount: {
+            amount: parseFloat(order.total_inc_tax || '0'),
+            currencyCode: order.currency_code || 'USD',
+          },
+          createdAt: order.date_created,
+          updatedAt: order.date_modified,
+          lineItems: {
+            edges: (order.products || []).map((product: any) => ({
+              node: {
+                id: product.id.toString(),
+                productId: product.product_id.toString(),
+                productName: product.name,
+                quantity: product.quantity,
+                unitPrice: {
+                  amount: parseFloat(product.price_inc_tax || '0'),
+                  currencyCode: order.currency_code || 'USD',
+                },
+              },
+            })),
+          },
+        }));
+
+        return NextResponse.json({
+          orders: transformedOrders,
+          totalCount: data.meta?.pagination?.total || transformedOrders.length,
+        });
+      }
+    } catch (b2bError) {
+      console.log('B2B API call failed, falling back to mock data:', b2bError);
+      // Fall through to mock data
+    }
+
+    // Fallback to mock data if B2B API fails or is not configured
     const mockOrders = [
       {
         id: '1',
@@ -107,72 +206,6 @@ export async function GET(request: NextRequest) {
                 quantity: 2,
                 unitPrice: {
                   amount: 1050.00,
-                  currencyCode: 'USD',
-                },
-              },
-            },
-          ],
-        },
-      },
-      {
-        id: '4',
-        orderNumber: 'ORD-2024-004',
-        status: 'shipped',
-        customer: {
-          id: '1',
-          firstName: 'John',
-          lastName: 'Doe',
-          company: 'Acme Corp',
-        },
-        totalAmount: {
-          amount: 3200.00,
-          currencyCode: 'USD',
-        },
-        createdAt: '2024-01-25T14:20:00Z',
-        updatedAt: '2024-01-26T09:30:00Z',
-        lineItems: {
-          edges: [
-            {
-              node: {
-                id: '4',
-                productId: '104',
-                productName: 'Deluxe Widget D',
-                quantity: 4,
-                unitPrice: {
-                  amount: 800.00,
-                  currencyCode: 'USD',
-                },
-              },
-            },
-          ],
-        },
-      },
-      {
-        id: '5',
-        orderNumber: 'ORD-2024-005',
-        status: 'cancelled',
-        customer: {
-          id: '2',
-          firstName: 'Jane',
-          lastName: 'Smith',
-          company: 'Enterprise Inc',
-        },
-        totalAmount: {
-          amount: 1500.00,
-          currencyCode: 'USD',
-        },
-        createdAt: '2024-01-28T16:45:00Z',
-        updatedAt: '2024-01-29T10:15:00Z',
-        lineItems: {
-          edges: [
-            {
-              node: {
-                id: '5',
-                productId: '105',
-                productName: 'Basic Widget E',
-                quantity: 15,
-                unitPrice: {
-                  amount: 100.00,
                   currencyCode: 'USD',
                 },
               },

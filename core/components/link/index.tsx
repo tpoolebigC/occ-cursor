@@ -25,7 +25,7 @@ type Props = NextLinkProps & PrefetchOptions;
  */
 export const Link = forwardRef<ComponentRef<'a'>, Props>(
   ({ href, prefetch = 'hover', prefetchKind = 'auto', children, className, ...rest }, ref) => {
-    let router;
+    let router: ReturnType<typeof useRouter> | undefined;
     let prefetchEnabled = false;
     
     try {
@@ -47,13 +47,11 @@ export const Link = forwardRef<ComponentRef<'a'>, Props>(
       if (typeof href === 'string') {
         // PrefetchKind enum is not exported
         // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-        // @ts-expect-error
-        router.prefetch(href, { kind: prefetchKind });
+        router.prefetch(href, { kind: prefetchKind as any });
       } else {
         // PrefetchKind enum is not exported
         // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-        // @ts-expect-error
-        router.prefetch(href.href, { kind: prefetchKind });
+        router.prefetch(href.href || '', { kind: prefetchKind as any });
       }
 
       setPrefetched();

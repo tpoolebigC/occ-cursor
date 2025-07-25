@@ -1,5 +1,5 @@
 import { auth } from '~/auth';
-import { loginWithB2B } from '~/b2b/client';
+import { loginWithB2B } from '~/features/b2b/services/client';
 import { getSessionCustomerAccessToken } from '~/auth';
 
 export default async function B2BDebugPage() {
@@ -63,7 +63,7 @@ export default async function B2BDebugPage() {
             b2bTestResult.success ? (
               <div>
                 <p className="text-green-600"><strong>✅ B2B API Test Successful!</strong></p>
-                <p><strong>Token Preview:</strong> {b2bTestResult.token.substring(0, 50)}...</p>
+                <p><strong>Token Preview:</strong> {b2bTestResult.token?.substring(0, 50)}...</p>
                 <details className="mt-2">
                   <summary className="cursor-pointer font-semibold">Full Token (click to expand)</summary>
                   <pre className="mt-2 text-xs overflow-auto">{b2bTestResult.token}</pre>

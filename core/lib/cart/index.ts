@@ -2,7 +2,8 @@
 
 import { unstable_expireTag } from 'next/cache';
 
-import { auth, getAnonymousSession, updateAnonymousSession, updateSession } from '~/auth';
+import { auth, updateSession } from '~/auth';
+import { getAnonymousSession, updateAnonymousSession } from '~/auth/server-utils';
 import { TAGS } from '~/client/tags';
 import { addCartLineItem, AddCartLineItemsInput } from '~/lib/cart/add-cart-line-item';
 import { createCart, CreateCartInput } from '~/lib/cart/create-cart';

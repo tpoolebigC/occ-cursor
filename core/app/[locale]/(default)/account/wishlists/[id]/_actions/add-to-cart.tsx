@@ -45,11 +45,14 @@ export async function addWishlistItemToCart(prevState: State, formData: FormData
 
     return {
       lastResult: submission.reply(),
-      successMessage: {
-        type: 'success',
-        message: t('successMessage', { cartItems: quantity }),
-        cartLink: true,
-      },
+      successMessage: t.rich('successMessage', {
+        cartItems: quantity,
+        cartLink: (chunks: any) => (
+          <Link className="underline" href="/cart" prefetch="viewport" prefetchKind="full">
+            {chunks}
+          </Link>
+        ),
+      } as any),
     };
   } catch (error) {
     // eslint-disable-next-line no-console

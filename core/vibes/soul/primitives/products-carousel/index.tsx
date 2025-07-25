@@ -1,13 +1,13 @@
 'use client';
 
-import { type Product } from '@bigcommerce/catalyst-client';
+import { type BcProductSchema } from '~/lib/makeswift/utils/use-bc-product-to-vibes-product/use-bc-product-to-vibes-product';
 import { clsx } from 'clsx';
 
 import { Carousel, CarouselButtons, CarouselContent, CarouselItem } from '../carousel';
-import { ProductCard } from '../product-card';
+import { ProductCard, mapBcProductToProduct } from '../product-card';
 
 interface ProductsCarouselProps {
-  products: Product[];
+  products: BcProductSchema[];
   className?: string;
   hideOverflow?: boolean;
 }
@@ -25,7 +25,7 @@ export function ProductsCarousel({ products, className, hideOverflow }: Products
       <CarouselContent className="-ml-2 md:-ml-4">
         {products.map((product) => (
           <CarouselItem key={product.entityId} className="pl-2 md:pl-4 md:basis-1/2 lg:basis-1/3 xl:basis-1/4">
-            <ProductCard product={product} />
+            <ProductCard product={mapBcProductToProduct(product)} />
           </CarouselItem>
         ))}
       </CarouselContent>

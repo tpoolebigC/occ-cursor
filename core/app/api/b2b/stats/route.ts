@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 import { getSessionCustomerAccessToken } from '~/auth';
-import { client } from '~/client';
+import { serverClient as client } from '~/client/server-client';
 import { graphql } from '~/client/graphql';
 
 const GetB2BStatsQuery = graphql(`
@@ -66,10 +66,10 @@ export async function GET(request: NextRequest) {
     // In a real implementation, you'd get this from the session or request
     const customerId = 1;
 
-    const { data } = await client.query({
-      query: GetB2BStatsQuery,
+    const { data } = await client.fetch({
+      document: GetB2BStatsQuery,
       variables: { customerId },
-    });
+    }) as any;
 
     if (!data?.customer) {
       return NextResponse.json(
@@ -81,15 +81,15 @@ export async function GET(request: NextRequest) {
     // Calculate stats from the data
     const orders = data.customer.orders?.edges || [];
     const quotes = data.customer.quotes?.edges || [];
-    const products = data.site?.products?.edges || [];
+    const products = (data.site?.products as any)?.edges || [];
 
     // Filter active orders (not completed/cancelled)
-    const activeOrders = orders.filter(({ node }) => 
+    const activeOrders = orders.filter(({ node }: any) => 
       node.status !== 'COMPLETED' && node.status !== 'CANCELLED'
     );
 
     // Filter pending quotes
-    const pendingQuotes = quotes.filter(({ node }) => 
+    const pendingQuotes = quotes.filter(({ node }: any) => 
       node.status === 'PENDING' || node.status === 'DRAFT'
     );
 
@@ -98,13 +98,13 @@ export async function GET(request: NextRequest) {
     const currentMonth = now.getMonth();
     const currentYear = now.getFullYear();
     
-    const monthlyOrders = orders.filter(({ node }) => {
+    const monthlyOrders = orders.filter(({ node }: any) => {
       const orderDate = new Date(node.createdAt.utc);
       return orderDate.getMonth() === currentMonth && 
              orderDate.getFullYear() === currentYear;
     });
 
-    const monthlyRevenue = monthlyOrders.reduce((total, { node }) => {
+    const monthlyRevenue = monthlyOrders.reduce((total: number, { node }: any) => {
       return total + parseFloat(node.total.value);
     }, 0);
 

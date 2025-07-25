@@ -1,4 +1,4 @@
-import { B2BProductOption } from '~/b2b/types';
+import { B2BProductOption } from '~/features/b2b/types/product-options';
 
 import { Field } from '../vibes/soul/sections/product-detail/schema';
 
@@ -7,39 +7,27 @@ interface ProductOption {
   value?: string | number;
 }
 
-export function mapToB2BProductOptions({ field, value }: ProductOption): B2BProductOption {
+export function mapToB2BProductOptions({ field, value }: ProductOption): { optionId: number; value: string; } {
   const fieldId = Number(field.name);
-
-  const baseOption: B2BProductOption = {
-    optionEntityId: fieldId,
-    optionValueEntityId: 0, // Will be set based on type
-    entityId: fieldId,
-    valueEntityId: 0, // Will be set based on type
-    text: '',
-    number: 0,
-    date: { utc: '' },
-  };
 
   switch (field.type) {
     case 'text':
     case 'textarea':
       return {
-        ...baseOption,
-        text: String(value || ''),
+        optionId: fieldId,
+        value: String(value || ''),
       };
 
     case 'number':
       return {
-        ...baseOption,
-        number: Number(value || 0),
+        optionId: fieldId,
+        value: String(value || 0),
       };
 
     case 'date':
       return {
-        ...baseOption,
-        date: {
-          utc: value ? new Date(value).toISOString() : '',
-        },
+        optionId: fieldId,
+        value: value ? new Date(value).toISOString() : '',
       };
 
     case 'button-radio-group':
@@ -50,14 +38,15 @@ export function mapToB2BProductOptions({ field, value }: ProductOption): B2BProd
       const selectedOption = field.options.find((opt) => opt.value === String(value));
 
       return {
-        ...baseOption,
-        optionValueEntityId: Number(selectedOption?.value ?? 0),
-        valueEntityId: Number(selectedOption?.value ?? 0),
-        text: selectedOption?.label || '',
+        optionId: fieldId,
+        value: selectedOption?.value || String(value || ''),
       };
     }
 
     default:
-      return baseOption;
+      return {
+        optionId: fieldId,
+        value: String(value || ''),
+      };
   }
 }

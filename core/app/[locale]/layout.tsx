@@ -15,19 +15,19 @@ import { fonts } from '~/app/fonts';
 import { CookieNotifications } from '~/app/notifications';
 import { Providers } from '~/app/providers';
 import { B2BLoader } from '~/b2b/loader';
-import { client } from '~/client';
+import { serverClient as client } from '~/client/server-client';
 import { graphql } from '~/client/graphql';
 import { revalidate } from '~/client/revalidate-target';
 import { WebAnalyticsFragment } from '~/components/analytics/fragment';
 import { AnalyticsProvider } from '~/components/analytics/provider';
 import { ContainerQueryPolyfill } from '~/components/polyfills/container-query';
 import { routing } from '~/i18n/routing';
-import { SiteTheme } from '~/lib/makeswift/components/site-theme';
-import { MakeswiftProvider } from '~/lib/makeswift/provider';
+import { SiteTheme } from '~/features/makeswift/components/site-theme';
+import { MakeswiftProvider } from '~/features/makeswift/providers/provider';
 
 import { getToastNotification } from '../../lib/server-toast';
 
-import '~/lib/makeswift/components';
+import '~/features/makeswift/components';
 
 const RootLayoutMetadataQuery = graphql(
   `

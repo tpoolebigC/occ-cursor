@@ -4,7 +4,7 @@
  */
 
 import { getChannelIdFromLocale } from '~/channels.config';
-import { client } from '~/client';
+import { serverClient as client } from '~/client/server-client';
 import { defaultLocale } from '~/i18n/locales';
 
 export const GET = async () => {

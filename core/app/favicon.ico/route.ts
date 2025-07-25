@@ -10,7 +10,7 @@
  */
 
 import { getChannelIdFromLocale } from '~/channels.config';
-import { client } from '~/client';
+import { serverClient as client } from '~/client/server-client';
 import { graphql } from '~/client/graphql';
 import { defaultLocale } from '~/i18n/locales';
 

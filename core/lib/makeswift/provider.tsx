@@ -2,7 +2,7 @@
 
 import { ReactRuntimeProvider, RootStyleRegistry } from '@makeswift/runtime/next';
 
-import { runtime } from '~/lib/makeswift/runtime';
+import { runtime } from '~/features/makeswift/utils/runtime';
 import '~/lib/makeswift/register-components';
 
 export function MakeswiftProvider({

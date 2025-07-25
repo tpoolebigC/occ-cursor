@@ -1,6 +1,6 @@
 import { MakeswiftComponent } from '@makeswift/runtime/next';
 
-import { getComponentSnapshot } from '~/lib/makeswift/client';
+import { getComponentSnapshot } from '~/features/makeswift/services/client';
 
 export const Component = async ({
   snapshotId,

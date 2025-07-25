@@ -1,7 +1,8 @@
 import { removeEdgesAndNodes } from '@bigcommerce/catalyst-client';
 import { cache } from 'react';
 
-import { getSessionCustomerAccessToken } from '~/auth';
+// Server-side auth functions should be imported in server contexts only
+// This file is in the client directory and may be imported by client components
 import { client } from '~/client';
 import { graphql, ResultOf } from '~/client/graphql';
 import { revalidate } from '~/client/revalidate-target';
@@ -115,15 +116,13 @@ export type GetProductsResponse = Array<
 >;
 
 const getBestSellingProducts = cache(async () => {
-  const customerAccessToken = await getSessionCustomerAccessToken();
   const currencyCode = await getPreferredCurrencyCode();
 
   try {
     const response = await client.fetch({
       document: GetBestSellingProductsQuery,
       variables: { currencyCode: currencyCode || 'USD' },
-      customerAccessToken,
-      fetchOptions: customerAccessToken ? { cache: 'no-store' } : { next: { revalidate } },
+      fetchOptions: { next: { revalidate } },
     });
 
     const { bestSellingProducts } = response.data.site;
@@ -142,15 +141,13 @@ const getBestSellingProducts = cache(async () => {
 });
 
 const getFeaturedProducts = cache(async () => {
-  const customerAccessToken = await getSessionCustomerAccessToken();
   const currencyCode = await getPreferredCurrencyCode();
 
   try {
     const response = await client.fetch({
       document: GetFeaturedProductsQuery,
       variables: { currencyCode: currencyCode || 'USD' },
-      customerAccessToken,
-      fetchOptions: customerAccessToken ? { cache: 'no-store' } : { next: { revalidate } },
+      fetchOptions: { next: { revalidate } },
     });
 
     const { featuredProducts } = response.data.site;
@@ -169,15 +166,13 @@ const getFeaturedProducts = cache(async () => {
 });
 
 const getNewestProducts = cache(async () => {
-  const customerAccessToken = await getSessionCustomerAccessToken();
   const currencyCode = await getPreferredCurrencyCode();
 
   try {
     const response = await client.fetch({
       document: GetNewestProductsQuery,
       variables: { currencyCode: currencyCode || 'USD' },
-      customerAccessToken,
-      fetchOptions: customerAccessToken ? { cache: 'no-store' } : { next: { revalidate } },
+      fetchOptions: { next: { revalidate } },
     });
 
     const { newestProducts } = response.data.site;
@@ -196,15 +191,13 @@ const getNewestProducts = cache(async () => {
 });
 
 const getProductsByIds = cache(async (entityIds: number[]) => {
-  const customerAccessToken = await getSessionCustomerAccessToken();
   const currencyCode = await getPreferredCurrencyCode();
 
   try {
     const response = await client.fetch({
       document: GetProductsByIds,
       variables: { entityIds, currencyCode: currencyCode || 'USD' },
-      customerAccessToken,
-      fetchOptions: customerAccessToken ? { cache: 'no-store' } : { next: { revalidate } },
+      fetchOptions: { next: { revalidate } },
     });
 
     const { products } = response.data.site;

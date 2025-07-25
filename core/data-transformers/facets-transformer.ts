@@ -2,7 +2,7 @@
 import { getTranslations } from 'next-intl/server';
 import { z } from 'zod';
 
-import { fetchAlgoliaFacetedSearch } from '~/lib/algolia/faceted-search';
+import { fetchAlgoliaFacetedSearch } from '~/features/algolia/services/faceted-search';
 import { ExistingResultType } from '~/client/util';
 
 // Import the schema types from the old file for compatibility
@@ -32,8 +32,8 @@ export const facetsTransformer = async ({
         paramName: 'categoryIn',
         label: facet.name,
         defaultCollapsed: facet.isCollapsedByDefault,
-        options: facet.categories.map((category) => {
-          const refinedCategory = refinedCategorySearchFilter?.categories.find(
+        options: facet.categories?.map((category) => {
+          const refinedCategory = refinedCategorySearchFilter?.categories?.find(
             (c) => c.entityId === category.entityId,
           );
           const isSelected = filters.categoryEntityIds?.includes(category.entityId) === true;
@@ -43,7 +43,7 @@ export const facetsTransformer = async ({
             value: category.entityId.toString(),
             disabled: refinedCategory == null && !isSelected,
           };
-        }),
+        }) || [],
       };
     }
 
@@ -56,8 +56,8 @@ export const facetsTransformer = async ({
         paramName: 'brand',
         label: facet.name,
         defaultCollapsed: facet.isCollapsedByDefault,
-        options: facet.brands.map((brand) => {
-          const refinedBrand = refinedBrandSearchFilter?.brands.find(
+        options: facet.brands?.map((brand) => {
+          const refinedBrand = refinedBrandSearchFilter?.brands?.find(
             (b) => b.entityId === brand.entityId,
           );
           const isSelected = filters.brandEntityIds?.includes(brand.entityId) === true;
@@ -67,7 +67,7 @@ export const facetsTransformer = async ({
             value: brand.entityId.toString(),
             disabled: refinedBrand == null && !isSelected,
           };
-        }),
+        }) || [],
       };
     }
 
@@ -77,10 +77,10 @@ export const facetsTransformer = async ({
 
       return {
         type: 'toggle-group' as const,
-        paramName: `attr_${facet.filterName}`,
-        label: facet.filterName,
-        options: facet.attributes.map((attribute) => {
-          const refinedAttribute = refinedProductAttributeSearchFilter?.attributes.find(
+        paramName: `attr_${facet.name || 'attribute'}`,
+        label: facet.name || 'Attribute',
+        options: facet.attributes?.map((attribute) => {
+          const refinedAttribute = refinedProductAttributeSearchFilter?.attributes?.find(
             (a) => a.value === attribute.value,
           );
 
@@ -93,7 +93,7 @@ export const facetsTransformer = async ({
             value: attribute.value,
             disabled: refinedAttribute == null && !isSelected,
           };
-        }),
+        }) || [],
       };
     }
 
@@ -126,9 +126,9 @@ export const facetsTransformer = async ({
       };
     }
 
-    if (facet.freeShipping) {
+    if (facet.__typename === 'OtherSearchFilter' && (facet as any).freeShipping) {
       const refinedFreeShippingSearchFilter =
-        refinedFacet?.__typename === 'OtherSearchFilter' && refinedFacet.freeShipping
+        refinedFacet?.__typename === 'OtherSearchFilter' && (refinedFacet as any).freeShipping
           ? refinedFacet
           : null;
       const isSelected = filters.isFreeShipping === true;
@@ -147,9 +147,9 @@ export const facetsTransformer = async ({
       };
     }
 
-    if (facet.isFeatured) {
+    if (facet.__typename === 'OtherSearchFilter' && (facet as any).isFeatured) {
       const refinedIsFeaturedSearchFilter =
-        refinedFacet?.__typename === 'OtherSearchFilter' && refinedFacet.isFeatured
+        refinedFacet?.__typename === 'OtherSearchFilter' && (refinedFacet as any).isFeatured
           ? refinedFacet
           : null;
       const isSelected = filters.isFeatured === true;
@@ -168,9 +168,9 @@ export const facetsTransformer = async ({
       };
     }
 
-    if (facet.isInStock) {
+    if (facet.__typename === 'OtherSearchFilter' && (facet as any).isInStock) {
       const refinedIsInStockSearchFilter =
-        refinedFacet?.__typename === 'OtherSearchFilter' && refinedFacet.isInStock
+        refinedFacet?.__typename === 'OtherSearchFilter' && (refinedFacet as any).isInStock
           ? refinedFacet
           : null;
       const isSelected = filters.hideOutOfStock === true;

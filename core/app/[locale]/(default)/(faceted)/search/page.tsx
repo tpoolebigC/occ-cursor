@@ -12,7 +12,7 @@ import { facetsTransformer } from '~/data-transformers/facets-transformer';
 import { pageInfoTransformer } from '~/data-transformers/page-info-transformer';
 import { pricesTransformer } from '~/data-transformers/prices-transformer';
 import { getPreferredCurrencyCode } from '~/lib/currency';
-import { fetchAlgoliaFacetedSearch } from '~/lib/algolia/faceted-search';
+import { fetchAlgoliaFacetedSearch } from '~/features/algolia/services/faceted-search';
 
 import { MAX_COMPARE_LIMIT } from '../../compare/page-data';
 import { getCompareProducts as getCompareProductsData } from '../fetch-compare-products';
@@ -106,7 +106,7 @@ export default async function Search(props: Props) {
       limit: parseInt(searchParams.limit as string) || 12,
       sort: searchParams.sort as any,
       brand: Array.isArray(searchParams.brand) ? searchParams.brand : searchParams.brand ? [searchParams.brand as string] : undefined,
-      categoryIn: Array.isArray(searchParams.categoryIn) ? searchParams.categoryIn : searchParams.categoryIn ? [searchParams.categoryIn as number] : undefined,
+      categoryIn: Array.isArray(searchParams.categoryIn) ? searchParams.categoryIn.map(id => Number(id)) : searchParams.categoryIn ? [Number(searchParams.categoryIn)] : undefined,
       minPrice: searchParams.minPrice ? parseFloat(searchParams.minPrice as string) : undefined,
       maxPrice: searchParams.maxPrice ? parseFloat(searchParams.maxPrice as string) : undefined,
       stock: Array.isArray(searchParams.stock) ? searchParams.stock : searchParams.stock ? [searchParams.stock as string] : undefined,

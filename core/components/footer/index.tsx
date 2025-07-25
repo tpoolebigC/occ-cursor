@@ -13,7 +13,7 @@ import { Streamable } from '@/vibes/soul/lib/streamable';
 import { Footer as FooterSection } from '@/vibes/soul/sections/footer';
 import { GetLinksAndSectionsQuery, LayoutQuery } from '~/app/[locale]/(default)/page-data';
 import { getSessionCustomerAccessToken } from '~/auth';
-import { client } from '~/client';
+import { serverClient as client } from '~/client/server-client';
 import { readFragment } from '~/client/graphql';
 import { revalidate } from '~/client/revalidate-target';
 import { logoTransformer } from '~/data-transformers/logo-transformer';
