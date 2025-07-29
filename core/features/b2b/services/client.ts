@@ -19,7 +19,7 @@ const ENV = z
     env: z.object({
       B2B_API_TOKEN: z.string(),
       BIGCOMMERCE_CHANNEL_ID: z.string(),
-      B2B_API_HOST: z.string().default('https://api-b2b.bigcommerce.com/'),
+      B2B_API_HOST: z.string().default('https://api-b2b.bigcommerce.com'),
     }),
   })
   .transform(({ env }) => env);

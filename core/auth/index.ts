@@ -266,24 +266,16 @@ const config = {
       return token;
     },
     session({ session, token }) {
-      // Handle customer access token
       if (token.user?.customerAccessToken) {
         session.user.customerAccessToken = token.user.customerAccessToken;
       }
 
-      // Handle cart ID
       if (token.user?.cartId !== undefined) {
         session.user.cartId = token.user.cartId;
       }
 
-      // Handle B2B token
       if (token.b2bToken) {
         session.b2bToken = token.b2bToken;
-      }
-
-      // Ensure session has required fields
-      if (!session.user) {
-        session.user = {};
       }
 
       return session;
@@ -347,12 +339,9 @@ export const getSessionCustomerAccessToken = async () => {
   try {
     const session = await auth();
 
-    // For B2B users, we might not have a customerAccessToken
-    // Return null instead of throwing to prevent redirect loops
-    return session?.user?.customerAccessToken || null;
-  } catch (error) {
-    console.warn('Failed to get session customer access token:', error);
-    return null;
+    return session?.user?.customerAccessToken;
+  } catch {
+    // No empty
   }
 };
 
