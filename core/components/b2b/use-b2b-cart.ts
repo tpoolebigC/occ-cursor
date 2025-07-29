@@ -2,11 +2,11 @@
 
 import { useEffect } from 'react';
 
-import { useSDK } from './use-b2b-sdk';
+import { useB2BSDK } from '~/shared/hooks/use-b2b-sdk';
 import { handleB2BCartCreated } from '~/lib/cart/merge-carts';
 
 export function useB2BCart(cartId?: string | null) {
-  const sdk = useSDK();
+  const sdk = useB2BSDK();
 
   useEffect(() => {
     // Skip on server side

@@ -4,7 +4,7 @@ import { useCallback, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 
 import { setCartId } from '~/lib/cart';
-import { useB2BSDK } from './use-b2b-sdk';
+import { useB2BSDK } from '~/shared/hooks/use-b2b-sdk';
 
 /**
  * B2B Cart Hook

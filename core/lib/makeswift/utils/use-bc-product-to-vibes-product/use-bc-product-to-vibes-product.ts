@@ -36,7 +36,7 @@ export type CardProduct = BcProductSchema;
 export function useBcProductToVibesProduct(): (product: BcProductSchema) => CardProduct {
   const format = useFormatter();
 
-  return (product) => {
+  return (product: any): any => {
     const { entityId, name, defaultImage, brand, path, prices } = product;
     const price = pricesTransformer(prices, format);
 

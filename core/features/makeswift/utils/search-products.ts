@@ -3,7 +3,13 @@
 
 import { getProductsByIds } from '~/client/queries/get-products';
 
-export async function searchProducts(query: string, limit: number = 10) {
+interface SearchProduct {
+  entityId: number;
+  name: string;
+  path: string;
+}
+
+export async function searchProducts(query: string, limit: number = 10): Promise<SearchProduct[]> {
   try {
     // For now, return empty array since we don't have a search function
     // This would need to be implemented with a proper search API

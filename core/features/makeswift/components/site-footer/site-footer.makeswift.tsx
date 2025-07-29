@@ -20,7 +20,7 @@ const logo = Shape({
 const links = List({
   label: 'Links',
   type: Shape({
-    label: 'Link',
+
     type: {
       label: TextInput({ label: 'Text', defaultValue: 'Text' }),
       link: Link({ label: 'URL' }),
@@ -38,7 +38,7 @@ runtime.registerComponent(MakeswiftFooter, {
     sections: List({
       label: 'Sections',
       type: Shape({
-        label: 'Section',
+
         type: {
           title: TextInput({ label: 'Title', defaultValue: 'Section' }),
           links,

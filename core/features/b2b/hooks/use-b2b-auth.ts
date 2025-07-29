@@ -5,7 +5,7 @@ import { signOut } from 'next-auth/react';
 import { useEffect } from 'react';
 
 import { login } from '../services/auth';
-import { useB2BSDK } from './use-b2b-sdk';
+import { useB2BSDK } from '~/shared/hooks/use-b2b-sdk';
 
 interface RegistrationData {
   data: {
@@ -46,9 +46,17 @@ export function useB2BAuth(token?: string) {
     };
 
     const handleLogout = () => {
+      console.log('B2B Logout triggered from features hook');
+      
+      // Clear any section parameters from URL before logout
+      const url = new URL(window.location.href);
+      url.searchParams.delete('section');
+      window.history.replaceState({}, '', url.toString());
+      console.log('B2B Logout: Cleared section parameters from URL');
+      
       void signOut({
         redirect: true,
-        redirectTo: '/login',
+        redirectTo: '/',
       }).catch((error: unknown) => {
         console.error('Failed to sign out:', error);
       });

@@ -1,7 +1,7 @@
 'use client';
 
 import { B2BRole } from './types';
-import { useSDK } from './use-b2b-sdk';
+import { useB2BSDK } from '~/shared/hooks/use-b2b-sdk';
 
 interface Config {
   key: string;
@@ -13,7 +13,7 @@ const isConfigEnabled = (configs: Config[], key: string): boolean => {
 };
 
 export const useB2BQuoteEnabled = (): boolean => {
-  const sdk = useSDK();
+  const sdk = useB2BSDK();
 
   const config = sdk?.utils?.quote?.getQuoteConfigs();
   const role = sdk?.utils?.user.getProfile().role;

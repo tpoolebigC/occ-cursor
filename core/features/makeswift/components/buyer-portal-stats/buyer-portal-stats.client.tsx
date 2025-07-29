@@ -1,9 +1,17 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
+import { useB2BStats } from '~/shared/hooks/use-b2b-data';
+
+interface B2BStats {
+  activeOrders: number;
+  monthlyRevenue: string;
+  pendingQuotes: number;
+  totalProducts: number;
+}
 
 interface BuyerPortalStatsProps {
-  columns?: number;
+  columns?: 2 | 3 | 4;
   showActiveOrders?: boolean;
   showMonthlyRevenue?: boolean;
   showPendingQuotes?: boolean;
@@ -12,13 +20,7 @@ interface BuyerPortalStatsProps {
   monthlyRevenue?: string;
   pendingQuotesCount?: number;
   totalProductsCount?: number;
-}
-
-interface B2BStats {
-  activeOrders: number;
-  monthlyRevenue: string;
-  pendingQuotes: number;
-  totalProducts: number;
+  customerId?: string;
 }
 
 export function BuyerPortalStatsClient({
@@ -31,94 +33,115 @@ export function BuyerPortalStatsClient({
   monthlyRevenue = '$12,450',
   pendingQuotesCount = 2,
   totalProductsCount = 15,
+  customerId,
 }: BuyerPortalStatsProps) {
-  const [stats, setStats] = useState<B2BStats>({
-    activeOrders: activeOrdersCount,
-    monthlyRevenue,
-    pendingQuotes: pendingQuotesCount,
-    totalProducts: totalProductsCount,
-  });
-  const [loading, setLoading] = useState(false);
+  // Use optimized SWR hook instead of useEffect
+  const { stats, isLoading, error } = useB2BStats(customerId);
 
-  useEffect(() => {
-    const fetchB2BStats = async () => {
-      setLoading(true);
-      try {
-        const response = await fetch('/api/b2b/stats');
-        if (response.ok) {
-          const data = await response.json();
-          setStats(data);
-        } else {
-          // Fallback to default values if API fails
-          setStats({
-            activeOrders: activeOrdersCount,
-            monthlyRevenue,
-            pendingQuotes: pendingQuotesCount,
-            totalProducts: totalProductsCount,
-          });
-        }
-      } catch (error) {
-        console.error('Failed to fetch B2B stats:', error);
-        // Fallback to default values
-        setStats({
-          activeOrders: activeOrdersCount,
-          monthlyRevenue,
-          pendingQuotes: pendingQuotesCount,
-          totalProducts: totalProductsCount,
-        });
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchB2BStats();
-  }, [activeOrdersCount, monthlyRevenue, pendingQuotesCount, totalProductsCount]);
+  // Use API data if available, fallback to props
+  const displayStats = {
+    activeOrders: stats.activeOrders || activeOrdersCount,
+    monthlyRevenue: stats.monthlyRevenue || monthlyRevenue,
+    pendingQuotes: stats.pendingQuotes || pendingQuotesCount,
+    totalProducts: stats.totalProducts || totalProductsCount,
+  };
 
   const gridCols = columns === 2 ? 'grid-cols-2' : 
                    columns === 3 ? 'grid-cols-3' : 
                    columns === 4 ? 'grid-cols-2 md:grid-cols-4' : 
                    'grid-cols-2 md:grid-cols-4';
 
-  if (loading) {
+  if (isLoading) {
     return (
-      <div className={`grid ${gridCols} gap-4`}>
+      <div className={`grid ${gridCols} gap-4 animate-pulse`}>
         {[...Array(columns)].map((_, i) => (
-          <div key={i} className="text-center animate-pulse">
-            <div className="h-8 bg-gray-200 rounded mb-2"></div>
-            <div className="h-4 bg-gray-200 rounded"></div>
-          </div>
+          <div key={i} className="h-20 bg-gray-200 rounded-lg"></div>
         ))}
       </div>
     );
   }
 
+  if (error) {
+    console.error('Failed to fetch B2B stats:', error);
+  }
+
   return (
     <div className={`grid ${gridCols} gap-4`}>
       {showActiveOrders && (
-        <div className="text-center">
-          <div className="text-2xl font-bold text-blue-600">{stats.activeOrders}</div>
-          <div className="text-sm text-gray-500">Active Orders</div>
+        <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
+          <div className="flex items-center">
+            <div className="flex-shrink-0">
+              <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                <span className="text-blue-600 font-semibold text-sm">
+                  {displayStats.activeOrders}
+                </span>
+              </div>
+            </div>
+            <div className="ml-3">
+              <p className="text-sm font-medium text-gray-500">Active Orders</p>
+              <p className="text-lg font-semibold text-gray-900">
+                {displayStats.activeOrders}
+              </p>
+            </div>
+          </div>
         </div>
       )}
-      
+
       {showMonthlyRevenue && (
-        <div className="text-center">
-          <div className="text-2xl font-bold text-green-600">{stats.monthlyRevenue}</div>
-          <div className="text-sm text-gray-500">This Month</div>
+        <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
+          <div className="flex items-center">
+            <div className="flex-shrink-0">
+              <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
+                <span className="text-green-600 font-semibold text-sm">$</span>
+              </div>
+            </div>
+            <div className="ml-3">
+              <p className="text-sm font-medium text-gray-500">Monthly Revenue</p>
+              <p className="text-lg font-semibold text-gray-900">
+                {displayStats.monthlyRevenue}
+              </p>
+            </div>
+          </div>
         </div>
       )}
-      
+
       {showPendingQuotes && (
-        <div className="text-center">
-          <div className="text-2xl font-bold text-purple-600">{stats.pendingQuotes}</div>
-          <div className="text-sm text-gray-500">Pending Quotes</div>
+        <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
+          <div className="flex items-center">
+            <div className="flex-shrink-0">
+              <div className="w-8 h-8 bg-yellow-100 rounded-full flex items-center justify-center">
+                <span className="text-yellow-600 font-semibold text-sm">
+                  {displayStats.pendingQuotes}
+                </span>
+              </div>
+            </div>
+            <div className="ml-3">
+              <p className="text-sm font-medium text-gray-500">Pending Quotes</p>
+              <p className="text-lg font-semibold text-gray-900">
+                {displayStats.pendingQuotes}
+              </p>
+            </div>
+          </div>
         </div>
       )}
-      
+
       {showTotalProducts && (
-        <div className="text-center">
-          <div className="text-2xl font-bold text-orange-600">{stats.totalProducts}</div>
-          <div className="text-sm text-gray-500">Total Products</div>
+        <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
+          <div className="flex items-center">
+            <div className="flex-shrink-0">
+              <div className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center">
+                <span className="text-purple-600 font-semibold text-sm">
+                  {displayStats.totalProducts}
+                </span>
+              </div>
+            </div>
+            <div className="ml-3">
+              <p className="text-sm font-medium text-gray-500">Total Products</p>
+              <p className="text-lg font-semibold text-gray-900">
+                {displayStats.totalProducts}
+              </p>
+            </div>
+          </div>
         </div>
       )}
     </div>

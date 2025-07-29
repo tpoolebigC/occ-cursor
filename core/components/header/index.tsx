@@ -33,10 +33,16 @@ const GetCartCountQuery = graphql(`
 
 const getCartCount = cache(async (cartId: string, customerAccessToken?: string) => {
   try {
+    // Skip cart count fetch if no valid customer access token
+    if (!customerAccessToken) {
+      return null;
+    }
+
     const response = await client.fetch({
       document: GetCartCountQuery,
       variables: { cartId },
       customerAccessToken,
+      validateCustomerAccessToken: false, // Don't validate to prevent redirects
       fetchOptions: {
         cache: 'no-store',
         next: {
@@ -85,7 +91,10 @@ export const Header = async () => {
   const logo = data.settings ? logoTransformer(data.settings) : '';
 
   // Determine account href based on user type
-  const accountHref = session?.b2bToken ? '/?section=orders' : '/login';
+  // For B2B users, redirect to embedded buyer portal (/?section=orders)
+  // For regular users, redirect to account pages
+  // For non-logged in users, redirect to login
+  const accountHref = session?.b2bToken ? '/?section=orders' : (session?.user?.customerAccessToken ? '/account' : '/login');
 
   const locales = routing.locales.map((enabledLocales) => ({
     id: enabledLocales,
@@ -129,14 +138,19 @@ export const Header = async () => {
   });
 
   const streamableCartCount = Streamable.from(async () => {
-    const cartId = await getCartId();
-    const customerAccessToken = await getSessionCustomerAccessToken();
+    try {
+      const cartId = await getCartId();
+      const customerAccessToken = await getSessionCustomerAccessToken();
 
-    if (!cartId) {
+      if (!cartId || !customerAccessToken) {
+        return null;
+      }
+
+      return getCartCount(cartId, customerAccessToken);
+    } catch (error) {
+      console.warn('Failed to get cart count:', error);
       return null;
     }
-
-    return getCartCount(cartId, customerAccessToken);
   });
 
   const streamableActiveCurrencyId = Streamable.from(async (): Promise<string | undefined> => {

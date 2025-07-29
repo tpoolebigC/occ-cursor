@@ -63,8 +63,21 @@ export default async (): Promise<NextConfig> => {
   let nextConfig: NextConfig = {
     reactStrictMode: true,
     experimental: {
-      optimizePackageImports: ['@icons-pack/react-simple-icons'],
+      optimizePackageImports: [
+        '@icons-pack/react-simple-icons',
+        'lucide-react',
+        '@radix-ui/react-accordion',
+        '@radix-ui/react-dialog',
+        '@radix-ui/react-dropdown-menu',
+        '@radix-ui/react-popover',
+        '@radix-ui/react-select',
+        '@radix-ui/react-tooltip',
+      ],
       ppr: 'incremental',
+      // Enable SWC minification for better performance
+      swcMinify: true,
+      // Enable concurrent features
+      serverComponentsExternalPackages: ['sharp'],
     },
     typescript: {
       ignoreBuildErrors: !!process.env.CI,
@@ -94,7 +107,27 @@ export default async (): Promise<NextConfig> => {
         'storage.googleapis.com', // Makeswift images
         ...settings.urls.cdnUrls.map(url => url.replace('https://', '').replace('http://', '')), // BigCommerce CDN
       ],
+      // Enable image optimization
+      formats: ['image/webp', 'image/avif'],
+      // Cache images for better performance
+      minimumCacheTTL: 60 * 60 * 24 * 30, // 30 days
     },
+    // Performance optimizations
+    compress: true,
+    poweredByHeader: false,
+    generateEtags: true,
+    // Bundle analyzer
+    ...(process.env.ANALYZE === 'true' && {
+      webpack: (config, { isServer }) => {
+        if (!isServer) {
+          config.resolve.fallback = {
+            ...config.resolve.fallback,
+            fs: false,
+          };
+        }
+        return config;
+      },
+    }),
     // eslint-disable-next-line @typescript-eslint/require-await
     async headers() {
       const cdnLinks = settings.urls.cdnUrls.map((url) => ({
@@ -110,7 +143,32 @@ export default async (): Promise<NextConfig> => {
               key: 'Content-Security-Policy',
               value: cspHeader.replace(/\n/g, ''),
             },
+            // Add caching headers for better performance
+            {
+              key: 'Cache-Control',
+              value: 'public, max-age=31536000, immutable',
+            },
             ...cdnLinks,
+          ],
+        },
+        // Cache static assets
+        {
+          source: '/_next/static/(.*)',
+          headers: [
+            {
+              key: 'Cache-Control',
+              value: 'public, max-age=31536000, immutable',
+            },
+          ],
+        },
+        // Cache images
+        {
+          source: '/_next/image(.*)',
+          headers: [
+            {
+              key: 'Cache-Control',
+              value: 'public, max-age=31536000, immutable',
+            },
           ],
         },
       ];

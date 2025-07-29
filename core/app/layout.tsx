@@ -1,6 +1,9 @@
 import { ReactNode } from 'react';
 import type { Metadata } from 'next';
 import { Providers } from './providers';
+import { SiteTheme } from '~/features/makeswift/components/site-theme';
+import { fonts } from './fonts';
+import { clsx } from 'clsx';
 
 interface RootLayoutProps {
   children: ReactNode;
@@ -16,8 +19,11 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: RootLayoutProps) {
   return (
-    <html lang="en">
-      <body>
+    <html className={clsx(fonts.map((f) => f.variable))} lang="en">
+      <head>
+        <SiteTheme />
+      </head>
+      <body className="flex min-h-screen flex-col">
         <Providers>
           {children}
         </Providers>

@@ -5,11 +5,11 @@ import { useCallback, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { setCartId } from '~/lib/cart';
 
-import { useSDK } from './use-b2b-sdk';
+import { useB2BSDK } from '~/shared/hooks/use-b2b-sdk';
 
 export function useB2BCart(id?: string | null) {
   const router = useRouter();
-  const sdk = useSDK();
+  const sdk = useB2BSDK();
 
   const handleCartCreated = useCallback(
     ({ data: { cartId = '' } }) => {

@@ -117,28 +117,21 @@ export default async function RootLayout({ params, children }: Props) {
 
   return (
     <MakeswiftProvider previewMode={(await draftMode()).isEnabled}>
-      <html className={clsx(fonts.map((f) => f.variable))} lang={locale}>
-        <head>
-          <SiteTheme />
-        </head>
-        <body className="flex min-h-screen flex-col">
-          <NextIntlClientProvider messages={messages}>
-            <NuqsAdapter>
-              <B2BLoader />
-              <AnalyticsProvider channelId={data.channel.entityId} settings={data.site.settings}>
-                <Providers>
-                  {toastNotificationCookieData && (
-                    <CookieNotifications {...toastNotificationCookieData} />
-                  )}
-                  {children}
-                </Providers>
-              </AnalyticsProvider>
-            </NuqsAdapter>
-          </NextIntlClientProvider>
-          <VercelComponents />
-          <ContainerQueryPolyfill />
-        </body>
-      </html>
+      <NextIntlClientProvider messages={messages}>
+        <NuqsAdapter>
+          <B2BLoader />
+          <AnalyticsProvider channelId={data.channel.entityId} settings={data.site.settings}>
+            <Providers>
+              {toastNotificationCookieData && (
+                <CookieNotifications {...toastNotificationCookieData} />
+              )}
+              {children}
+            </Providers>
+          </AnalyticsProvider>
+        </NuqsAdapter>
+      </NextIntlClientProvider>
+      <VercelComponents />
+      <ContainerQueryPolyfill />
     </MakeswiftProvider>
   );
 }

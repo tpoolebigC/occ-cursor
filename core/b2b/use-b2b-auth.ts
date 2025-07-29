@@ -5,7 +5,7 @@ import { signOut } from 'next-auth/react';
 import { useEffect } from 'react';
 
 import { login } from './server-login';
-import { useSDK } from './use-b2b-sdk';
+import { useB2BSDK } from '~/shared/hooks/use-b2b-sdk';
 
 interface Data {
   data: {
@@ -32,9 +32,16 @@ const handleRegistered = ({ data: { email, password, landingLoginLocation } }: D
 };
 
 const handleLogout = () => {
+  // Clear any section parameters from URL before logout
+  if (typeof window !== 'undefined') {
+    const url = new URL(window.location.href);
+    url.searchParams.delete('section');
+    window.history.replaceState({}, '', url.toString());
+  }
+  
   void signOut({
     redirect: true,
-    redirectTo: '/login',
+    redirectTo: '/',
   }).catch((error: unknown) => {
     // eslint-disable-next-line no-console
     console.error('Failed to sign out:', error);
@@ -48,7 +55,7 @@ const sections: Record<string, string> = {
 
 export function useB2BAuth(token?: string) {
   const searchParams = useSearchParams();
-  const sdk = useSDK();
+  const sdk = useB2BSDK();
 
   useEffect(() => {
     // Skip on server side

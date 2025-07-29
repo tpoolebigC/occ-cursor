@@ -266,16 +266,24 @@ const config = {
       return token;
     },
     session({ session, token }) {
+      // Handle customer access token
       if (token.user?.customerAccessToken) {
         session.user.customerAccessToken = token.user.customerAccessToken;
       }
 
+      // Handle cart ID
       if (token.user?.cartId !== undefined) {
         session.user.cartId = token.user.cartId;
       }
 
+      // Handle B2B token
       if (token.b2bToken) {
         session.b2bToken = token.b2bToken;
+      }
+
+      // Ensure session has required fields
+      if (!session.user) {
+        session.user = {};
       }
 
       return session;
@@ -339,16 +347,25 @@ export const getSessionCustomerAccessToken = async () => {
   try {
     const session = await auth();
 
-    return session?.user?.customerAccessToken;
-  } catch {
-    // No empty
+    // For B2B users, we might not have a customerAccessToken
+    // Return null instead of throwing to prevent redirect loops
+    return session?.user?.customerAccessToken || null;
+  } catch (error) {
+    console.warn('Failed to get session customer access token:', error);
+    return null;
   }
 };
 
 export const isLoggedIn = async () => {
-  const cat = await getSessionCustomerAccessToken();
+  try {
+    const session = await auth();
+    const cat = session?.user?.customerAccessToken;
+    const b2bToken = session?.b2bToken;
 
-  return Boolean(cat);
+    return Boolean(cat || b2bToken);
+  } catch {
+    return false;
+  }
 };
 
 // Note: Server-side functions like anonymousSignIn, clearAnonymousSession, etc.

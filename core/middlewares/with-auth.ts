@@ -13,6 +13,18 @@ function redirectToLogin(url: string) {
 
 export const withAuth: MiddlewareFactory = (next) => {
   return async (request, event) => {
+    console.log('Auth Middleware Debug:', {
+      url: request.nextUrl.toString(),
+      pathname: request.nextUrl.pathname,
+      searchParams: Object.fromEntries(request.nextUrl.searchParams.entries()),
+      method: request.method
+    });
+    
+    // Skip auth middleware for login page to prevent redirect loops
+    if (request.nextUrl.pathname === '/login') {
+      return next(request, event);
+    }
+    
     // @ts-expect-error: The `auth` function doesn't have the correct type to support it as a MiddlewareFactory.
     const authWithCallback = auth(async (req) => {
       const anonymousSession = await getAnonymousSession();
@@ -38,8 +50,16 @@ export const withAuth: MiddlewareFactory = (next) => {
       }
 
       const { customerAccessToken } = req.auth.user ?? {};
+      const hasB2BToken = req.auth?.b2bToken;
 
-      if (isProtectedRoute && isGetRequest && !customerAccessToken) {
+      // Allow B2B users to access protected routes even without customerAccessToken
+      // Also allow access to homepage with section parameters (embedded buyer portal)
+      const hasSectionParams = req.nextUrl.searchParams.has('section');
+      const isHomepageWithSection = req.nextUrl.pathname === '/' && hasSectionParams;
+      
+      // For B2B users, don't require customerAccessToken
+      // For regular users, require customerAccessToken for protected routes
+      if (isProtectedRoute && isGetRequest && !customerAccessToken && !hasB2BToken && !isHomepageWithSection) {
         return redirectToLogin(req.url);
       }
 

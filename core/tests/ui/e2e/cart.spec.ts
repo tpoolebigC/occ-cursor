@@ -24,7 +24,7 @@ test('Cart page displays line item', async ({ page, catalog, currency }) => {
   // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
   const addToCartSuccessMessage = t.rich('Product.ProductDetails.successMessage', {
     cartItems: 1,
-    cartLink: (chunks: React.ReactNode) => chunks,
+    
   }) as string;
 
   await expect(page.getByText(addToCartSuccessMessage)).toBeVisible();
@@ -60,7 +60,7 @@ test('Cart page allows updating item quantity', async ({ page, catalog }) => {
   // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
   const addToCartSuccessMessage = t.rich('Product.ProductDetails.successMessage', {
     cartItems: 1,
-    cartLink: (chunks: React.ReactNode) => chunks,
+    
   }) as string;
 
   await expect(page.getByText(addToCartSuccessMessage)).toBeVisible();
@@ -82,7 +82,7 @@ test('Cart page allows removing a line item', async ({ page, catalog }) => {
   // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
   const addToCartSuccessMessage = t.rich('Product.ProductDetails.successMessage', {
     cartItems: 1,
-    cartLink: (chunks: React.ReactNode) => chunks,
+    
   }) as string;
 
   await expect(page.getByText(addToCartSuccessMessage)).toBeVisible();
@@ -106,7 +106,7 @@ test('Cart page can proceed to checkout', async ({ page, catalog }) => {
   // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
   const addToCartSuccessMessage = t.rich('Product.ProductDetails.successMessage', {
     cartItems: 1,
-    cartLink: (chunks: React.ReactNode) => chunks,
+    
   }) as string;
 
   await expect(page.getByText(addToCartSuccessMessage)).toBeVisible();

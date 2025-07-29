@@ -5,7 +5,7 @@ export function useMakeswiftForm(initialData: any = {}) {
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   const updateField = (field: string, value: any) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+    setFormData((prev: any) => ({ ...prev, [field]: value }));
     if (errors[field]) {
       setErrors(prev => ({ ...prev, [field]: '' }));
     }

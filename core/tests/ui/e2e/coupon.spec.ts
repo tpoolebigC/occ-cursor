@@ -12,7 +12,7 @@ test('Valid coupon code can be applied to the cart', async ({ page, catalog, pro
   // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
   const addToCartSuccessMessage = t.rich('Product.ProductDetails.successMessage', {
     cartItems: 1,
-    cartLink: (chunks: React.ReactNode) => chunks,
+    
   }) as string;
 
   await expect(page.getByText(addToCartSuccessMessage)).toBeVisible();
@@ -40,7 +40,7 @@ test('Invalid coupon code cannot be applied', async ({ page, catalog }) => {
   // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
   const addToCartSuccessMessage = t.rich('Product.ProductDetails.successMessage', {
     cartItems: 1,
-    cartLink: (chunks: React.ReactNode) => chunks,
+    
   }) as string;
 
   await expect(page.getByText(addToCartSuccessMessage)).toBeVisible();

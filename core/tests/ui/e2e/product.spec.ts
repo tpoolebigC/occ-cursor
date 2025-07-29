@@ -109,7 +109,7 @@ test('Quantity buttons work and adds the correct amount to the cart', async ({ p
   // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
   const addToCartSuccessMessage = t.rich('successMessage', {
     cartItems: 3,
-    cartLink: (chunks: React.ReactNode) => chunks,
+    
   }) as string;
 
   await expect(page.getByText(addToCartSuccessMessage)).toBeVisible();
@@ -128,7 +128,7 @@ test('Quantity input works and adds the correct amount to the cart', async ({ pa
   // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
   const addToCartSuccessMessage = t.rich('successMessage', {
     cartItems: 5,
-    cartLink: (chunks: React.ReactNode) => chunks,
+    
   }) as string;
 
   await expect(page.getByText(addToCartSuccessMessage)).toBeVisible();

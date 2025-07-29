@@ -1,120 +1,164 @@
 # B2B Buyer Portal Integration
 
-This directory contains the B2B (Business-to-Business) buyer portal integration for the Catalyst storefront.
+This project uses BigCommerce's **embedded buyer portal** with enhanced Algolia search integration and Makeswift page building capabilities.
 
-## Overview
+## 🎯 **What This Provides**
 
-The B2B buyer portal provides additional functionality for B2B customers, including:
-- Quote management
-- Shopping lists
-- B2B-specific pricing and discounts
-- Enhanced order management
+- **Embedded Buyer Portal**: BigCommerce's official B2B portal loaded via CDN
+- **Algolia Search**: Enhanced product search with faceted filtering
+- **Makeswift Integration**: Visual page building for custom storefronts
+- **Session Management**: Seamless authentication flow
 
-## Setup
+## 🚀 **Quick Start**
 
-### Environment Variables
+### 1. Environment Variables
 
-Add the following environment variables to your `.env.local` file:
+Add these to your `.env.local`:
 
 ```bash
-# Required for B2B functionality
-B2B_API_TOKEN=your_b2b_api_token_here
-B2B_API_HOST=https://api-b2b.bigcommerce.com
+# BigCommerce Store
+BIGCOMMERCE_STORE_HASH=your_store_hash
+BIGCOMMERCE_CHANNEL_ID=your_channel_id
+BIGCOMMERCE_STOREFRONT_TOKEN=your_storefront_token
 
-# Optional: Use staging B2B CDN
-STAGING_B2B_CDN_ORIGIN=false
+# B2B API (for embedded portal)
+B2B_CLIENT_ID=your_b2b_client_id
+B2B_CLIENT_SECRET=your_b2b_client_secret
+B2B_API_TOKEN=your_b2b_api_token
+
+# Algolia Search
+ALGOLIA_APP_ID=your_algolia_app_id
+ALGOLIA_SEARCH_KEY=your_algolia_search_key
+ALGOLIA_ADMIN_KEY=your_algolia_admin_key
+ALGOLIA_INDEX_NAME=your_index_name
 ```
 
-### Authentication Flow
+### 2. B2B Authentication Flow
 
-The B2B integration automatically:
-1. Authenticates users with BigCommerce
-2. Calls the B2B API to get a B2B token
-3. Passes the B2B token to the buyer portal SDK
-4. Handles B2B-specific callbacks and events
+The embedded portal handles authentication automatically:
 
-## Components
+1. **Customer Login**: Uses NextAuth.js with BigCommerce
+2. **B2B Token Generation**: Automatically generates B2B tokens for authenticated users
+3. **Portal Loading**: Loads the official BigCommerce B2B portal
 
-### B2BLoader
-The main component that loads the B2B buyer portal script and configuration.
+### 3. Access the Portal
 
-### B2BScript
-Renders the B2B script tags and manages the B2B SDK integration.
+- **B2B Users**: Automatically redirected to `/?section=orders` when accessing account pages
+- **Regular Users**: Standard customer account experience
 
-### Hooks
+## 🔧 **Components**
 
-- `useB2BAuth`: Handles B2B authentication and logout
-- `useB2BCart`: Manages cart synchronization with the B2B portal
-- `useSDK`: Provides access to the B2B SDK
+### B2B Loader (`b2b-loader.tsx`)
+- Loads the B2B script from BigCommerce CDN
+- Handles session management
+- Passes authentication tokens to the portal
 
-## Usage
+### B2B Script (`b2b-script.tsx`)
+- Renders the B2B script tags
+- Manages B2B SDK integration
+- Handles portal configuration
 
-The B2B integration is automatically loaded in the default layout. No additional setup is required.
+### B2B Auth Hook (`use-b2b-auth.ts`)
+- Manages B2B authentication state
+- Handles login/logout events
+- Integrates with the B2B SDK
 
-### Debugging
+## 🔍 **Algolia Integration**
 
-The `CustomerDebug` component can be added to any page to debug B2B integration issues:
+### Product Search
+- Faceted search with categories, brands, price ranges
+- Real-time search suggestions
+- Advanced filtering options
 
-```tsx
-import { CustomerDebug } from '~/components/b2b/customer-debug';
+### Search Components
+- `SearchForm`: Main search interface
+- `SearchResults`: Displays search results
+- `SearchFilters`: Faceted filtering
 
-// Add to your page component
-<CustomerDebug />
+## 🎨 **Makeswift Integration**
+
+### Available Components
+- Product cards and carousels
+- Search forms and results
+- Navigation and layout components
+- Custom content sections
+
+### Page Building
+- Visual drag-and-drop interface
+- Responsive design tools
+- Component customization
+- Live preview
+
+## 📁 **File Structure**
+
+```
+core/
+├── components/
+│   ├── b2b/
+│   │   ├── b2b-loader.tsx      # B2B portal loader
+│   │   ├── b2b-script.tsx      # B2B script renderer
+│   │   ├── use-b2b-auth.ts     # B2B auth hook
+│   │   └── README.md           # This file
+│   └── search-form/
+│       └── index.tsx           # Algolia search form
+├── features/
+│   ├── algolia/                # Algolia search features
+│   └── makeswift/              # Makeswift components
+├── lib/
+│   ├── b2b/
+│   │   └── config.ts           # B2B configuration
+│   └── algolia/                # Algolia utilities
+└── app/
+    ├── buyer-portal/           # Embedded portal route
+    └── search/                 # Search results page
 ```
 
-## Troubleshooting
+## 🔒 **Security**
 
-### Common Issues
+- **Session-based authentication**: Uses existing customer sessions
+- **Token management**: Automatic B2B token generation
+- **Secure API calls**: All API calls go through server-side routes
+- **Environment variables**: Sensitive data stored in environment variables
 
-1. **B2B token not available**: Check that `B2B_API_TOKEN` is set in your environment variables
-2. **B2B script not loading**: Verify that `BIGCOMMERCE_STORE_HASH` and `BIGCOMMERCE_CHANNEL_ID` are correctly set
-3. **Authentication failures**: Ensure the B2B API token has the correct permissions
+## 🚀 **Deployment**
 
-### Debug Information
+1. **Environment Setup**: Configure all required environment variables
+2. **Build**: Run `pnpm build` to build the application
+3. **Deploy**: Deploy to your hosting platform (Vercel, Netlify, etc.)
+4. **Verify**: Test B2B portal access and Algolia search functionality
 
-Check the browser console for debug logs from the B2B integration:
-- `B2B Loader Debug`: Shows environment configuration
-- `B2B Script Debug`: Shows script loading status
-- `B2B Config loaded`: Confirms B3 configuration is set
-- `B2B Script loaded successfully`: Confirms script loaded
+## 🐛 **Troubleshooting**
 
-## API Reference
+### B2B Portal Not Loading
+- Check B2B API credentials in environment variables
+- Verify customer authentication is working
+- Check browser console for script loading errors
 
-### B2B SDK Methods
+### Algolia Search Issues
+- Verify Algolia credentials and index configuration
+- Check search component implementation
+- Review Algolia dashboard for indexing status
 
-The B2B SDK provides the following methods:
+### Makeswift Components Missing
+- Ensure all components are properly registered
+- Check component imports in Makeswift runtime
+- Verify component props and configuration
 
-```typescript
-// User management
-window.b2b.utils.user.loginWithB2BStorefrontToken(token)
-window.b2b.utils.user.getProfile()
-window.b2b.utils.user.getB2BToken()
+## 📚 **Resources**
 
-// Cart management
-window.b2b.utils.cart.getEntityId()
-window.b2b.utils.cart.setEntityId(cartId)
+- [BigCommerce B2B Documentation](https://developer.bigcommerce.com/docs/ZG9jOjIyNDE3Mw-b2b)
+- [Algolia Documentation](https://www.algolia.com/doc/)
+- [Makeswift Documentation](https://www.makeswift.com/docs)
+- [NextAuth.js Documentation](https://next-auth.js.org/)
 
-// Quote management
-window.b2b.utils.quote.getQuoteConfigs()
-window.b2b.utils.quote.addProductsFromCartId(cartId)
-window.b2b.utils.quote.addProducts(products)
+## 🤝 **Support**
 
-// Shopping lists
-window.b2b.utils.shoppingList.addProductFromPage(product)
+For issues specific to this implementation:
+1. Check the troubleshooting section above
+2. Review environment variable configuration
+3. Check browser console for errors
+4. Verify BigCommerce store settings
 
-// Navigation
-window.b2b.utils.openPage(page)
-```
-
-### Events
-
-The B2B SDK provides the following events:
-
-```typescript
-// Authentication events
-window.b2b.callbacks.addEventListener('on-logout', callback)
-window.b2b.callbacks.addEventListener('on-registered', callback)
-
-// Cart events
-window.b2b.callbacks.addEventListener('on-cart-created', callback)
-``` 
+For BigCommerce B2B issues:
+- [BigCommerce Support](https://support.bigcommerce.com/)
+- [BigCommerce Developer Community](https://community.bigcommerce.com/) 

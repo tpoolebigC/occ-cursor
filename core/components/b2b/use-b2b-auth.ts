@@ -4,13 +4,23 @@ import { useSearchParams } from 'next/navigation';
 import { signOut } from 'next-auth/react';
 import { useEffect } from 'react';
 
-import { useSDK } from './use-b2b-sdk';
+import { useB2BSDK } from '~/shared/hooks/use-b2b-sdk';
 
 interface Data {
   data: Record<string, string>;
 }
 
 const handleLogout = () => {
+  console.log('B2B Logout triggered from component hook');
+  
+  // Clear any section parameters from URL before logout
+  if (typeof window !== 'undefined') {
+    const url = new URL(window.location.href);
+    url.searchParams.delete('section');
+    window.history.replaceState({}, '', url.toString());
+    console.log('B2B Logout: Cleared section parameters from URL');
+  }
+  
   void signOut({ callbackUrl: '/' });
 };
 
@@ -21,7 +31,7 @@ const sections: Record<string, string> = {
 
 export function useB2BAuth(token?: string) {
   const searchParams = useSearchParams();
-  const sdk = useSDK();
+  const sdk = useB2BSDK();
 
   useEffect(() => {
     // Skip on server side

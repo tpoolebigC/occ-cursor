@@ -3,7 +3,7 @@
 import { useState } from 'react';
 
 import { useB2BQuoteEnabled } from '~/features/b2b/hooks/use-b2b-quote-enabled';
-import { useB2BSDK } from '~/features/b2b/hooks/use-b2b-sdk';
+import { useB2BSDK } from '~/shared/hooks/use-b2b-sdk';
 import { useB2BShoppingListEnabled } from '~/features/b2b/hooks/use-b2b-shopping-list-enabled';
 
 import { Field } from '../vibes/soul/sections/product-detail/schema';

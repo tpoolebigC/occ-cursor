@@ -100,7 +100,7 @@ test('Can add simple product to cart', async ({ page, catalog }) => {
   await page.getByRole('button', { name: t('addToCart') }).click();
 
   // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
-  const addToCartSuccessMessage = t.rich('successMessage', {
+    const addToCartSuccessMessage = t.rich('successMessage', {
     cartItems: 1,
     cartLink: (chunks: React.ReactNode) => chunks,
   }) as string;

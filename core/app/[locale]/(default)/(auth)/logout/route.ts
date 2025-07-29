@@ -9,7 +9,7 @@ export const GET = async (
   { params }: { params: Promise<{ locale: string }> },
 ) => {
   const { locale } = await params;
-  const redirectTo = request.nextUrl.searchParams.get('redirectTo') ?? '/login';
+  const redirectTo = request.nextUrl.searchParams.get('redirectTo') ?? '/';
   const redirectToPathname = new URL(redirectTo, request.nextUrl.origin).pathname;
 
   await signOut({ redirect: false });

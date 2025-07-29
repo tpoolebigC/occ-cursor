@@ -1,7 +1,7 @@
 'use client';
 
 import { B2BRole } from '../types/customer';
-import { useB2BSDK } from './use-b2b-sdk';
+import { useB2BSDK } from '~/shared/hooks/use-b2b-sdk';
 
 interface Config {
   key: string;

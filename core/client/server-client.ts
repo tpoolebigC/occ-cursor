@@ -70,7 +70,10 @@ export const serverClient = createClient({
   },
   onError: (error, queryType) => {
     if (error instanceof BigCommerceAuthError && queryType === 'query') {
-      redirect('/api/auth/signout');
+      // Don't redirect on auth errors to prevent infinite loops
+      // Instead, let the component handle the error gracefully
+      console.warn('BigCommerce auth error:', error);
+      return;
     }
   },
 }); 

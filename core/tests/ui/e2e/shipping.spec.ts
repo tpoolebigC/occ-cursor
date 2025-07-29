@@ -14,7 +14,7 @@ async function addProductAndGoToCart(page: Page, catalog: CatalogFixture) {
   // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
   const addToCartSuccessMessage = t.rich('Product.ProductDetails.successMessage', {
     cartItems: 1,
-    cartLink: (chunks: React.ReactNode) => chunks,
+    
   }) as string;
 
   await expect(page.getByText(addToCartSuccessMessage)).toBeVisible();

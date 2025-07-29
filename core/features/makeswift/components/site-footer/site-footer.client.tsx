@@ -22,11 +22,7 @@ type ContextProps = Omit<FooterProps, 'sections'> & {
 
 const PropsContext = createContext<ContextProps>({
   sections: [],
-  logo: {
-    show: false,
-    src: { url: '', alt: '' },
-    alt: '',
-  },
+  logo: '',
 });
 
 export const PropsContextProvider = ({
@@ -58,14 +54,13 @@ function combineSections(
   passedSections: ContextProps['sections'],
   makeswiftSections: Props['sections'],
 ): ContextProps['sections'] {
-  return mergeSections(
-    passedSections,
-    makeswiftSections.map(({ title, links }) => ({
+  return [
+    ...passedSections,
+    ...makeswiftSections.map(({ title, links }) => ({
       title,
       links: links.map(({ label, link }) => ({ label, href: link.href })),
     })),
-    (left: any, right: any) => ({ ...left, links: [...left.links, ...right.links] }),
-  );
+  ];
 }
 
 export const MakeswiftFooter = forwardRef(
@@ -77,10 +72,10 @@ export const MakeswiftFooter = forwardRef(
       <Footer
         {...passedProps}
         copyright={copyright ?? passedProps.copyright}
-        logo={logo.show ? logoObject : { url: '', alt: '' }}
+        logo={logo.show ? logoObject : ''}
         logoHeight={logo.show ? logo.height : 0}
         logoWidth={logo.show ? logo.width : 0}
-        ref={ref}
+
         sections={combineSections(passedProps.sections, sections)}
       />
     );

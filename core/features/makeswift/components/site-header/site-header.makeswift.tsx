@@ -17,7 +17,7 @@ import { MakeswiftHeader } from './site-header.client';
 export const COMPONENT_TYPE = 'catalyst-makeswift-header';
 
 const banner = Shape({
-  label: 'Banner',
+
   type: {
     show: Checkbox({ label: 'Show banner', defaultValue: false }),
     allowClose: Checkbox({ label: 'Allow banner to close', defaultValue: true }),
@@ -34,7 +34,7 @@ const logoGroup = (
   },
 ) =>
   Shape({
-    label,
+
     type: {
       src: Image({ label: 'Logo' }),
       alt: TextInput({ label: 'Alt text', defaultValue: 'Logo alt' }),
@@ -44,7 +44,7 @@ const logoGroup = (
   });
 
 const logo = Shape({
-  label: 'Logo',
+
   type: {
     desktop: logoGroup('Desktop', { width: 200, height: 40 }),
     mobile: logoGroup('Mobile', { width: 100, height: 40 }),
@@ -55,7 +55,6 @@ const logo = Shape({
 const links = List({
   label: 'Links',
   type: Shape({
-    label: 'Link',
     type: {
       label: TextInput({ label: 'Text', defaultValue: 'Text' }),
       link: Link({ label: 'URL' }),
@@ -67,7 +66,7 @@ const links = List({
 const groups = List({
   label: 'Groups',
   type: Shape({
-    label: 'Link group',
+
     type: {
       label: TextInput({ label: 'Text', defaultValue: 'Text' }),
       link: Link({ label: 'URL' }),
@@ -87,7 +86,6 @@ runtime.registerComponent(MakeswiftHeader, {
     links: List({
       label: 'Additional links',
       type: Shape({
-        label: 'Link',
         type: {
           label: TextInput({ label: 'Text', defaultValue: 'Text' }),
           link: Link({ label: 'URL' }),

@@ -94,9 +94,9 @@ runtime.registerComponent(
                 const products = await searchProducts(query);
 
                 return products.map((product) => ({
-                  id: product.entityId?.toString() || '',
-                  label: product.name || '',
-                  value: product.entityId?.toString() || '',
+                  id: (product as any).entityId?.toString() || '',
+                  label: (product as any).name || '',
+                  value: (product as any).entityId?.toString() || '',
                 }));
               },
             }),

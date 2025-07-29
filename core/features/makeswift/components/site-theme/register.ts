@@ -8,17 +8,17 @@ import components from './components';
 
 export const COMPONENT_TYPE = 'catalyst-makeswift-theme-provider';
 
-runtime.registerComponent(MakeswiftSiteTheme, {
+runtime.registerComponent(MakeswiftSiteTheme as any, {
   type: COMPONENT_TYPE,
   label: 'MakeswiftSiteTheme (private)',
   hidden: true,
   props: {
     fontTokens: Shape({
-      label: 'Fonts',
+
       type: fontFamilyTokens,
     }),
     components: Shape({
-      label: 'Components',
+
       type: components,
     }),
   },
