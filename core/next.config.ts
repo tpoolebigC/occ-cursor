@@ -74,10 +74,8 @@ export default async (): Promise<NextConfig> => {
         '@radix-ui/react-tooltip',
       ],
       ppr: 'incremental',
-      // Enable SWC minification for better performance
-      swcMinify: true,
       // Enable concurrent features
-      serverComponentsExternalPackages: ['sharp'],
+      serverExternalPackages: ['sharp'],
     },
     typescript: {
       ignoreBuildErrors: !!process.env.CI,
