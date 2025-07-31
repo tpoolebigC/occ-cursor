@@ -91,10 +91,10 @@ export const Header = async () => {
   const logo = data.settings ? logoTransformer(data.settings) : '';
 
   // Determine account href based on user type
-  // For B2B users, redirect to embedded buyer portal (/?section=orders)
+  // For B2B users, redirect to our custom buyer portal dashboard
   // For regular users, redirect to account pages
   // For non-logged in users, redirect to login
-  const accountHref = session?.b2bToken ? '/?section=orders' : (session?.user?.customerAccessToken ? '/account' : '/login');
+  const accountHref = session?.b2bToken ? '/custom-dashboard' : (session?.user?.customerAccessToken ? '/account' : '/login');
 
   const locales = routing.locales.map((enabledLocales) => ({
     id: enabledLocales,
