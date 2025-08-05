@@ -74,8 +74,6 @@ export default async (): Promise<NextConfig> => {
         '@radix-ui/react-tooltip',
       ],
       ppr: 'incremental',
-      // Enable concurrent features
-      serverExternalPackages: ['sharp'],
     },
     typescript: {
       ignoreBuildErrors: !!process.env.CI,

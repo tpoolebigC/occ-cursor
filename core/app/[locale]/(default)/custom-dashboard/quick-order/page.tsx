@@ -5,9 +5,11 @@ import { useRouter } from 'next/navigation';
 import { B2BNavigation } from '~/b2b/components/B2BNavigation';
 import QuickOrderTable from '~/b2b/components/QuickOrderTable';
 import QuickOrderPad from '~/b2b/components/QuickOrderPad';
-import QuickAdd from '~/b2b/components/QuickAdd';
+// QuickAdd component removed - using QuickOrderPad instead
 import { searchAlgoliaProducts } from '~/b2b/server-actions';
-import { addToCart, getCart, type Cart, type CartLineItem } from '~/b2b/services/cartService';
+import { addToCart } from '~/b2b/services/cartService';
+import { getCart } from '~/b2b/server-actions';
+import type { Cart } from '~/b2b/services/cartService';
 
 interface QuickOrderProduct {
   objectID: string;
@@ -49,7 +51,7 @@ export default function QuickOrderPage() {
     setIsLoadingCart(true);
     try {
       const result = await getCart();
-      if (result.success && result.cart) {
+      if (result.cart) {
         setCart(result.cart);
       }
     } catch (error) {
@@ -66,8 +68,9 @@ export default function QuickOrderPage() {
         quantity: quantity
       }]);
 
-      if (result.success && result.cart) {
-        setCart(result.cart);
+      if (result.success) {
+        // Reload cart to get updated state
+        await loadCart();
         console.log('✅ Successfully added to cart:', product.name);
       } else {
         console.error('❌ Failed to add to cart:', result.errors);
@@ -105,7 +108,7 @@ export default function QuickOrderPage() {
         const result = await addProductBySku(item.sku, item.quantity);
         results.push({ ...result, sku: item.sku });
       } catch (error) {
-        results.push({ success: false, sku: item.sku, error: error.message });
+        results.push({ success: false, sku: item.sku, error: error instanceof Error ? error.message : 'Unknown error' });
       }
     }
     
@@ -127,7 +130,11 @@ export default function QuickOrderPage() {
 
   const getCartTotal = () => {
     if (!cart) return 0;
-    return cart.lineItems.reduce((total, item) => total + (item.price * item.quantity), 0);
+    const allItems = [...cart.lineItems.physicalItems, ...cart.lineItems.digitalItems];
+    return allItems.reduce((total, item) => {
+      const price = (item.prices as any)?.price?.value || 0;
+      return total + (price * item.quantity);
+    }, 0);
   };
 
   const handleCheckout = () => {
@@ -214,8 +221,8 @@ export default function QuickOrderPage() {
 
               {/* Bulk Add Method */}
               {activeMethod === 'bulk' && (
-                <QuickAdd 
-                  onBulkAdd={addBulkProducts}
+                <QuickOrderPad 
+                  onAddBySku={addProductBySku}
                 />
               )}
             </div>
@@ -231,14 +238,14 @@ export default function QuickOrderPage() {
                   <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600 mx-auto"></div>
                   <p className="mt-2 text-sm text-gray-500">Loading cart...</p>
                 </div>
-              ) : !cart || cart.lineItems.length === 0 ? (
+              ) : !cart || (cart.lineItems.physicalItems.length === 0 && cart.lineItems.digitalItems.length === 0) ? (
                 <div className="text-center py-8">
                   <p className="text-gray-500">Your cart is empty</p>
                   <p className="text-sm text-gray-400 mt-2">Add products using the methods above</p>
                 </div>
               ) : (
                 <div className="space-y-4">
-                  {cart.lineItems.map((item) => (
+                  {[...cart.lineItems.physicalItems, ...cart.lineItems.digitalItems].map((item) => (
                     <div key={item.entityId} className="flex items-center space-x-4 p-4 border border-gray-200 rounded-lg">
                       {item.imageUrl && (
                         <img
@@ -249,12 +256,12 @@ export default function QuickOrderPage() {
                       )}
                       <div className="flex-1">
                         <h3 className="text-sm font-medium text-gray-900">{item.name}</h3>
-                        <p className="text-sm text-gray-500">SKU: {item.sku}</p>
-                        <p className="text-sm text-gray-900">{formatPrice(item.price)} each</p>
+                        <p className="text-sm text-gray-500">Product ID: {item.productEntityId}</p>
+                        <p className="text-sm text-gray-900">{formatPrice((item.prices as any)?.price?.value || 0)} each</p>
                       </div>
                       <div className="text-right">
                         <p className="text-sm font-medium text-gray-900">Qty: {item.quantity}</p>
-                        <p className="text-sm text-gray-900">{formatPrice(item.price * item.quantity)}</p>
+                        <p className="text-sm text-gray-900">{formatPrice(((item.prices as any)?.price?.value || 0) * item.quantity)}</p>
                       </div>
                     </div>
                   ))}
@@ -263,7 +270,7 @@ export default function QuickOrderPage() {
             </div>
 
             {/* Order Summary */}
-            {cart && cart.lineItems.length > 0 && (
+            {cart && (cart.lineItems.physicalItems.length > 0 || cart.lineItems.digitalItems.length > 0) && (
               <div className="bg-white shadow rounded-lg p-6">
                 <h2 className="text-lg font-medium text-gray-900 mb-4">Order Summary</h2>
                 <div className="space-y-2">

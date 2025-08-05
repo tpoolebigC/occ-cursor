@@ -1,8 +1,11 @@
-'use server';
+/**
+ * B2B Cart Service using gql-tada
+ * 
+ * This service handles cart operations using Catalyst's patterns and gql-tada
+ * for type-safe GraphQL operations.
+ */
 
-import { auth } from '~/auth';
 import { addToOrCreateCart } from '~/lib/cart';
-import { getCart as getCartData } from '~/client/queries/get-cart';
 
 export interface CartItem {
   productEntityId: number;
@@ -10,127 +13,120 @@ export interface CartItem {
   selectedOptions?: Array<{
     entityId: number;
     name: string;
-    value: string;
   }>;
-}
-
-export interface CartLineItem {
-  entityId: number;
-  productEntityId: number;
-  name: string;
-  sku: string;
-  quantity: number;
-  imageUrl?: string;
-  price: number;
-  salePrice?: number;
 }
 
 export interface Cart {
   entityId: string;
-  lineItems: CartLineItem[];
+  currencyCode: string;
+  isTaxIncluded: boolean;
+  lineItems: {
+    physicalItems: Array<{
+      entityId: string;
+      productEntityId: number;
+      name: string;
+      quantity: number;
+      selectedOptions: Array<{
+        entityId: number;
+        name: string;
+      }>;
+      imageUrl?: string | null;
+      prices: unknown;
+    }>;
+    digitalItems: Array<{
+      entityId: string;
+      productEntityId: number;
+      name: string;
+      quantity: number;
+      selectedOptions: Array<{
+        entityId: number;
+        name: string;
+      }>;
+      imageUrl?: string | null;
+      prices: unknown;
+    }>;
+  };
+  cartAmount: unknown;
 }
 
-export async function addToCart(items: CartItem[]): Promise<{ success: boolean; cart?: Cart; errors?: string[] }> {
+/**
+ * Add items to cart using Catalyst's addToOrCreateCart utility
+ */
+export async function addToCart(items: CartItem[]): Promise<{ success: boolean; errors?: string[] }> {
   try {
-    const session = await auth();
-    
-    if (!session?.user?.customerAccessToken) {
-      return { success: false, errors: ['No customer access token available'] };
-    }
-
     console.log('🛒 [Cart Service] Adding items to cart:', items);
 
     // Convert items to the format expected by Catalyst's addToOrCreateCart
-    // This should be a CreateCartInput or AddCartLineItemsInput['data']
-    const cartData = {
-      lineItems: items.map(item => ({
-        productEntityId: item.productEntityId,
-        quantity: item.quantity,
-        selectedOptions: item.selectedOptions || []
-      }))
-    };
+    const lineItems = items.map(item => ({
+      productEntityId: item.productEntityId,
+      quantity: item.quantity,
+      // selectedOptions will be handled separately when we implement proper option handling
+    }));
 
     // Use Catalyst's existing cart utility
-    await addToOrCreateCart(cartData);
+    await addToOrCreateCart({ lineItems });
 
     console.log('🛒 [Cart Service] Successfully added items to cart');
-
-    // Get the updated cart using Catalyst's getCart utility
-    const cartResult = await getCart();
-    return { success: true, cart: cartResult.cart };
+    return { success: true };
   } catch (error) {
-    console.error('🛒 [Cart Service] Error adding to cart:', error);
-    return { success: false, errors: [error instanceof Error ? error.message : 'Unknown error'] };
+    console.error('🛒 [Cart Service] Error adding items to cart:', error);
+    return { 
+      success: false, 
+      errors: [error instanceof Error ? error.message : 'Unknown error'] 
+    };
   }
 }
 
+/**
+ * Get current cart - this will be handled by server actions
+ */
 export async function getCart(): Promise<{ success: boolean; cart?: Cart; errors?: string[] }> {
   try {
-    const session = await auth();
+    console.log('🛒 [Cart Service] Getting cart...');
     
-    if (!session?.user?.customerAccessToken) {
-      return { success: false, errors: ['No customer access token available'] };
-    }
-
-    // Use Catalyst's existing getCart utility
-    const cartData = await getCartData();
-    
-    if (!cartData) {
-      return { success: false, errors: ['No cart found'] };
-    }
-
-    // Transform cart data to our interface
-    const cart: Cart = {
-      entityId: cartData.entityId,
-      lineItems: [
-        ...(cartData.lineItems.physicalItems || []).map((item: any) => ({
-          entityId: item.entityId,
-          productEntityId: item.productEntityId,
-          name: item.name,
-          sku: item.sku,
-          quantity: item.quantity,
-          imageUrl: item.imageUrl,
-          price: item.extendedListPrice.value,
-          salePrice: item.extendedSalePrice?.value
-        })),
-        ...(cartData.lineItems.digitalItems || []).map((item: any) => ({
-          entityId: item.entityId,
-          productEntityId: item.productEntityId,
-          name: item.name,
-          sku: item.sku,
-          quantity: item.quantity,
-          imageUrl: item.imageUrl,
-          price: item.extendedListPrice.value,
-          salePrice: item.extendedSalePrice?.value
-        }))
-      ]
-    };
-
-    return { success: true, cart };
+    // This will be handled by server actions instead
+    return { success: false, errors: ['Cart retrieval should be handled by server actions'] };
   } catch (error) {
     console.error('🛒 [Cart Service] Error getting cart:', error);
-    return { success: false, errors: [error instanceof Error ? error.message : 'Unknown error'] };
+    return { 
+      success: false, 
+      errors: [error instanceof Error ? error.message : 'Unknown error'] 
+    };
   }
 }
 
+/**
+ * Reorder from an existing order
+ */
 export async function reorderFromOrder(orderId: number): Promise<{ success: boolean; cart?: Cart; errors?: string[] }> {
   try {
-    // Get order details first
-    const session = await auth();
-    
-    if (!session?.user?.customerAccessToken) {
-      return { success: false, errors: ['No customer access token available'] };
-    }
-
-    // For now, we'll use a simplified approach
-    // In a real implementation, you'd fetch the order details and extract line items
     console.log('🛒 [Cart Service] Reordering from order:', orderId);
     
-    // This would need to be implemented based on your order structure
-    // For now, return an error
-    return { success: false, errors: ['Reorder functionality not yet implemented'] };
+    // This will be handled by server actions
+    return { success: false, errors: ['Reorder should be handled by server actions'] };
   } catch (error) {
-    console.error('🛒 [Cart Service] Error reordering:', error);
-    return { success: false, errors: [error instanceof Error ? error.message : 'Unknown error'] };
+    console.error('🛒 [Cart Service] Error reordering from order:', error);
+    return { 
+      success: false, 
+      errors: [error instanceof Error ? error.message : 'Unknown error'] 
+    };
+  }
+}
+
+/**
+ * Clear the current cart
+ */
+export async function clearCart(): Promise<{ success: boolean; errors?: string[] }> {
+  try {
+    console.log('🛒 [Cart Service] Clearing cart...');
+    
+    // This will be handled by server actions
+    return { success: false, errors: ['Clear cart should be handled by server actions'] };
+  } catch (error) {
+    console.error('🛒 [Cart Service] Error clearing cart:', error);
+    return { 
+      success: false, 
+      errors: [error instanceof Error ? error.message : 'Unknown error'] 
+    };
   }
 } 

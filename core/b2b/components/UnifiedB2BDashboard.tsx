@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { getCustomerInfo, getOrders, getQuotes, getInvoices, searchAlgoliaProducts } from '~/b2b/server-actions';
 import { AlgoliaProduct } from '~/b2b/server-actions';
-import { QuickOrderModal } from './QuickOrderModal';
+// QuickOrderModal removed - using QuickOrderPad instead
 
 interface DashboardData {
   customer: any;
@@ -199,16 +199,7 @@ export function UnifiedB2BDashboard() {
         )}
       </main>
 
-      {/* Quick Order Modal */}
-      {showQuickOrder && (
-        <QuickOrderModal 
-          onClose={() => setShowQuickOrder(false)}
-          onOrderPlaced={() => {
-            setShowQuickOrder(false);
-            loadDashboardData(); // Refresh data
-          }}
-        />
-      )}
+      {/* Quick Order Modal - removed, using QuickOrderPad instead */}
     </div>
   );
 }

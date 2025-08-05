@@ -3,16 +3,11 @@
 import { useState, useEffect } from 'react';
 import { getCustomerInfo, getOrders, getQuotes, getInvoices, searchAlgoliaProducts } from '~/b2b/server-actions';
 import { AlgoliaProduct } from '~/b2b/server-actions';
-import { getCustomerInfoB3, getOrdersB3, getQuotesB3, getInvoicesB3 } from '~/b2b/server-actions-b3';
 import { ApiDebugger } from './ApiDebugger';
 import { B2BNavigation } from './B2BNavigation';
-// Temporarily commenting out debug components to isolate issues
+// Debug components for development
 // import { AuthDebugger } from './AuthDebugger';
 // import { B2BLoginTrigger } from './B2BLoginTrigger';
-// import { B3StorageDebugger } from './B3StorageDebugger';
-// import { B3StorageInitializer } from './B3StorageInitializer';
-// Temporarily commenting out the new B2B components to fix server error
-// import { B2BAuthDebugger } from './B2BAuthDebugger';
 
 interface DashboardData {
   customer: any;
@@ -445,18 +440,9 @@ export function CustomB2BDashboard() {
           </div>
         </div>
 
-        {/* Debug Components */}
+        {/* Debug Components - Removed B3 debugger components */}
         <div className="mt-6 space-y-4">
           <ApiDebugger />
-          {/* Temporarily commenting out debug components to isolate issues
-          <AuthDebugger />
-          <B2BLoginTrigger />
-          <B3StorageDebugger />
-          <B3StorageInitializer />
-          */}
-          {/* Temporarily commenting out the new B2B components
-          <B2BAuthDebugger />
-          */}
         </div>
       </div>
     </div>

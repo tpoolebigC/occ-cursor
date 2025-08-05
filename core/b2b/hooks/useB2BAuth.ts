@@ -9,14 +9,12 @@
 
 import { useState, useEffect } from 'react';
 import { 
-  b2bAuthManager, 
   B2BAuthState, 
   B2BUserContext,
   CustomerRole,
   CompanyStatus,
   Permission,
   CompanyInfo,
-  MasqueradeCompany,
   initializeB2BAuth,
   getB2BAuthState,
   subscribeToB2BAuth,
@@ -24,9 +22,7 @@ import {
   logoutB2B,
   hasB2BPermission,
   isB2BUser,
-  getB2BCompanyInfo,
-  isB2BMasquerading,
-  getB2BMasqueradeCompany
+  getB2BCompanyInfo
 } from '../utils/b2bAuthManager';
 
 export interface UseB2BAuthReturn {
@@ -35,7 +31,7 @@ export interface UseB2BAuthReturn {
   isInitialized: boolean;
   userContext: B2BUserContext | null;
   error: string | null;
-  source: 'B3Storage' | 'API' | 'Manual' | 'None';
+  source: 'API' | 'Manual' | 'None';
   isLoading: boolean;
   
   // Actions
@@ -47,8 +43,6 @@ export interface UseB2BAuthReturn {
   hasPermission: (permissionCode: string, requiredLevel?: number) => boolean;
   getCompanyInfo: () => CompanyInfo | null;
   isB2BUser: () => boolean;
-  isMasquerading: () => boolean;
-  getMasqueradeCompany: () => MasqueradeCompany | null;
   
   // Role and status helpers
   getUserRole: () => CustomerRole | null;
@@ -119,13 +113,7 @@ export function useB2BAuth(): UseB2BAuthReturn {
     return isB2BUser();
   };
 
-  const isMasquerading = (): boolean => {
-    return isB2BMasquerading();
-  };
 
-  const getMasqueradeCompany = (): MasqueradeCompany | null => {
-    return getB2BMasqueradeCompany();
-  };
 
   const getUserRole = (): CustomerRole | null => {
     return state.userContext?.role || null;
@@ -157,8 +145,6 @@ export function useB2BAuth(): UseB2BAuthReturn {
     hasPermission,
     getCompanyInfo,
     isB2BUser,
-    isMasquerading,
-    getMasqueradeCompany,
     
     // Role and status helpers
     getUserRole,
@@ -229,18 +215,4 @@ export function useB2BPermissions(): Permission[] {
   return getPermissions();
 }
 
-/**
- * Hook for checking if user is masquerading
- */
-export function useB2BMasquerading(): boolean {
-  const { isMasquerading } = useB2BAuth();
-  return isMasquerading();
-}
-
-/**
- * Hook for getting masquerade company info
- */
-export function useB2BMasqueradeCompany(): MasqueradeCompany | null {
-  const { getMasqueradeCompany } = useB2BAuth();
-  return getMasqueradeCompany();
-} 
+ 
