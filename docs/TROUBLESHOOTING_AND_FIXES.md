@@ -1,363 +1,349 @@
-# 🚨 Troubleshooting and Fixes: The Complete Guide
+# 🚨 B2B Buyer Portal Troubleshooting Guide
 
-Hey there! 👋 So you're running into some issues with your BigCommerce Catalyst B2B and Algolia integration? Don't worry - we've been there! This guide covers every problem we encountered during development and exactly how we fixed them.
+This guide covers common issues and solutions for the BigCommerce B2B Buyer Portal implementation built on Catalyst. These are **real problems we solved** during development.
 
-## 🎯 What This Guide Covers
+## 🎯 **What This Guide Covers**
 
-This isn't your typical troubleshooting guide. We're sharing **real problems we actually solved** during development, including:
+This troubleshooting guide addresses issues specific to our **production-ready B2B implementation**:
 
-- **B2B route conflicts** that caused 404 errors
-- **Algolia environment variable issues** that broke search
-- **Middleware issues** that broke everything
-- **Import path problems** that drove us crazy
-- **Cart synchronization failures** that seemed impossible to fix
-- **Search form submission issues** that were frustrating
-- **Facet selection problems** that needed fixing
-- **Environment validation issues** that were sneaky
-- **And much more!**
+- **B2B authentication and script loading issues**
+- **Cart integration problems with Catalyst utilities**
+- **GraphQL query errors and API integration issues**
+- **Navigation and UI problems**
+- **Environment variable configuration issues**
+- **Performance and error handling problems**
 
-## 🚨 Critical Issues and Fixes (The Big Ones)
+## 🚨 **Critical Issues and Fixes**
 
-### Issue 1: B2B Route Conflicts and 404 Errors
+### **Issue 1: B2B Script Not Loading (500 Errors)**
 
 **The Problem:** 
-We implemented a custom B2B buyer portal and everything was returning 404 errors. It was a nightmare!
+B2B script fails to load, causing 500 errors across the custom dashboard.
 
-**What Was Happening:**
-- Route conflicts between our custom B2B implementation and BigCommerce's official buyer portal
-- Middleware exclusions not properly configured
-- Locale routing conflicts making everything worse
+**Symptoms:**
+- 500 errors on `/custom-dashboard` routes
+- B3Storage not available in browser
+- B2B authentication failing
+- Console errors about missing B2B script
+
+**Root Cause:**
+- Incorrect import paths in `cartService.ts`
+- Missing environment variables
+- B2B script configuration issues
 
 **The Solution:**
-We **switched to BigCommerce's official buyer portal approach**. Here's what we did:
+1. **Fix Import Paths** - Use correct Catalyst utilities:
+```typescript
+// CORRECT - Use Catalyst's official utilities
+import { addToOrCreateCart } from '~/lib/cart';
+import { getCart as getCartData } from '~/client/queries/get-cart';
 
-```bash
-# Removed our custom B2B routes (they were causing conflicts)
-rm -rf core/app/[locale]/(default)/b2b/
-rm -rf core/app/[locale]/(default)/business/
-
-# Kept the official B2B integration
-# core/b2b/ - This is the good stuff!
+// INCORRECT - Custom GraphQL mutations
+// import { ADD_CART_LINE_ITEMS } from './graphql';
 ```
 
-**Why This Works:**
-- **Official approach** - BigCommerce supports this method
-- **No route conflicts** - Uses their hosted portal instead of custom routes
-- **Feature complete** - All the B2B features you need
-- **Properly tested** - Actually works in production
-
-**Lesson Learned:** Don't fight BigCommerce's official approach. Use their hosted buyer portal - it's way easier!
-
-### Issue 2: Algolia Environment Variable Naming Conflicts
-
-**The Problem:**
-After upgrading to Catalyst 1.1.0, Algolia search stopped working due to environment variable naming conflicts.
-
-**What Was Happening:**
-- Old environment variables used `NEXT_PUBLIC_` prefix
-- New Catalyst version expected standard Algolia variable names
-- Search functionality completely broken
-
-**The Solution:**
-We **updated all environment variables** to use the standard Algolia naming convention:
-
+2. **Verify Environment Variables**:
 ```env
-# OLD (BROKEN)
-NEXT_PUBLIC_ALGOLIA_APP_ID=your_algolia_app_id
-NEXT_PUBLIC_ALGOLIA_APP_KEY=your_algolia_search_api_key
-NEXT_PUBLIC_ALGOLIA_INDEXNAME=your_algolia_index_name
-
-# NEW (WORKING)
-ALGOLIA_APPLICATION_ID=your_algolia_app_id
-ALGOLIA_SEARCH_API_KEY=your_algolia_search_api_key
-ALGOLIA_INDEX_NAME=your_algolia_index_name
+# Required for B2B functionality
+BIGCOMMERCE_STORE_HASH=your_store_hash
+BIGCOMMERCE_CHANNEL_ID=your_channel_id
+B2B_API_TOKEN=your_b2b_api_token_here
 ```
 
-**Files We Changed:**
-- `.env.local` - Updated environment variable names
-- `core/lib/algolia/client.ts` - Updated to use new variable names
-- `core/lib/algolia/faceted-search.ts` - Updated all references
-- `core/lib/algolia.ts` - Updated error messages
-- `core/client/queries/get-search-results.ts` - Updated variable references
-
-**Lesson Learned:** Always check environment variable naming conventions when upgrading frameworks!
-
-### Issue 3: Search Form Submission Not Working
-
-**The Problem:**
-Users could type in the search box, but hitting enter or clicking the search button did nothing.
-
-**What Was Happening:**
-- Search form was preventing default submission
-- Form action wasn't properly configured
-- Missing `getFormProps` and `action={formAction}` setup
-
-**The Solution:**
-We **fixed the search form configuration** in the navigation component:
-
+3. **Check B2B Script Configuration**:
 ```tsx
-// Fixed search form in navigation/index.tsx
-<form
-  {...getFormProps(form)}
-  onSubmit={handleSubmit}
-  className="nav-search-form flex items-center gap-3 px-3 py-3 @4xl:px-5 @4xl:py-4 bg-white rounded-lg border border-gray-200"
->
-  {/* form content */}
-</form>
+// core/components/b2b/b2b-script.tsx
+const b2bConfig = {
+  platform: 'catalyst',
+  storeHash: process.env.BIGCOMMERCE_STORE_HASH,
+  channelId: process.env.BIGCOMMERCE_CHANNEL_ID,
+  environment: 'production'
+};
 ```
 
-**Key Changes:**
-- Added `{...getFormProps(form)}` to the form element
-- Set `onSubmit={handleSubmit}` for proper form handling
-- Added white background styling for better visibility
+**Verification:**
+```bash
+# Test basic functionality
+curl http://localhost:3000/custom-dashboard/test-page
 
-**Lesson Learned:** Form submission in React requires proper configuration with Conform!
+# Check TypeScript compilation
+pnpm typecheck
+```
 
-### Issue 4: Facet Selection Not Working
+### **Issue 2: GraphQL Query Errors**
 
 **The Problem:**
-Facet filters weren't working - clicking on brand or category filters did nothing.
+GraphQL queries fail with schema errors or return incorrect data.
 
-**What Was Happening:**
-- URL parameters were being treated as single strings instead of arrays
-- Facet selection logic expected arrays but received strings
-- TypeScript errors about `brand.map is not a function`
+**Common Errors:**
+- `Cannot query field 'cart' on type 'Query'`
+- `Cannot query field 'entityId' on type 'ProductConnection'`
+- `Cannot query field 'sku' on type 'OrderPhysicalLineItem'`
 
 **The Solution:**
-We **fixed the parameter handling** to support both single values and arrays:
+Use correct BigCommerce GraphQL patterns:
 
 ```typescript
-// Fixed parameter parsing in search page
-const search = await fetchAlgoliaFacetedSearch({
-  term: searchParams.term as string || '',
-  page: parseInt(searchParams.page as string) || 0,
-  limit: parseInt(searchParams.limit as string) || 12,
-  sort: searchParams.sort as any,
-  brand: Array.isArray(searchParams.brand) ? searchParams.brand : searchParams.brand ? [searchParams.brand as string] : undefined,
-  categoryIn: Array.isArray(searchParams.categoryIn) ? searchParams.categoryIn : searchParams.categoryIn ? [searchParams.categoryIn as number] : undefined,
-  // ... other parameters
-});
-```
-
-**Files We Changed:**
-- `core/app/[locale]/(default)/(faceted)/search/page.tsx` - Fixed parameter parsing
-- `core/lib/algolia/faceted-search.ts` - Updated interface and handling
-
-**Lesson Learned:** URL parameters can be single values or arrays - handle both cases!
-
-### Issue 5: Search Results Styling Issues
-
-**The Problem:**
-Search results were hard to read with black text on dark backgrounds.
-
-**What Was Happening:**
-- Search results had no background styling
-- Type-ahead results were invisible
-- Poor contrast made text unreadable
-
-**The Solution:**
-We **added comprehensive styling** for search results:
-
-```css
-/* Added to globals.css */
-:root {
-  --nav-search-background: hsl(0 0% 100%);
-  --nav-search-border: hsl(0 0% 90%);
-  --nav-search-divider: hsl(0 0% 90%);
-  /* ... more variables */
-}
-```
-
-**Files We Changed:**
-- `core/app/globals.css` - Added search styling variables
-- `core/vibes/soul/primitives/navigation/index.tsx` - Added white backgrounds to search results
-
-**Lesson Learned:** Always consider contrast and readability in search interfaces!
-
-### Issue 6: B2B Token Generation Missing
-
-**The Problem:**
-B2B customers could log in but had no B2B token, so B2B features weren't available.
-
-**What Was Happening:**
-- B2B token generation wasn't added to the auth flow
-- JWT callbacks weren't handling B2B token creation
-- Session lacked B2B capabilities
-
-**The Solution:**
-We **added B2B token generation** to the auth system:
-
-```typescript
-// Added to auth/index.ts
-export async function generateB2BToken(customerId: number): Promise<string | null> {
-  try {
-    const response = await fetch(`${process.env.B2B_API_HOST}/stores/${process.env.BIGCOMMERCE_STORE_HASH}/v2/customers/${customerId}/login`, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${process.env.B2B_API_TOKEN}`,
-        'Content-Type': 'application/json',
-      },
-    });
-    
-    if (response.ok) {
-      const data = await response.json();
-      return data.data.token;
+// CORRECT - Cart queries
+const GET_CART = graphql(`
+  query GetCart($cartId: String!) {
+    site {
+      cart(entityId: $cartId) {
+        entityId
+        lineItems {
+          physicalItems {
+            entityId
+            productEntityId
+            name
+            sku
+            quantity
+            imageUrl
+            extendedListPrice { value }
+            extendedSalePrice { value }
+          }
+        }
+      }
     }
-    return null;
+  }
+`);
+
+// CORRECT - Product search
+const SEARCH_PRODUCTS = graphql(`
+  query SearchProducts($searchTerm: String!, $first: Int = 10) {
+    site {
+      search {
+        searchProducts(filters: { searchTerm: $searchTerm }) {
+          products(first: $first) {
+            edges {
+              node {
+                entityId
+                name
+                sku
+                prices {
+                  price { value currencyCode }
+                  salePrice { value currencyCode }
+                }
+                defaultImage { url(width: 100) altText }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+`);
+
+// CORRECT - Order queries
+const GET_ORDERS = graphql(`
+  query GetOrders($first: Int = 50) {
+    customer {
+      orders(first: $first) {
+        edges {
+          node {
+            entityId
+            orderedAt { utc }
+            status { value }
+            totalIncTax { value }
+            consignments {
+              shipping {
+                edges {
+                  node {
+                    lineItems {
+                      edges {
+                        node {
+                          entityId
+                          productEntityId
+                          name
+                          quantity
+                          image { url altText }
+                          subTotalListPrice { value currencyCode }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+`);
+```
+
+### **Issue 3: Cart Integration Problems**
+
+**The Problem:**
+Cart operations fail or don't synchronize properly.
+
+**Symptoms:**
+- Items not adding to cart
+- Cart not updating in header
+- Reorder functionality broken
+- Cart errors in console
+
+**The Solution:**
+Use Catalyst's official cart utilities:
+
+```typescript
+// CORRECT - Cart service implementation
+import { auth } from '~/auth';
+import { addToOrCreateCart } from '~/lib/cart';
+import { getCart as getCartData } from '~/client/queries/get-cart';
+
+export async function addToCart(items: CartItem[]): Promise<{ success: boolean; cart?: Cart; errors?: string[] }> {
+  try {
+    const session = await auth();
+    if (!session?.user?.customerAccessToken) {
+      return { success: false, errors: ['No customer access token available'] };
+    }
+    
+    const cartData = {
+      lineItems: items.map(item => ({
+        productEntityId: item.productEntityId,
+        quantity: item.quantity,
+        selectedOptions: item.selectedOptions || []
+      }))
+    };
+    
+    await addToOrCreateCart(cartData);
+    const cartResult = await getCart();
+    return { success: true, cart: cartResult.cart };
   } catch (error) {
-    console.error('B2B token generation failed:', error);
-    return null;
+    console.error('🛒 [Cart Service] Error adding to cart:', error);
+    return { success: false, errors: [error instanceof Error ? error.message : 'Unknown error'] };
   }
 }
 ```
 
-**Files We Changed:**
-- `core/auth/index.ts` - Added B2B token generation
-- `core/auth/customer-login-api.ts` - Updated to include B2B token in session
-
-**Lesson Learned:** B2B functionality requires explicit token generation in the auth flow!
-
-### Issue 7: Middleware Issues Causing 404s
+### **Issue 4: Navigation Duplication**
 
 **The Problem:**
-Our middleware wasn't calling `NextResponse.next()` properly, causing all sorts of weird routing issues.
+Duplicate navigation elements (search, cart, user icons) appear in header.
 
-**What Was Happening:**
-- Locale redirect middleware not handling all cases
-- Missing `NextResponse.next()` calls in middleware chain
-- Middleware breaking the entire routing system
+**Symptoms:**
+- Search icon appears twice
+- Cart icon duplicated
+- User icon duplicated
+- Currency selector duplicated
 
 **The Solution:**
+Conditionally hide navigation elements in custom dashboard:
+
+```tsx
+// core/components/header/index.tsx
+const headersList = await headers();
+const pathname = headersList.get('x-pathname') || headersList.get('x-invoke-path') || '';
+const isCustomDashboard = pathname.startsWith('/custom-dashboard');
+
+<HeaderSection
+  navigation={{
+    // ... other props
+    hideNavigationElements: isCustomDashboard,
+  }}
+/>
+```
+
+```tsx
+// core/vibes/soul/primitives/navigation/index.tsx
+export const Navigation = forwardRef(function Navigation<S extends SearchResult>(
+  {
+    // ... other props
+    hideNavigationElements = false,
+  }: Props<S>,
+  ref: Ref<HTMLDivElement>,
+) {
+  return (
+    <nav>
+      {/* ... navigation content */}
+      {!hideNavigationElements && (
+        <div className="flex items-center justify-end gap-0.5">
+          {/* Search, User, Cart, Locale, Currency components */}
+        </div>
+      )}
+    </nav>
+  );
+});
+```
+
+### **Issue 5: Quick Order Search Not Working**
+
+**The Problem:**
+Product search in Quick Order returns empty results or missing data.
+
+**Symptoms:**
+- Search returns no products
+- Prices and SKUs are empty
+- Product images not displaying
+- Search errors in console
+
+**The Solution:**
+Implement robust search with Algolia fallback:
+
 ```typescript
-// Fixed middleware.ts
-export function middleware(request: NextRequest) {
-  // ... existing logic ...
-  
-  // Always call next() at the end - this was the key!
-  return NextResponse.next();
+// Enhanced search with proper error handling
+export async function searchAlgoliaProducts(query: string): Promise<AlgoliaProduct[]> {
+  try {
+    // Check Algolia environment variables
+    const algoliaAppId = process.env.ALGOLIA_APPLICATION_ID;
+    const algoliaSearchKey = process.env.ALGOLIA_SEARCH_API_KEY;
+    const algoliaIndexName = process.env.ALGOLIA_INDEX_NAME;
+
+    if (!algoliaAppId || !algoliaSearchKey || !algoliaIndexName) {
+      console.log('🔍 [Algolia] Environment variables missing, falling back to GraphQL');
+      return await searchProductsGraphQL(query);
+    }
+
+    // Initialize Algolia client
+    const algoliasearch = (await import('algoliasearch')).default;
+    const client = algoliasearch(algoliaAppId, algoliaSearchKey);
+    const index = client.initIndex(algoliaIndexName);
+
+    // Search with enhanced attributes
+    const { hits } = await index.search(query, {
+      attributesToRetrieve: [
+        'name', 'sku', 'product_id', 'default_price', 'sale_price',
+        'default_image', 'images', 'brand_name'
+      ],
+      hitsPerPage: 20
+    });
+
+    if (!hits || hits.length === 0) {
+      console.log('🔍 [Algolia] No results, falling back to GraphQL');
+      return await searchProductsGraphQL(query);
+    }
+
+    // Transform results with robust data mapping
+    return hits.map((hit: any) => ({
+      productId: hit.product_id || hit.objectID,
+      name: hit.name || 'Unknown Product',
+      sku: hit.sku || '',
+      price: hit.default_price || hit.price || 0,
+      salePrice: hit.sale_price || null,
+      imageUrl: hit.default_image?.url || hit.images?.[0]?.url || '',
+      brand: hit.brand_name || ''
+    }));
+  } catch (error) {
+    console.error('🔍 [Algolia] Search error, falling back to GraphQL:', error);
+    return await searchProductsGraphQL(query);
+  }
 }
 ```
 
-**Files We Changed:**
-- `core/middleware.ts` - Fixed the middleware chain
-- `core/middlewares/with-intl.ts` - Disabled locale enforcement for development
-
-**Lesson Learned:** Always call `NextResponse.next()` in your middleware, or everything breaks!
-
-### Issue 8: Import Path Resolution Errors
+### **Issue 6: Environment Variable Problems**
 
 **The Problem:**
-Module not found errors for B2B hooks were driving us crazy. The import paths were wrong!
+Environment variables not being loaded or recognized.
 
-**What Was Happening:**
-- Incorrect relative import paths
-- Component location vs B2B hooks location mismatch
-- TypeScript couldn't find the modules
-
-**The Solution:**
-```typescript
-// Fixed import path in ProductDetailB2BActions.tsx
-// From: '../../../b2b/use-product-details'
-// To: '../../../../b2b/use-product-details'
-
-import { useAddToQuote, useAddToShoppingList } from '../../../../b2b/use-product-details';
-```
-
-**Path Calculation:**
-- Component: `core/vibes/soul/sections/product-detail/ProductDetailB2BActions.tsx`
-- B2B hooks: `core/b2b/use-product-details.tsx`
-- Correct path: `../../../../b2b/use-product-details` (4 levels up)
-
-**Files We Changed:**
-- `core/vibes/soul/sections/product-detail/ProductDetailB2BActions.tsx`
-
-**Lesson Learned:** Count your directory levels carefully when writing import paths!
-
-### Issue 9: Cart Synchronization Issues
-
-**The Problem:**
-Cart sync from buyer portal wasn't working despite success messages. We had a complex API-based solution that was over-engineered.
-
-**What Was Happening:**
-- Complex API-based cart sync implementation
-- Missing event handling for cart updates
-- Over-engineered solution that was fragile
+**Symptoms:**
+- B2B script not loading
+- API calls failing
+- Configuration errors
+- Empty values in logs
 
 **The Solution:**
-We **adopted the official approach** from BigCommerce's B2B repo:
-
-```typescript
-// Official approach in use-b2b-cart.ts
-const handleCartCreated = (event: any) => {
-  const cartId = event.detail.cartId;
-  document.cookie = `cartId=${cartId}; path=/; max-age=31536000`;
-  window.location.reload();
-};
-```
-
-**Files We Changed:**
-- `core/b2b/use-b2b-cart.ts` - Simplified to official approach
-- Removed: `core/app/api/b2b/cart-sync/route.ts` (our complex API)
-
-**Lesson Learned:** Sometimes the simple solution is the best solution. Don't over-engineer!
-
-### Issue 10: Missing B2B Hook Files
-
-**The Problem:**
-Module not found errors for B2B functionality because we were missing critical files.
-
-**What Was Happening:**
-- Missing B2B hook files from official implementation
-- Incomplete B2B integration
-- TypeScript errors everywhere
-
-**The Solution:**
-We **copied all the missing files** from the official BigCommerce B2B repo:
-
-**Files We Added:**
-- `core/b2b/use-b2b-quote-enabled.ts`
-- `core/b2b/use-b2b-shopping-list-enabled.ts`
-- `core/b2b/map-to-b2b-product-options.tsx`
-- `core/b2b/use-product-details.tsx`
-- `core/b2b/loader.tsx`
-- `core/b2b/script-dev.tsx`
-- `core/b2b/script-production.tsx`
-- `core/b2b/server-login.ts`
-- `core/b2b/types.ts`
-- `core/b2b/use-b2b-auth.ts`
-- `core/b2b/use-b2b-cart.ts`
-- `core/b2b/use-b2b-sdk.ts`
-- `core/b2b/customer-debug.tsx`
-
-**Lesson Learned:** Don't try to reinvent the wheel. Use the official implementation!
-
-### Issue 11: Locale Routing Conflicts
-
-**The Problem:**
-Locale enforcement was causing routing issues and conflicts with B2B routes.
-
-**What Was Happening:**
-- Locale redirect middleware too aggressive
-- Conflicts with B2B routes
-- Routing system breaking
-
-**The Solution:**
-We **disabled locale enforcement** for development and simplified routing:
-
-**Files We Changed:**
-- `core/middlewares/with-intl.ts` - Disabled locale enforcement
-- `core/middleware.ts` - Simplified locale handling
-
-**Lesson Learned:** Sometimes you need to simplify your routing to get things working!
-
-## 🔧 Configuration Issues and Fixes
-
-### Issue 1: Environment Variables Setup
-
-**The Problem:**
-Missing or incorrect environment variables causing all sorts of weird issues.
-
-**The Solution:**
+1. **Verify `.env.local` file**:
 ```env
 # BigCommerce Configuration
 BIGCOMMERCE_STORE_HASH=your_store_hash
@@ -366,198 +352,180 @@ BIGCOMMERCE_CLIENT_ID=your_client_id
 BIGCOMMERCE_CLIENT_SECRET=your_client_secret
 BIGCOMMERCE_ACCESS_TOKEN=your_access_token
 
-# Algolia Configuration - UPDATED NAMES
+# B2B Configuration
+B2B_API_TOKEN=your_b2b_api_token_here
+B2B_API_HOST=https://api-b2b.bigcommerce.com/
+
+# Algolia Configuration
 ALGOLIA_APPLICATION_ID=your_algolia_app_id
 ALGOLIA_SEARCH_API_KEY=your_algolia_search_api_key
 ALGOLIA_INDEX_NAME=your_algolia_index_name
-
-# B2B Configuration (CRITICAL!)
-B2B_API_TOKEN=your_b2b_api_token
-B2B_API_HOST=https://api-b2b.bigcommerce.com/
 ```
 
-**Critical Note:** Make sure `B2B_API_TOKEN` is **required**, not optional. We learned this the hard way!
-
-### Issue 2: B2B API Configuration
-
-**The Problem:**
-B2B API not properly configured, causing authentication failures.
-
-**The Solution:**
-1. **Enable B2B features** in BigCommerce admin
-2. **Get B2B API token** from Settings → API → B2B API
-3. **Configure customer groups** for B2B customers
-
-**Pro Tip:** The B2B API token is different from your regular BigCommerce API token. You need both!
-
-### Issue 3: Algolia Index Configuration
-
-**The Problem:**
-Algolia search not working properly due to incorrect index configuration.
-
-**The Solution:**
-1. **Configure searchable attributes**: `name`, `description`, `brand_name`, `categories_without_path`, `sku`
-2. **Set up facets**: `categories_without_path`, `brand_name`, `default_price`, `in_stock`, `is_visible`
-3. **Index products** with proper data structure
-
-## 🚀 Performance and Optimization Fixes
-
-### Issue 1: Webpack Performance Warnings
-
-**The Problem:**
-Webpack cache serialization warnings cluttering the console.
-
-**The Solution:**
-- **Optimized bundle size** by removing unused dependencies
-- **Configured proper caching** strategies
-- **Used production builds** for deployment
-
-### Issue 2: API Response Times
-
-**The Problem:**
-Slow API responses affecting user experience.
-
-**The Solution:**
-- **Implemented caching** for API responses
-- **Optimized request batching** where possible
-- **Used CDN** for static assets
-
-## 🔍 Debugging Strategies (How We Found These Issues)
-
-### Strategy 1: Console Logging
-We added extensive console logging to track down issues:
-
-```typescript
-console.log('B2B Loader Debug:', {
-  hasB2BApiHost: !!process.env.B2B_API_HOST,
-  hasB2BApiToken: !!process.env.B2B_API_TOKEN,
-  hasB2BToken: !!session?.b2bToken,
-  session: session ? 'exists' : 'missing'
-});
-
-console.log('🔍 [Algolia] Environment check:', {
-  appId: process.env.ALGOLIA_APPLICATION_ID ? 'SET' : 'NOT SET',
-  appKey: process.env.ALGOLIA_SEARCH_API_KEY ? 'SET' : 'NOT SET',
-  indexName: process.env.ALGOLIA_INDEX_NAME ? 'SET' : 'NOT SET',
-  nodeEnv: process.env.NODE_ENV
+2. **Add environment variable logging**:
+```tsx
+// core/app/[locale]/(default)/custom-dashboard/page.tsx
+console.log('CustomDashboardPage Environment Variables:', {
+  storeHash: process.env.BIGCOMMERCE_STORE_HASH,
+  channelId: process.env.BIGCOMMERCE_CHANNEL_ID,
+  hasStoreHash: !!process.env.BIGCOMMERCE_STORE_HASH,
+  hasChannelId: !!process.env.BIGCOMMERCE_CHANNEL_ID
 });
 ```
 
-### Strategy 2: Debug Pages
-We created debug pages to monitor functionality:
-
+3. **Restart development server**:
 ```bash
-# B2B Debug Page
-http://localhost:3000/b2b-debug
-
-# Business Test Page
-http://localhost:3000/business-test
-
-# Algolia Debug (via console logs)
-npm run algolia:debug
+# Stop server and clear cache
+pkill -f "next dev"
+rm -rf .next
+pnpm run dev
 ```
 
-### Strategy 3: Environment Variable Checks
-We added environment variable validation:
+### **Issue 7: TypeScript Compilation Errors**
 
+**The Problem:**
+TypeScript errors preventing build or causing runtime issues.
+
+**Common Errors:**
+- `Module not found: Can't resolve '~/lib/cart/get-cart'`
+- `Property 'sku' does not exist on type 'OrderPhysicalLineItem'`
+- `Type 'undefined' is not assignable to type 'string'`
+
+**The Solution:**
+1. **Fix import paths**:
 ```typescript
-const ENV = z
-  .object({
-    env: z.object({
-      B2B_API_TOKEN: z.string(), // Required, not optional!
-      BIGCOMMERCE_CHANNEL_ID: z.string(),
-      B2B_API_HOST: z.string().default('https://api-b2b.bigcommerce.com/'),
-      ALGOLIA_APPLICATION_ID: z.string(),
-      ALGOLIA_SEARCH_API_KEY: z.string(),
-      ALGOLIA_INDEX_NAME: z.string(),
-    }),
-  })
-  .transform(({ env }) => env);
+// CORRECT import paths
+import { getCart as getCartData } from '~/client/queries/get-cart';
+import { addToOrCreateCart } from '~/lib/cart';
 ```
 
-## 🎯 Key Lessons Learned
+2. **Add proper type definitions**:
+```typescript
+// Make optional properties optional
+interface ReorderButtonProps {
+  orderId: number;
+  lineItems: Array<{
+    node: {
+      entityId: number;
+      productEntityId: number;
+      name: string;
+      sku?: string; // Make optional
+      quantity: number;
+      subTotalListPrice: {
+        value: number;
+        currencyCode: string;
+      };
+    };
+  }>;
+}
+```
 
-### Lesson 1: Use Official Approaches
-Don't fight BigCommerce's official methods. Their hosted buyer portal is way easier than custom implementations.
+3. **Add null checks**:
+```typescript
+// Add null checks for potentially undefined values
+const orderStatus = order.status?.value || 'Unknown';
+const lineItems = order.consignments?.shipping?.edges?.[0]?.node?.lineItems?.edges || [];
+```
 
-### Lesson 2: Keep It Simple
-We over-engineered several solutions. The simple approach often works better.
+## 🔍 **Debugging Tools**
 
-### Lesson 3: Environment Variables Matter
-Most issues were configuration-related. Double-check your environment variables!
+### **Test Pages**
+Use these test pages to verify functionality:
 
-### Lesson 4: Debug Tools Are Essential
-Without our debug pages and console logging, we never would have found these issues.
-
-### Lesson 5: Import Paths Are Tricky
-Count your directory levels carefully when writing import paths!
-
-### Lesson 6: Form Submission Requires Proper Setup
-React forms need proper configuration with libraries like Conform.
-
-### Lesson 7: Styling Matters for UX
-Search interfaces need proper contrast and readability.
-
-## 🆘 When You're Still Stuck
-
-### Step 1: Check the Debug Pages
 ```bash
-http://localhost:3000/b2b-debug
-http://localhost:3000/business-test
+# Basic functionality test
+http://localhost:3000/custom-dashboard/test-page
+
+# Simple test page
+http://localhost:3000/simple-test-page
+
+# API debugger (built into dashboard)
+http://localhost:3000/custom-dashboard
 ```
 
-### Step 2: Look at Console Logs
-Open your browser's developer tools and check the console for error messages.
+### **Console Logging**
+Look for these log patterns:
 
-### Step 3: Verify Environment Variables
+```javascript
+// B2B Script Loading
+B2B Script loaded successfully
+B3Storage available: true
+
+// Cart Operations
+🛒 [Cart Service] Adding items to cart: [...]
+🛒 [Cart Service] Successfully added items to cart
+
+// API Calls
+[BigCommerce] query GetOrders - 254ms - complexity 2658
+Orders response: { data: { customer: { orders: [...] } } }
+
+// Search Operations
+🔍 [Algolia] Environment check: { appId: 'SET', appKey: 'SET', ... }
+```
+
+### **Environment Variable Check**
 ```bash
-npm run env:check
+# Check environment variables
+curl http://localhost:3000/custom-dashboard/test-page
+
+# Check TypeScript compilation
+pnpm typecheck
+
+# Check build process
+pnpm run build
 ```
 
-### Step 4: Check BigCommerce Admin
-Make sure B2B features are enabled and properly configured.
+## 🚀 **Performance Optimization**
 
-### Step 5: Test Search Functionality
-```bash
-# Test search API
-curl "http://localhost:3000/search?term=plant"
+### **Common Performance Issues**
+1. **Slow API responses** - Implement caching
+2. **Large bundle size** - Use dynamic imports
+3. **Memory leaks** - Clean up event listeners
+4. **Slow page loads** - Optimize images and code splitting
 
-# Check Algolia connection
-npm run algolia:debug
+### **Performance Solutions**
+```typescript
+// Implement caching for API responses
+const cache = new Map();
+
+export async function getCachedData(key: string, fetcher: () => Promise<any>) {
+  if (cache.has(key)) {
+    return cache.get(key);
+  }
+  const data = await fetcher();
+  cache.set(key, data);
+  return data;
+}
+
+// Use dynamic imports for large components
+const QuickOrderModal = dynamic(() => import('./QuickOrderModal'), {
+  loading: () => <div>Loading...</div>
+});
 ```
 
-### Step 6: Create a GitHub Issue
-If you're still stuck, create an issue in this repository. We'll help you fix it!
+## 📞 **Getting Help**
 
-## 🎉 Success Stories
+### **When to Seek Help**
+1. **500 errors persist** after trying all solutions
+2. **GraphQL schema errors** that don't match documentation
+3. **Performance issues** affecting user experience
+4. **Security concerns** with B2B data
 
-### What We Built
-- **Complete B2B integration** that actually works
-- **Lightning-fast Algolia search** with faceted filtering
-- **Production-ready deployment** on Vercel
-- **Comprehensive debugging tools** for troubleshooting
-- **Complete documentation** for future developers
+### **Information to Provide**
+When seeking help, include:
+- **Error messages** from console
+- **Environment variable status** (without sensitive data)
+- **Steps to reproduce** the issue
+- **Expected vs actual behavior**
+- **Browser and device information**
 
-### What Others Can Learn
-- **Start with official approaches** - Don't reinvent the wheel
-- **Build debug tools early** - They'll save you hours of troubleshooting
-- **Document everything** - Future you will thank you
-- **Test thoroughly** - Production issues are expensive
-- **Pay attention to environment variables** - They're often the root cause
-
-## 📚 Additional Resources
-
-### Documentation
-- **[B2B Setup Guide](B2B_SETUP.md)** - Complete B2B setup instructions
-- **[Algolia Setup Guide](ALGOLIA_SETUP.md)** - Algolia search integration
-- **[BigCommerce B2B Documentation](https://developer.bigcommerce.com/docs/b2b)** - Official docs
-
-### Community
-- **[BigCommerce Developer Community](https://developer.bigcommerce.com/community)** - Get help from other developers
-- **[GitHub Discussions](https://github.com/bigcommerce/catalyst/discussions)** - Ask questions
+### **Resources**
+- **BigCommerce Developer Community** - [Community Forum](https://developer.bigcommerce.com/community)
+- **Catalyst Documentation** - [catalyst.dev](https://catalyst.dev/docs/)
+- **B2B API Documentation** - [BigCommerce B2B Docs](https://developer.bigcommerce.com/docs/b2b)
 
 ---
 
-**Remember:** Every problem has a solution. We found them all, and now you don't have to! 🚀
-
-*P.S. If this guide helped you fix your issues, consider giving the repo a star! ⭐* 
+**Last Updated:** January 2025  
+**Version:** 1.0.0  
+**Status:** Production Ready 
