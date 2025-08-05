@@ -1,5 +1,6 @@
 import { getLocale, getTranslations } from 'next-intl/server';
 import { cache } from 'react';
+import { headers } from 'next/headers';
 
 import { Streamable } from '@/vibes/soul/lib/streamable';
 import { HeaderSection } from '@/vibes/soul/sections/header-section';
@@ -84,6 +85,11 @@ const getHeaderData = cache(async () => {
 export const Header = async () => {
   const t = await getTranslations('Components.Header');
   const locale = await getLocale();
+
+  // Check if we're in the custom dashboard area
+  const headersList = await headers();
+  const pathname = headersList.get('x-pathname') || headersList.get('x-invoke-path') || '';
+  const isCustomDashboard = pathname.startsWith('/custom-dashboard');
 
   const data = await getHeaderData();
   const session = await auth();
@@ -185,6 +191,8 @@ export const Header = async () => {
         activeCurrencyId: streamableActiveCurrencyId,
         currencyAction: switchCurrency,
         switchCurrencyLabel: t('SwitchCurrency.label'),
+        // Hide navigation elements in custom dashboard to avoid duplication
+        hideNavigationElements: isCustomDashboard,
       }}
     />
   );

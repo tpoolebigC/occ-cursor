@@ -31,8 +31,8 @@ export const config = {
      * - xmlsitemap.php (legacy sitemap route)
      * - robots.txt (robots route)
      * - buyer-portal (buyer portal routes - no locale needed)
-     * - custom-dashboard (our custom B2B dashboard - no locale needed)
+     * - custom-dashboard (our custom B2B dashboard - now in locale directory)
      */
-    '/((?!api|admin|_next/static|_next/image|_vercel|favicon.ico|xmlsitemap.php|sitemap.xml|robots.txt|login/token|buyer-portal|custom-dashboard).*)',
+    '/((?!api|admin|_next/static|_next/image|_vercel|favicon.ico|xmlsitemap.php|sitemap.xml|robots.txt|login/token|buyer-portal).*)',
   ],
 };

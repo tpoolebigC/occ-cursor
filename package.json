@@ -29,11 +29,5 @@
     "turbo": "^2.5.5",
     "typescript": "^5.8.3",
     "unlighthouse": "^0.17.2"
-  },
-  "dependencies": {
-    "@emotion/react": "^11.14.0",
-    "@emotion/styled": "^11.14.1",
-    "@mui/icons-material": "^7.2.0",
-    "@mui/material": "^7.2.0"
   }
 }

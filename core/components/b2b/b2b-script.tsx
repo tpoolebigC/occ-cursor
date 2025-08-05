@@ -2,9 +2,6 @@
 
 import { useEffect, useRef } from 'react';
 
-import { useB2BAuth } from './use-b2b-auth';
-import { useB2BCart } from './use-b2b-cart';
-
 interface Props {
   storeHash: string;
   channelId: string;
@@ -23,17 +20,16 @@ export function B2BScript({
   const scriptRef = useRef<HTMLScriptElement>(null);
   const configRef = useRef<HTMLScriptElement>(null);
 
-  useB2BAuth(token);
-  useB2BCart(cartId);
-
   useEffect(() => {
     // Skip on server side
     if (typeof window === 'undefined') {
+      console.log('B2B Script: Skipping on server side');
       return;
     }
 
     // Only load scripts if they haven't been loaded yet
     if (scriptRef.current || configRef.current) {
+      console.log('B2B Script: Scripts already loaded, skipping');
       return;
     }
 
@@ -42,8 +38,23 @@ export function B2BScript({
       channelId,
       environment,
       hasToken: !!token,
-      cartId
+      cartId,
+      hasStoreHash: !!storeHash,
+      hasChannelId: !!channelId
     });
+
+    // Validate required parameters
+    if (!storeHash) {
+      console.error('B2B Script: Missing storeHash');
+      return;
+    }
+
+    if (!channelId) {
+      console.error('B2B Script: Missing channelId');
+      return;
+    }
+
+    console.log('B2B Script: Creating config script...');
 
     // Create config script with enhanced configuration
     const configScript = document.createElement('script');
@@ -77,14 +88,17 @@ export function B2BScript({
     `;
     document.head.appendChild(configScript);
     configRef.current = configScript;
+    console.log('B2B Script: Config script added to head');
 
     // Create B2B script
+    console.log('B2B Script: Creating B2B script...');
     const b2bScript = document.createElement('script');
     b2bScript.setAttribute('data-channelid', channelId);
     b2bScript.setAttribute('data-environment', environment);
     b2bScript.setAttribute('data-storehash', storeHash);
     b2bScript.src = `https://cdn.bundleb2b.net/b2b/${environment}/storefront/headless.js`;
     b2bScript.type = 'module';
+    
     b2bScript.onload = () => {
       console.log('B2B Script loaded successfully');
       
@@ -101,15 +115,24 @@ export function B2BScript({
             console.log('No cart ID found, attempting to initialize cart...');
             // The B2B portal should create a cart when needed
           }
+        } else {
+          console.log('B2B Cart utils not available after load');
         }
       }, 1000);
     };
-    b2bScript.onerror = (e) => console.error('B2B Script failed to load:', e);
+    
+    b2bScript.onerror = (e) => {
+      console.error('B2B Script failed to load:', e);
+      console.error('B2B Script URL:', b2bScript.src);
+    };
+    
     document.head.appendChild(b2bScript);
     scriptRef.current = b2bScript;
+    console.log('B2B Script: B2B script added to head, URL:', b2bScript.src);
 
     return () => {
       // Cleanup on unmount
+      console.log('B2B Script: Cleaning up...');
       if (configRef.current) {
         document.head.removeChild(configRef.current);
         configRef.current = null;

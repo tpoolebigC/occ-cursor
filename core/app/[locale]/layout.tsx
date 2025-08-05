@@ -14,7 +14,7 @@ import '../../globals.css';
 import { fonts } from '~/app/fonts';
 import { CookieNotifications } from '~/app/notifications';
 import { Providers } from '~/app/providers';
-import { B2BLoader } from '~/b2b/loader';
+// B2BLoader removed to prevent double headers
 import { serverClient as client } from '~/client/server-client';
 import { graphql } from '~/client/graphql';
 import { revalidate } from '~/client/revalidate-target';
@@ -119,7 +119,6 @@ export default async function RootLayout({ params, children }: Props) {
     <MakeswiftProvider previewMode={(await draftMode()).isEnabled}>
       <NextIntlClientProvider messages={messages}>
         <NuqsAdapter>
-          <B2BLoader />
           <AnalyticsProvider channelId={data.channel.entityId} settings={data.site.settings}>
             <Providers>
               {toastNotificationCookieData && (

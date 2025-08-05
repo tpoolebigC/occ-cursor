@@ -119,6 +119,7 @@ interface Props<S extends SearchResult> {
   searchLabel?: string;
   mobileMenuTriggerLabel?: string;
   switchCurrencyLabel?: string;
+  hideNavigationElements?: boolean;
 }
 
 const MobileMenuButton = forwardRef<
@@ -286,6 +287,7 @@ export const Navigation = forwardRef(function Navigation<S extends SearchResult>
     searchLabel = 'Search',
     mobileMenuTriggerLabel = 'Toggle navigation',
     switchCurrencyLabel,
+    hideNavigationElements = false,
   }: Props<S>,
   ref: Ref<HTMLDivElement>,
 ) {
@@ -533,97 +535,99 @@ export const Navigation = forwardRef(function Navigation<S extends SearchResult>
         </ul>
 
         {/* Icon Buttons */}
-        <div
-          className={clsx(
-            'flex items-center justify-end gap-0.5 transition-colors duration-300',
-            linksPosition === 'center' ? 'flex-1' : 'flex-1 @4xl:flex-none',
-          )}
-        >
-          {searchAction ? (
-            <Popover.Root onOpenChange={setIsSearchOpen} open={isSearchOpen}>
-              <Popover.Anchor className="absolute left-0 right-0 top-full" />
-              <Popover.Trigger asChild>
-                <button
-                  aria-label={openSearchPopupLabel}
-                  className={navButtonClassName}
-                  onPointerEnter={(e) => e.preventDefault()}
-                  onPointerLeave={(e) => e.preventDefault()}
-                  onPointerMove={(e) => e.preventDefault()}
-                >
-                  <Search size={20} strokeWidth={1} />
-                </button>
-              </Popover.Trigger>
-              <Popover.Portal>
-                <Popover.Content className="max-h-[calc(var(--radix-popover-content-available-height)-16px)] w-[var(--radix-popper-anchor-width)] py-2 @container data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95">
-                  <div className="flex max-h-[inherit] flex-col rounded-2xl bg-[var(--nav-search-background,hsl(var(--background)))] shadow-xl ring-1 ring-[var(--nav-search-border,hsl(var(--foreground)/5%))] transition-all duration-200 ease-in-out @4xl:inset-x-0">
-                    <SearchForm
-                      searchAction={searchAction}
-                      searchHref={searchHref}
-                      searchInputPlaceholder={searchInputPlaceholder}
-                      searchParamName={searchParamName}
-                      searchSubmitLabel={searchSubmitLabel}
-                    />
-                  </div>
-                </Popover.Content>
-              </Popover.Portal>
-            </Popover.Root>
-          ) : (
-            <Link aria-label={searchLabel} className={navButtonClassName} href={searchHref}>
-              <Search size={20} strokeWidth={1} />
-            </Link>
-          )}
+        {!hideNavigationElements && (
+          <div
+            className={clsx(
+              'flex items-center justify-end gap-0.5 transition-colors duration-300',
+              linksPosition === 'center' ? 'flex-1' : 'flex-1 @4xl:flex-none',
+            )}
+          >
+            {searchAction ? (
+              <Popover.Root onOpenChange={setIsSearchOpen} open={isSearchOpen}>
+                <Popover.Anchor className="absolute left-0 right-0 top-full" />
+                <Popover.Trigger asChild>
+                  <button
+                    aria-label={openSearchPopupLabel}
+                    className={navButtonClassName}
+                    onPointerEnter={(e) => e.preventDefault()}
+                    onPointerLeave={(e) => e.preventDefault()}
+                    onPointerMove={(e) => e.preventDefault()}
+                  >
+                    <Search size={20} strokeWidth={1} />
+                  </button>
+                </Popover.Trigger>
+                <Popover.Portal>
+                  <Popover.Content className="max-h-[calc(var(--radix-popover-content-available-height)-16px)] w-[var(--radix-popper-anchor-width)] py-2 @container data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95">
+                    <div className="flex max-h-[inherit] flex-col rounded-2xl bg-[var(--nav-search-background,hsl(var(--background)))] shadow-xl ring-1 ring-[var(--nav-search-border,hsl(var(--foreground)/5%))] transition-all duration-200 ease-in-out @4xl:inset-x-0">
+                      <SearchForm
+                        searchAction={searchAction}
+                        searchHref={searchHref}
+                        searchInputPlaceholder={searchInputPlaceholder}
+                        searchParamName={searchParamName}
+                        searchSubmitLabel={searchSubmitLabel}
+                      />
+                    </div>
+                  </Popover.Content>
+                </Popover.Portal>
+              </Popover.Root>
+            ) : (
+              <Link aria-label={searchLabel} className={navButtonClassName} href={searchHref}>
+                <Search size={20} strokeWidth={1} />
+              </Link>
+            )}
 
-          <Link aria-label={accountLabel} className={navButtonClassName} href={accountHref}>
-            <User size={20} strokeWidth={1} />
-          </Link>
-          <Link aria-label={cartLabel} className={navButtonClassName} href={cartHref}>
-            <ShoppingBag size={20} strokeWidth={1} />
+            <Link aria-label={accountLabel} className={navButtonClassName} href={accountHref}>
+              <User size={20} strokeWidth={1} />
+            </Link>
+            <Link aria-label={cartLabel} className={navButtonClassName} href={cartHref}>
+              <ShoppingBag size={20} strokeWidth={1} />
+              <Stream
+                fallback={
+                  <span className="absolute -right-0.5 -top-0.5 flex h-4 w-4 animate-pulse items-center justify-center rounded-full bg-contrast-100 text-xs text-background" />
+                }
+                value={streamableCartCount}
+              >
+                {(cartCount) =>
+                  cartCount != null &&
+                  cartCount > 0 && (
+                    <span className="absolute -right-0.5 -top-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-[var(--nav-cart-count-background,hsl(var(--foreground)))] font-[family-name:var(--nav-cart-count-font-family,var(--font-family-body))] text-xs text-[var(--nav-cart-count-text,hsl(var(--background)))]">
+                      {cartCount}
+                    </span>
+                  )
+                }
+              </Stream>
+            </Link>
+
+            {/* Locale / Language Dropdown */}
+            {locales && locales.length > 1 ? (
+              <LocaleSwitcher
+                activeLocaleId={activeLocaleId}
+                className="hidden @4xl:block"
+                // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
+                locales={locales as [Locale, Locale, ...Locale[]]}
+              />
+            ) : null}
+
+            {/* Currency Dropdown */}
             <Stream
-              fallback={
-                <span className="absolute -right-0.5 -top-0.5 flex h-4 w-4 animate-pulse items-center justify-center rounded-full bg-contrast-100 text-xs text-background" />
-              }
-              value={streamableCartCount}
+              fallback={null}
+              value={Streamable.all([streamableCurrencies, streamableActiveCurrencyId])}
             >
-              {(cartCount) =>
-                cartCount != null &&
-                cartCount > 0 && (
-                  <span className="absolute -right-0.5 -top-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-[var(--nav-cart-count-background,hsl(var(--foreground)))] font-[family-name:var(--nav-cart-count-font-family,var(--font-family-body))] text-xs text-[var(--nav-cart-count-text,hsl(var(--background)))]">
-                    {cartCount}
-                  </span>
-                )
+              {([currencies, activeCurrencyId]) =>
+                currencies && currencies.length > 1 && currencyAction ? (
+                  <CurrencyForm
+                    action={currencyAction}
+                    activeCurrencyId={activeCurrencyId}
+                    className="hidden @4xl:block"
+                    // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
+                    currencies={currencies as [Currency, ...Currency[]]}
+                    switchCurrencyLabel={switchCurrencyLabel}
+                  />
+                ) : null
               }
             </Stream>
-          </Link>
-
-          {/* Locale / Language Dropdown */}
-          {locales && locales.length > 1 ? (
-            <LocaleSwitcher
-              activeLocaleId={activeLocaleId}
-              className="hidden @4xl:block"
-              // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
-              locales={locales as [Locale, Locale, ...Locale[]]}
-            />
-          ) : null}
-
-          {/* Currency Dropdown */}
-          <Stream
-            fallback={null}
-            value={Streamable.all([streamableCurrencies, streamableActiveCurrencyId])}
-          >
-            {([currencies, activeCurrencyId]) =>
-              currencies && currencies.length > 1 && currencyAction ? (
-                <CurrencyForm
-                  action={currencyAction}
-                  activeCurrencyId={activeCurrencyId}
-                  className="hidden @4xl:block"
-                  // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
-                  currencies={currencies as [Currency, ...Currency[]]}
-                  switchCurrencyLabel={switchCurrencyLabel}
-                />
-              ) : null
-            }
-          </Stream>
-        </div>
+          </div>
+        )}
       </div>
 
       <div className="perspective-[2000px] absolute left-0 right-0 top-full z-50 flex w-full justify-center">
