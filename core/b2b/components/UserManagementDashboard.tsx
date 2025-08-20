@@ -28,10 +28,11 @@ enum CustomerRole {
 
 interface UserManagementDashboardProps {
   companyId?: number;
+  defaultActiveTab?: 'users' | 'permissions' | 'activity' | 'settings' | 'hierarchy';
 }
 
-export function UserManagementDashboard({ companyId }: UserManagementDashboardProps) {
-  const [activeTab, setActiveTab] = useState<'users' | 'permissions' | 'activity' | 'settings' | 'hierarchy'>('users');
+export function UserManagementDashboard({ companyId, defaultActiveTab = 'users' }: UserManagementDashboardProps) {
+  const [activeTab, setActiveTab] = useState<'users' | 'permissions' | 'activity' | 'settings' | 'hierarchy'>(defaultActiveTab);
 
   const tabs = [
     {

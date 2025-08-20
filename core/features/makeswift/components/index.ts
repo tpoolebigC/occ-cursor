@@ -38,6 +38,10 @@ import './quote-stats/quote-stats.makeswift';
 import './recent-orders-table/recent-orders-table.makeswift';
 import './revenue-chart/revenue-chart.makeswift';
 import './revenue-metric/revenue-metric.makeswift';
+// Buyer Portal custom components
+import './buyer-portal/b2b-navigation.makeswift';
+import './buyer-portal/user-management-dashboard.makeswift';
+import './buyer-portal/company-hierarchy.makeswift';
 import './security-form/security-form.makeswift';
 import './segments-chart/segments-chart.makeswift';
 import './site-footer/site-footer.makeswift';
