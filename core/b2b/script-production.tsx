@@ -11,11 +11,17 @@ interface Props {
   token?: string;
   environment: 'staging' | 'production';
   cartId?: string | null;
+  assetsBase?: string; // Optional override to load buyer-portal assets from a custom base (e.g., WebDAV/ngrok)
 }
 
-export function ScriptProduction({ cartId, storeHash, channelId, token, environment }: Props) {
+export function ScriptProduction({ cartId, storeHash, channelId, token, environment, assetsBase }: Props) {
   useB2BAuth(token);
   useB2BCart(cartId);
+
+  // Prefer custom assets base when provided; fall back to the default CDN headless loader
+  const scriptSrc = assetsBase
+    ? `${assetsBase.replace(/\/$/, '')}/headless.js`
+    : `https://cdn.bundleb2b.net/b2b/${environment}/storefront/headless.js`;
 
   return (
     <>
@@ -35,7 +41,7 @@ export function ScriptProduction({ cartId, storeHash, channelId, token, environm
         data-channelid={channelId}
         data-environment={environment}
         data-storehash={storeHash}
-        src={`https://cdn.bundleb2b.net/b2b/${environment}/storefront/headless.js`}
+        src={scriptSrc}
         type="module"
       />
     </>

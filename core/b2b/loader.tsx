@@ -10,6 +10,7 @@ const EnvironmentSchema = z.object({
   BIGCOMMERCE_CHANNEL_ID: z.string({ message: 'BIGCOMMERCE_CHANNEL_ID is required' }),
   LOCAL_BUYER_PORTAL_HOST: z.string().url().optional(),
   STAGING_B2B_CDN_ORIGIN: z.string().optional(),
+  BUYER_PORTAL_ASSETS_BASE: z.string().url().optional(),
 });
 
 export async function B2BLoader() {
@@ -18,6 +19,7 @@ export async function B2BLoader() {
     BIGCOMMERCE_CHANNEL_ID,
     LOCAL_BUYER_PORTAL_HOST,
     STAGING_B2B_CDN_ORIGIN,
+    BUYER_PORTAL_ASSETS_BASE,
   } = EnvironmentSchema.parse(process.env);
 
   const session = await auth();
@@ -50,6 +52,7 @@ export async function B2BLoader() {
       cartId={session?.user?.cartId}
       channelId={BIGCOMMERCE_CHANNEL_ID}
       environment={environment}
+      assetsBase={BUYER_PORTAL_ASSETS_BASE}
       storeHash={BIGCOMMERCE_STORE_HASH}
       token={session?.b2bToken}
     />
