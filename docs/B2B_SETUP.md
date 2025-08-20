@@ -6,6 +6,44 @@ This repository provides a clean, production-ready B2B buyer portal implementati
 
 ## 🎯 **Key Features**
 
+### **🔐 Authentication & Authorization**
+- **BigCommerce B2B Edition Integration**: Leverages official BigCommerce B2B authentication
+- **Customer Access Tokens**: Secure token-based authentication
+- **Role-Based Access**: Built-in BigCommerce B2B roles and permissions
+
+### **📦 Order Management**
+- **Order History**: View and search through past orders
+- **Order Details**: Detailed order information with line items
+- **Order Status Tracking**: Real-time order status updates
+- **Reorder Functionality**: Quick reorder from previous orders
+
+### **🛒 Cart Management**
+- **Add to Cart**: Seamless product addition to cart
+- **Cart Viewing**: View current cart contents
+- **Cart Operations**: Update quantities, remove items
+- **Quick Order**: Bulk product ordering interface
+
+### **🔍 Product Search**
+- **GraphQL Search**: Fast, type-safe product search
+- **Search Results**: Paginated product results
+- **Product Details**: Comprehensive product information
+- **Fallback Search**: Graceful degradation to GraphQL search
+
+### **📮 Address Management**
+- **Address Book**: Manage shipping and billing addresses
+- **Address CRUD**: Create, read, update, delete addresses
+- **Address Types**: Support for shipping and billing addresses
+- **Default Addresses**: Set preferred addresses
+
+### **📋 Shopping Lists** ✅ **Fully Functional**
+- **List Management**: Create, edit, and delete shopping lists via REST API
+- **Item Management**: Add, update, and remove items from lists via REST API
+- **Algolia Product Search**: Fast, type-safe product search for adding items
+- **Add to Cart**: Bulk add all items from shopping list to cart
+- **Create Quotes**: Convert shopping lists to quotes (Coming Soon)
+- **List Details Page**: Full shopping list management interface
+- **Status**: Fully integrated with BigCommerce B2B REST API + Algolia Search
+
 ### ✅ **What Makes This Work**
 - **gql-tada Integration** - Uses `gql.tada` for type-safe GraphQL queries
 - **Proper Catalyst API Integration** - Uses `site.cart()` and `site.search.searchProducts()` patterns
@@ -59,6 +97,7 @@ core/b2b/
 - Makeswift integration (optional)
 
 ### **Installation**
+
 
 1. **Clone the repository**:
    ```bash

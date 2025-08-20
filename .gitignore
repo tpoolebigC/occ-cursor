@@ -10,6 +10,8 @@ dist
 .env
 .env*.local
 .env*.test
+.env*
+!.env.example
 test-results/
 playwright-report/
 playwright/.cache/

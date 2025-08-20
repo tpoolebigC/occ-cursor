@@ -18,10 +18,16 @@ export function B2BNavigation({ activeTab = 'dashboard', onTabChange }: B2BNavig
     if (pathname.includes('/orders/')) return 'orders';
     if (pathname.includes('/invoices/')) return 'invoices';
     if (pathname.includes('/quotes/')) return 'quotes';
+    if (pathname.includes('/addresses/')) return 'addresses';
+    if (pathname.includes('/shopping-lists/')) return 'shopping-lists';
+    if (pathname.includes('/users/')) return 'users';
     if (pathname.includes('/quick-order')) return 'quick-order';
     if (pathname.includes('/orders')) return 'orders';
     if (pathname.includes('/invoices')) return 'invoices';
     if (pathname.includes('/quotes')) return 'quotes';
+    if (pathname.includes('/addresses')) return 'addresses';
+    if (pathname.includes('/shopping-lists')) return 'shopping-lists';
+    if (pathname.includes('/users')) return 'users';
     if (pathname === '/custom-dashboard') return 'dashboard';
     return activeTab;
   };
@@ -70,6 +76,37 @@ export function B2BNavigation({ activeTab = 'dashboard', onTabChange }: B2BNavig
         </svg>
       ),
     },
+          {
+        id: 'addresses',
+        name: 'Address Book',
+        href: '/custom-dashboard/addresses',
+        icon: (
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+          </svg>
+        ),
+      },
+      {
+        id: 'shopping-lists',
+        name: 'Shopping Lists',
+        href: '/custom-dashboard/shopping-lists',
+        icon: (
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+          </svg>
+        ),
+      },
+      {
+        id: 'users',
+        name: 'Users',
+        href: '/custom-dashboard/users',
+        icon: (
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z" />
+          </svg>
+        ),
+      },
   ];
 
   return (
