@@ -29,5 +29,8 @@
     "turbo": "^2.5.5",
     "typescript": "^5.8.3",
     "unlighthouse": "^0.17.2"
+  },
+  "dependencies": {
+    "jsonwebtoken": "^9.0.2"
   }
 }
