@@ -73,7 +73,7 @@ export default async (): Promise<NextConfig> => {
         '@radix-ui/react-select',
         '@radix-ui/react-tooltip',
       ],
-      ppr: 'incremental',
+      // ppr: 'incremental', // Requires canary Next.js — disabled for stable 15.4.8
     },
     typescript: {
       ignoreBuildErrors: !!process.env.CI,
