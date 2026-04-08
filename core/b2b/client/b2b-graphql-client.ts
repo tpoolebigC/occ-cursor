@@ -244,6 +244,13 @@ export const SEARCH_PRODUCTS = graphql(`
                   status
                   description
                 }
+                variants(first: 1) {
+                  edges {
+                    node {
+                      entityId
+                    }
+                  }
+                }
               }
             }
           }
@@ -258,9 +265,9 @@ export const SEARCH_PRODUCTS = graphql(`
 // ============================================================================
 
 export const GET_CART = graphql(`
-  query GetCart {
+  query GetCart($cartId: String) {
     site {
-      cart {
+      cart(entityId: $cartId) {
         entityId
         currencyCode
         isTaxIncluded
@@ -300,7 +307,7 @@ export const GET_CART = graphql(`
             }
           }
         }
-        cartAmount {
+        amount {
           value
           currencyCode
         }
@@ -482,8 +489,12 @@ export async function getCart() {
     throw new Error('No customer access token available');
   }
 
+  // Read the cart ID from the session (same source as the header cart)
+  const cartId = session?.user?.cartId ?? undefined;
+
   const response = await client.fetch({
     document: GET_CART,
+    variables: { cartId: cartId || null },
     customerAccessToken: session.user.customerAccessToken,
     fetchOptions: { cache: 'no-store' },
   });
@@ -628,7 +639,7 @@ export async function getShoppingLists() {
 
     console.log('🛒 [Shopping List] Customer ID from GraphQL:', customerId);
 
-    // Create B2B REST client (uses B2B_API_TOKEN from environment)
+    // Create B2B REST client (uses B2B_X_AUTH_TOKEN + BIGCOMMERCE_STORE_HASH from environment)
     const b2bClient = new B2BRestClient();
     const response = await b2bClient.getShoppingLists(customerId.toString()) as any;
     
@@ -730,7 +741,7 @@ export async function getShoppingList(listId: number) {
       throw new Error('Customer ID not available from GraphQL API');
     }
 
-    // Create B2B REST client (uses B2B_API_TOKEN from environment)
+    // Create B2B REST client (uses B2B_X_AUTH_TOKEN + BIGCOMMERCE_STORE_HASH from environment)
     const b2bClient = new B2BRestClient();
     const response = await b2bClient.getShoppingList(listId.toString(), customerId.toString()) as any;
     
@@ -740,7 +751,7 @@ export async function getShoppingList(listId: number) {
     // Fetch product details for each item
     const itemsWithProductDetails = await Promise.all(
       (list.items || []).map(async (item: any) => {
-        const productDetails = await getProductDetails(item.productId, session.user.customerAccessToken);
+        const productDetails = await getProductDetails(item.productId, session?.user?.customerAccessToken ?? '');
         return {
           entityId: item.id,
           productEntityId: item.productId,
@@ -783,7 +794,7 @@ export async function createShoppingList(input: { name: string; description?: st
       throw new Error('Customer ID not available from GraphQL API');
     }
 
-    // Create B2B REST client (uses B2B_API_TOKEN from environment)
+    // Create B2B REST client (uses B2B_X_AUTH_TOKEN + BIGCOMMERCE_STORE_HASH from environment)
     const b2bClient = new B2BRestClient();
     const response = await b2bClient.createShoppingList({
       name: input.name,
@@ -812,7 +823,7 @@ export async function updateShoppingList(listId: number, input: { name: string; 
       throw new Error('No customer access token available');
     }
 
-    // Create B2B REST client (uses B2B_API_TOKEN from environment)
+    // Create B2B REST client (uses B2B_X_AUTH_TOKEN + BIGCOMMERCE_STORE_HASH from environment)
     const b2bClient = new B2BRestClient();
     const response = await b2bClient.updateShoppingList(listId.toString(), {
       name: input.name,
@@ -845,7 +856,7 @@ export async function deleteShoppingList(listId: number) {
       throw new Error('No customer access token available');
     }
 
-    // Create B2B REST client (uses B2B_API_TOKEN from environment)
+    // Create B2B REST client (uses B2B_X_AUTH_TOKEN + BIGCOMMERCE_STORE_HASH from environment)
     const b2bClient = new B2BRestClient();
     await b2bClient.deleteShoppingList(listId.toString());
     return { success: true };
@@ -878,7 +889,7 @@ export async function addItemToShoppingList(listId: number, input: { productEnti
       throw new Error('Customer ID not available from GraphQL API');
     }
 
-    // Create B2B REST client (uses B2B_API_TOKEN from environment)
+    // Create B2B REST client (uses B2B_X_AUTH_TOKEN + BIGCOMMERCE_STORE_HASH from environment)
     const b2bClient = new B2BRestClient();
     
     // According to B2B API docs, we add items by updating the shopping list with items array
@@ -921,7 +932,7 @@ export async function updateShoppingListItem(listId: number, itemId: number, inp
       throw new Error('No customer access token available');
     }
 
-    // Create B2B REST client (uses B2B_API_TOKEN from environment)
+    // Create B2B REST client (uses B2B_X_AUTH_TOKEN + BIGCOMMERCE_STORE_HASH from environment)
     const b2bClient = new B2BRestClient();
     const response = await b2bClient.updateShoppingListItem(listId.toString(), itemId.toString(), {
       productId: input.productEntityId,
@@ -954,7 +965,7 @@ export async function removeItemFromShoppingList(listId: number, itemId: number)
       throw new Error('No customer access token available');
     }
 
-    // Create B2B REST client (uses B2B_API_TOKEN from environment)
+    // Create B2B REST client (uses B2B_X_AUTH_TOKEN + BIGCOMMERCE_STORE_HASH from environment)
     const b2bClient = new B2BRestClient();
     await b2bClient.removeItemFromShoppingList(listId.toString(), itemId.toString());
     return { success: true };
@@ -967,7 +978,7 @@ export async function removeItemFromShoppingList(listId: number, itemId: number)
 
 export async function submitShoppingListForApproval(listId: number, message?: string) {
   try {
-    // Create B2B REST client (uses B2B_API_TOKEN from environment)
+    // Create B2B REST client (uses B2B_X_AUTH_TOKEN + BIGCOMMERCE_STORE_HASH from environment)
     const b2bClient = new B2BRestClient();
     
     // Update shopping list status to "ready for approval" (40)

@@ -1,166 +1,114 @@
-import { getOrders } from '~/b2b/server-actions';
+import { Suspense } from 'react';
+import Link from 'next/link';
+import { getEnrichedOrders, type EnrichedOrder } from '~/b2b/server-actions';
 import { B2BNavigation } from '~/b2b/components/B2BNavigation';
+import { OrdersTable } from './_components/orders-table';
+import { OrdersFilters } from './_components/orders-filters';
 
-export default async function OrdersPage() {
-  const result = await getOrders(50);
-  
-  if (result.error) {
-    return (
-      <div className="min-h-screen bg-gray-50">
-        <B2BNavigation />
-        <div className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
-          <div className="bg-red-50 border border-red-200 rounded-lg p-6">
-            <h3 className="text-lg font-medium text-red-800">Error Loading Orders</h3>
-            <p className="text-red-600 mt-2">{result.error}</p>
-          </div>
-        </div>
-      </div>
-    );
-  }
+interface OrdersPageProps {
+  params: Promise<{ locale: string }>;
+  searchParams: Promise<{
+    q?: string;
+    status?: string;
+    page?: string;
+    limit?: string;
+    sortBy?: string;
+    orderBy?: string;
+    dateFrom?: string;
+    dateTo?: string;
+  }>;
+}
 
-  const orders = result.customer?.orders?.edges || [];
+export default async function OrdersPage({ params: paramsPromise, searchParams }: OrdersPageProps) {
+  const { locale } = await paramsPromise;
+  const params = await searchParams;
+  const page = parseInt(params.page ?? '1', 10);
+  const limit = parseInt(params.limit ?? '25', 10);
+  const offset = (page - 1) * limit;
 
-  const formatPrice = (price: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-    }).format(price);
-  };
+  const result = await getEnrichedOrders({
+    q: params.q,
+    status: params.status,
+    offset,
+    limit,
+    orderBy: params.orderBy ?? '-createdAt',
+    beginDateAt: params.dateFrom,
+    endDateAt: params.dateTo,
+  });
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-    });
-  };
-
-  const getStatusBadgeColor = (status: string) => {
-    switch (status.toLowerCase()) {
-      case 'completed':
-        return 'bg-green-100 text-green-800';
-      case 'awaiting_payment':
-        return 'bg-yellow-100 text-yellow-800';
-      case 'cancelled':
-        return 'bg-red-100 text-red-800';
-      case 'shipped':
-        return 'bg-blue-100 text-blue-800';
-      default:
-        return 'bg-gray-100 text-gray-800';
-    }
-  };
+  const totalPages = Math.ceil((result.pagination.totalCount || 0) / limit);
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Navigation */}
       <B2BNavigation />
 
-      {/* Main Content */}
       <div className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="mb-6">
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-2xl font-bold text-gray-900">Orders</h1>
-              <p className="text-gray-600">View and manage your order history</p>
+              <p className="text-gray-600">
+                View and manage your order history
+                {result.pagination.totalCount > 0 && (
+                  <span className="ml-1">
+                    ({result.pagination.totalCount} total)
+                  </span>
+                )}
+              </p>
             </div>
-            <a
-              href="/custom-dashboard"
+            <Link
+              href={`/${locale}/custom-dashboard`}
               className="text-indigo-600 hover:text-indigo-900 text-sm font-medium"
             >
-              ← Back to Dashboard
-            </a>
+              &larr; Back to Dashboard
+            </Link>
           </div>
         </div>
 
-        {/* Orders List */}
-        <div className="bg-white shadow rounded-lg">
-          <div className="px-6 py-4 border-b border-gray-200">
-            <h2 className="text-lg font-medium text-gray-900">All Orders ({orders.length})</h2>
+        {/* Filters */}
+        <OrdersFilters
+          currentQuery={params.q}
+          currentStatus={params.status}
+          currentDateFrom={params.dateFrom}
+          currentDateTo={params.dateTo}
+        />
+
+        {/* Error display */}
+        {result.error && (
+          <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
+            <h3 className="text-sm font-medium text-red-800">Error loading orders</h3>
+            <p className="text-sm text-red-600 mt-1">{result.error}</p>
           </div>
-          
-          {orders.length > 0 ? (
-            <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Order ID
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Date
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Status
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Total
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Items
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Actions
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
-                  {orders.map((edge: any) => {
-                    const order = edge.node;
-                    const lineItems = order.consignments?.shipping?.edges?.[0]?.node?.lineItems?.edges || [];
-                    return (
-                      <tr key={order.entityId} className="hover:bg-gray-50">
-                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                          <a 
-                            href={`/custom-dashboard/orders/${order.entityId}`}
-                            className="text-indigo-600 hover:text-indigo-900 hover:underline"
-                          >
-                            #{order.entityId}
-                          </a>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                          {formatDate(order.orderedAt.utc)}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusBadgeColor(order.status.value)}`}>
-                            {order.status.value.replace('_', ' ')}
-                          </span>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                          {formatPrice(order.totalIncTax.value)}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                          {lineItems.length} item{lineItems.length !== 1 ? 's' : ''}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                          <div className="flex space-x-2">
-                            <a
-                              href={`/custom-dashboard/orders/${order.entityId}`}
-                              className="text-indigo-600 hover:text-indigo-900"
-                            >
-                              View
-                            </a>
-                            <button className="text-gray-600 hover:text-gray-900">
-                              Reorder
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-          ) : (
-            <div className="text-center py-12">
-              <p className="text-gray-500">No orders found.</p>
-              <p className="text-sm text-gray-400 mt-2">Your order history will appear here.</p>
-            </div>
-          )}
-        </div>
+        )}
+
+        {/* Orders Table */}
+        <Suspense fallback={<OrdersTableSkeleton />}>
+          <OrdersTable
+            orders={result.orders}
+            currentPage={page}
+            totalPages={totalPages}
+            totalCount={result.pagination.totalCount}
+            limit={limit}
+            orderBy={params.orderBy ?? 'createdAt'}
+          />
+        </Suspense>
       </div>
     </div>
   );
-} 
+}
+
+function OrdersTableSkeleton() {
+  return (
+    <div className="bg-white shadow rounded-lg">
+      <div className="px-6 py-4 border-b border-gray-200">
+        <div className="h-5 w-32 bg-gray-200 rounded animate-pulse" />
+      </div>
+      <div className="p-6 space-y-4">
+        {Array.from({ length: 5 }).map((_, i) => (
+          <div key={i} className="h-12 bg-gray-100 rounded animate-pulse" />
+        ))}
+      </div>
+    </div>
+  );
+}

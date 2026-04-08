@@ -54,24 +54,14 @@ export function QuoteDetailTable({
     });
   };
 
-  // Get status badge color
+  // Official B2B Edition quote status badge colors
   const getStatusBadgeColor = (status: string) => {
-    switch (status.toLowerCase()) {
-      case 'draft':
-        return 'bg-gray-100 text-gray-800';
-      case 'pending':
-        return 'bg-yellow-100 text-yellow-800';
-      case 'approved':
-        return 'bg-green-100 text-green-800';
-      case 'rejected':
-        return 'bg-red-100 text-red-800';
-      case 'expired':
-        return 'bg-gray-100 text-gray-800';
-      case 'converted':
-        return 'bg-blue-100 text-blue-800';
-      default:
-        return 'bg-gray-100 text-gray-800';
-    }
+    const s = status.toLowerCase();
+    if (s.includes('new') || s.includes('in process')) return 'bg-green-100 text-green-800';
+    if (s.includes('draft') || s.includes('updated by customer')) return 'bg-yellow-100 text-yellow-800';
+    if (s.includes('expired') || s.includes('archived')) return 'bg-red-100 text-red-800';
+    if (s.includes('ordered')) return 'bg-blue-100 text-blue-800';
+    return 'bg-gray-100 text-gray-800';
   };
 
   // Get product status badge color

@@ -2,8 +2,22 @@ import { cache } from 'react';
 import { ResultOf } from 'gql.tada';
 
 import { ProductCardFragment } from '~/components/product-card/fragment';
-import { AlgoliaHit } from '~/data-transformers/algolia-search-results-transformer';
-import algoliaClient, { searchSingleIndex } from '~/features/algolia/services/client';
+
+// Lazy-import Algolia to avoid crashing when Algolia env vars are not set
+type AlgoliaHit = {
+  objectID: string;
+  name: string;
+  url: string;
+  product_images: Array<{ description: string; is_thumbnail: boolean; url_thumbnail: string }>;
+  categories_without_path: string[];
+  default_price: string | number;
+  prices: Record<string, any>;
+  sales_prices: Record<string, number>;
+  calculated_prices: Record<string, number>;
+  retail_prices: Record<string, number>;
+  brand_name?: string;
+  categories?: { lvl0: string[] };
+};
 
 interface ProductSearchResponse {
   hits: AlgoliaHit[];
@@ -90,6 +104,9 @@ export const getSearchResults = cache(async (searchTerm: string) => {
   const selectedCurrency = 'USD'; // TODO: use selected storefront currency
 
   try {
+    // Lazy-import Algolia to avoid crashing when env vars are missing
+    const { searchSingleIndex } = await import('~/features/algolia/services/legacy');
+
     const algoliaResults = await searchSingleIndex<AlgoliaHit>({
               indexName: process.env.ALGOLIA_INDEX_NAME || '',
       searchParams: {

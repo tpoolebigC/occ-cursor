@@ -134,6 +134,10 @@ export default async function Cart({ params }: Props) {
 
           case 'CartSelectedMultiLineTextFieldOption':
           case 'CartSelectedTextFieldOption':
+            // Enhance display for flooring sqft modifier
+            if (option.name === 'Square Footage' && option.text) {
+              return `${option.text} sqft`;
+            }
             return `${option.name}: ${option.text}`;
 
           case 'CartSelectedDateFieldOption':

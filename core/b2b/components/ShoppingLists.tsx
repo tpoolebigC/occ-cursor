@@ -5,7 +5,7 @@ import { ShoppingListCard } from './ShoppingListCard';
 import { ShoppingListForm } from './ShoppingListForm';
 
 interface ShoppingList {
-  entityId: number;
+  id: number;
   name: string;
   description?: string;
   items?: any[];
@@ -90,7 +90,7 @@ export function ShoppingLists({ shoppingLists, onUpdate }: ShoppingListsProps) {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {shoppingLists.map((list) => (
             <ShoppingListCard
-              key={list.entityId}
+              key={list.id}
               shoppingList={list}
               onEdit={() => handleEditList(list)}
               onUpdate={onUpdate}

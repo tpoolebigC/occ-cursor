@@ -2,13 +2,15 @@
 
 import { useState } from 'react';
 import { ShoppingListItem } from './ShoppingListItem';
-import { AlgoliaProductSearch } from './AlgoliaProductSearch';
+import { ProductSearch } from './ProductSearch';
 import { ShoppingListWorkflow } from './ShoppingListWorkflow';
-import { addItemToShoppingList, removeItemFromShoppingList, updateShoppingListItem } from '~/b2b/server-actions';
+import { addItemToShoppingList, removeItemFromShoppingList, updateShoppingListItem, createQuoteWithProducts } from '~/b2b/server-actions';
+import type { QuoteLineItemInput } from '~/b2b/server-actions';
 import { addToCart } from '~/b2b/services/cartService';
+import { useRouter } from 'next/navigation';
 
 interface ShoppingList {
-  entityId: number;
+  id: number;
   name: string;
   description?: string;
   items?: any[];
@@ -23,11 +25,13 @@ export function ShoppingListDetails({ shoppingList, onUpdate }: ShoppingListDeta
   const [showAddProduct, setShowAddProduct] = useState(false);
   const [isAddingToCart, setIsAddingToCart] = useState(false);
   const [isCreatingQuote, setIsCreatingQuote] = useState(false);
+  const router = useRouter();
 
-  const handleAddItem = async (productId: number, quantity: number) => {
+  const handleAddItem = async (productId: number, quantity: number, variantId?: number) => {
     try {
-      const result = await addItemToShoppingList(shoppingList.entityId, {
+      const result = await addItemToShoppingList(shoppingList.id, {
         productEntityId: productId,
+        variantId,
         quantity
       });
       
@@ -48,7 +52,7 @@ export function ShoppingListDetails({ shoppingList, onUpdate }: ShoppingListDeta
     }
 
     try {
-      const result = await removeItemFromShoppingList(shoppingList.entityId, itemId);
+      const result = await removeItemFromShoppingList(shoppingList.id, itemId);
       
       if (result.error) {
         alert(`Error removing item: ${result.error}`);
@@ -62,8 +66,7 @@ export function ShoppingListDetails({ shoppingList, onUpdate }: ShoppingListDeta
 
   const handleUpdateItemQuantity = async (itemId: number, quantity: number) => {
     try {
-      const result = await updateShoppingListItem(shoppingList.entityId, itemId, {
-        productEntityId: 0, // We don't need to update the product ID
+      const result = await updateShoppingListItem(shoppingList.id, itemId, {
         quantity
       });
       
@@ -91,7 +94,7 @@ export function ShoppingListDetails({ shoppingList, onUpdate }: ShoppingListDeta
       for (const item of shoppingList.items) {
         try {
           const result = await addToCart([{
-            productEntityId: item.productEntityId,
+            productEntityId: item.productId,
             quantity: item.quantity
           }]);
           
@@ -101,7 +104,7 @@ export function ShoppingListDetails({ shoppingList, onUpdate }: ShoppingListDeta
             errorCount++;
           }
         } catch (error) {
-          console.error(`Failed to add item ${item.productEntityId} to cart:`, error);
+          console.error(`Failed to add item ${item.productId} to cart:`, error);
           errorCount++;
         }
       }
@@ -126,8 +129,30 @@ export function ShoppingListDetails({ shoppingList, onUpdate }: ShoppingListDeta
 
     setIsCreatingQuote(true);
     try {
-      // TODO: Implement quote creation from shopping list
-      alert('Quote creation from shopping list is coming soon!');
+      const lineItems: QuoteLineItemInput[] = shoppingList.items.map((item) => ({
+        productId: item.productId,
+        variantId: item.variantId ?? 0,
+        sku: item.sku ?? '',
+        productName: item.productName ?? item.name ?? '',
+        quantity: item.quantity ?? 1,
+        basePrice: parseFloat(item.basePrice ?? item.salePrice ?? '0'),
+        offeredPrice: parseFloat(item.offeredPrice ?? item.salePrice ?? item.basePrice ?? '0'),
+        imageUrl: item.imageUrl ?? '',
+      }));
+
+      const result = await createQuoteWithProducts(lineItems, `Quote from ${shoppingList.name}`);
+
+      if (result.error) {
+        alert(`Error creating quote: ${result.error}`);
+      } else if (result.quote?.id) {
+        alert('Quote created successfully!');
+        const quoteDate = result.quote.createdAt != null ? String(result.quote.createdAt) : '';
+        const qs = quoteDate ? `?date=${encodeURIComponent(quoteDate)}` : '';
+
+        router.push(`/custom-dashboard/quotes/${result.quote.id}${qs}`);
+      } else {
+        alert('Quote created, but could not navigate to it.');
+      }
     } catch (error) {
       alert('Failed to create quote');
     } finally {
@@ -190,10 +215,10 @@ export function ShoppingListDetails({ shoppingList, onUpdate }: ShoppingListDeta
               <div className="space-y-4">
                 {shoppingList.items?.map((item) => (
                   <ShoppingListItem
-                    key={item.entityId}
+                    key={item.id}
                     item={item}
-                    onRemove={() => handleRemoveItem(item.entityId)}
-                    onUpdateQuantity={(quantity) => handleUpdateItemQuantity(item.entityId, quantity)}
+                    onRemove={() => handleRemoveItem(item.id)}
+                    onUpdateQuantity={(quantity) => handleUpdateItemQuantity(item.id, quantity)}
                   />
                 ))}
               </div>
@@ -220,7 +245,7 @@ export function ShoppingListDetails({ shoppingList, onUpdate }: ShoppingListDeta
                 </div>
               </div>
               <div className="p-6 overflow-y-auto max-h-[60vh]">
-                <AlgoliaProductSearch onProductSelect={handleAddItem} />
+                <ProductSearch onProductSelect={handleAddItem} />
               </div>
             </div>
           </div>

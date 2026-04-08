@@ -5,19 +5,21 @@ import { AddressCard } from './AddressCard';
 import { AddressForm } from './AddressForm';
 
 interface Address {
-  entityId: number;
+  id: number;
+  label?: string;
   firstName: string;
   lastName: string;
   company: string;
-  address1: string;
-  address2?: string;
+  addressLine1: string;
+  addressLine2?: string;
   city: string;
-  stateOrProvince: string;
+  state: string;
+  country?: string;
   countryCode: string;
-  postalCode: string;
-  phone?: string;
-  addressType?: string;
-  isDefault?: boolean;
+  zipCode: string;
+  isDefaultShipping?: boolean;
+  isDefaultBilling?: boolean;
+  extraFields?: Array<{ fieldName: string; fieldValue: string }>;
 }
 
 interface AddressBookProps {
@@ -50,11 +52,7 @@ export function AddressBook({ addresses, onAddressUpdate }: AddressBookProps) {
     onAddressUpdate();
   };
 
-  // Note: addressType may not be available in BigCommerce GraphQL schema
-  // For now, we'll show all addresses in a single list
   const allAddresses = addresses;
-  const shippingAddresses = addresses.filter(addr => !addr.addressType || addr.addressType === 'shipping');
-  const billingAddresses = addresses.filter(addr => addr.addressType === 'billing');
 
   return (
     <div className="space-y-6">
@@ -133,7 +131,7 @@ export function AddressBook({ addresses, onAddressUpdate }: AddressBookProps) {
           <div className="space-y-4">
             {allAddresses.map((address) => (
               <AddressCard
-                key={address.entityId}
+                key={address.id}
                 address={address}
                 onEdit={() => handleEditAddress(address)}
                 onUpdate={onAddressUpdate}

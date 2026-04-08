@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { deleteShoppingList } from '~/b2b/server-actions';
 
 interface ShoppingList {
-  entityId: number;
+  id: number;
   name: string;
   description?: string;
   items?: any[];
@@ -27,7 +27,7 @@ export function ShoppingListCard({ shoppingList, onEdit, onUpdate }: ShoppingLis
 
     try {
       setIsDeleting(true);
-      const result = await deleteShoppingList(shoppingList.entityId);
+      const result = await deleteShoppingList(shoppingList.id);
       
       if (result.error) {
         alert(`Error deleting shopping list: ${result.error}`);
@@ -41,7 +41,7 @@ export function ShoppingListCard({ shoppingList, onEdit, onUpdate }: ShoppingLis
     }
   };
 
-  const itemCount = shoppingList.items?.length || 0;
+  const itemCount = (shoppingList as any).products?.totalCount ?? shoppingList.items?.length ?? 0;
 
   return (
     <div className="bg-white rounded-lg shadow hover:shadow-md transition-shadow">
@@ -86,7 +86,7 @@ export function ShoppingListCard({ shoppingList, onEdit, onUpdate }: ShoppingLis
         {/* Actions */}
         <div className="flex space-x-2">
           <Link
-            href={`/custom-dashboard/shopping-lists/${shoppingList.entityId}`}
+            href={`/custom-dashboard/shopping-lists/${shoppingList.id}`}
             className="flex-1 bg-indigo-600 text-white text-center py-2 px-3 rounded-md hover:bg-indigo-700 transition-colors text-sm font-medium"
           >
             View List

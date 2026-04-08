@@ -1,12 +1,13 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useParams } from 'next/navigation';
+import Link from 'next/link';
 import { B2BNavigation } from '~/b2b/components/B2BNavigation';
 import QuickOrderTable from '~/b2b/components/QuickOrderTable';
 import QuickOrderPad from '~/b2b/components/QuickOrderPad';
 // QuickAdd component removed - using QuickOrderPad instead
-import { searchAlgoliaProducts } from '~/b2b/server-actions';
+import { searchProducts } from '~/b2b/server-actions';
 import { addToCart } from '~/b2b/services/cartService';
 import { getCart } from '~/b2b/server-actions';
 import type { Cart } from '~/b2b/services/cartService';
@@ -30,6 +31,8 @@ interface QuickAddItem {
 
 export default function QuickOrderPage() {
   const router = useRouter();
+  const params = useParams();
+  const locale = (params.locale as string) || 'en';
   const [activeMethod, setActiveMethod] = useState<'table' | 'pad' | 'bulk'>('table');
   const [cart, setCart] = useState<Cart | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -85,7 +88,7 @@ export default function QuickOrderPage() {
   const addProductBySku = async (sku: string, quantity: number) => {
     try {
       // Search for the product by SKU
-      const results = await searchAlgoliaProducts(sku);
+      const results = await searchProducts(sku);
       const product = results.find(p => p.sku.toLowerCase() === sku.toLowerCase());
       
       if (product) {
@@ -139,7 +142,7 @@ export default function QuickOrderPage() {
 
   const handleCheckout = () => {
     // Navigate to the main checkout page
-    router.push('/checkout');
+    router.push(`/${locale}/checkout`);
   };
 
   return (
@@ -156,12 +159,12 @@ export default function QuickOrderPage() {
               <h1 className="text-2xl font-bold text-gray-900">Quick Order</h1>
               <p className="text-gray-600">Add multiple products to quotes, shopping lists, and orders</p>
             </div>
-            <a
-              href="/custom-dashboard"
+            <Link
+              href={`/${locale}/custom-dashboard`}
               className="text-indigo-600 hover:text-indigo-900 text-sm font-medium"
             >
-              ← Back to Dashboard
-            </a>
+              &larr; Back to Dashboard
+            </Link>
           </div>
         </div>
 

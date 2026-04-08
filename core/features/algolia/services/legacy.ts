@@ -5,14 +5,20 @@ const appId = process.env.ALGOLIA_APPLICATION_ID;
 const searchApiKey = process.env.ALGOLIA_SEARCH_API_KEY;
 const indexName = process.env.ALGOLIA_INDEX_NAME || 'products';
 
+// Gracefully handle missing Algolia config -- log a warning instead of crashing.
+// When SEARCH_PROVIDER is not 'algolia', these vars aren't needed.
 if (!appId || !searchApiKey) {
-  throw new Error('Missing Algolia environment variables: ALGOLIA_APPLICATION_ID and ALGOLIA_SEARCH_API_KEY are required');
+  console.warn(
+    '[Algolia] ALGOLIA_APPLICATION_ID and ALGOLIA_SEARCH_API_KEY are not set. ' +
+    'Algolia search will not be available. Set SEARCH_PROVIDER=algolia and provide ' +
+    'these env vars to enable Algolia.'
+  );
 }
 
-// Create the Algolia client with fetch requester
-export const algoliaClient = algoliasearch(appId, searchApiKey, {
-  requester: createFetchRequester()
-});
+// Create the Algolia client with fetch requester (or null if not configured)
+export const algoliaClient = (appId && searchApiKey)
+  ? algoliasearch(appId, searchApiKey, { requester: createFetchRequester() })
+  : null;
 
 // Helper function for single index search
 export const searchSingleIndex = async <T = any>({
@@ -31,6 +37,10 @@ export const searchSingleIndex = async <T = any>({
     [key: string]: any;
   };
 }) => {
+  if (!algoliaClient) {
+    throw new Error('Algolia client not configured. Set ALGOLIA_APPLICATION_ID and ALGOLIA_SEARCH_API_KEY.');
+  }
+
   const results = await algoliaClient.search([{
     indexName: searchIndexName,
     ...searchParams
@@ -70,6 +80,10 @@ export const facetedSearch = async <T = any>({
     [key: string]: any;
   };
 }) => {
+  if (!algoliaClient) {
+    throw new Error('Algolia client not configured. Set ALGOLIA_APPLICATION_ID and ALGOLIA_SEARCH_API_KEY.');
+  }
+
   const results = await algoliaClient.search([{
     indexName: searchIndexName,
     ...searchParams
@@ -95,6 +109,11 @@ export const facetedSearch = async <T = any>({
 // Debug function to inspect index
 export const debugIndex = async () => {
   try {
+    if (!algoliaClient) {
+      console.warn('[Algolia Debug] Client not configured, skipping.');
+      return;
+    }
+
     console.log('🔍 [Algolia Debug] Starting index inspection...');
     
     const searchResult = await algoliaClient.search([{

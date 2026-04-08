@@ -1,19 +1,33 @@
 /**
- * B2B Cart Service using gql-tada
- * 
- * This service handles cart operations using Catalyst's patterns and gql-tada
- * for type-safe GraphQL operations.
+ * B2B Cart Service
+ *
+ * Handles cart operations using Catalyst's addToOrCreateCart utility.
+ * Supports variant/option selection for products with required options.
  */
 
 import { addToOrCreateCart } from '~/lib/cart';
 
+export interface CartItemSelectedOption {
+  optionEntityId: number;
+  valueEntityId?: number;
+  // For text/number/date fields:
+  text?: string;
+  number?: number;
+  date?: { utc: string };
+}
+
 export interface CartItem {
   productEntityId: number;
   quantity: number;
-  selectedOptions?: Array<{
-    entityId: number;
-    name: string;
-  }>;
+  variantEntityId?: number;
+  selectedOptions?: {
+    multipleChoices?: Array<{ optionEntityId: number; optionValueEntityId: number }>;
+    checkboxes?: Array<{ optionEntityId: number; optionValueEntityId: number }>;
+    numberFields?: Array<{ optionEntityId: number; number: number }>;
+    textFields?: Array<{ optionEntityId: number; text: string }>;
+    multiLineTextFields?: Array<{ optionEntityId: number; text: string }>;
+    dateFields?: Array<{ optionEntityId: number; date: { utc: string } }>;
+  };
 }
 
 export interface Cart {
@@ -46,87 +60,73 @@ export interface Cart {
       prices: unknown;
     }>;
   };
-  cartAmount: unknown;
+  amount: unknown;
 }
 
 /**
- * Add items to cart using Catalyst's addToOrCreateCart utility
+ * Add items to cart using Catalyst's addToOrCreateCart utility.
+ * Now properly passes through selectedOptions and variantEntityId for variant products.
  */
 export async function addToCart(items: CartItem[]): Promise<{ success: boolean; errors?: string[] }> {
   try {
-    console.log('🛒 [Cart Service] Adding items to cart:', items);
-
     // Convert items to the format expected by Catalyst's addToOrCreateCart
-    const lineItems = items.map(item => ({
-      productEntityId: item.productEntityId,
-      quantity: item.quantity,
-      // selectedOptions will be handled separately when we implement proper option handling
-    }));
+    const lineItems = items.map((item) => {
+      const lineItem: Record<string, unknown> = {
+        productEntityId: item.productEntityId,
+        quantity: item.quantity,
+      };
+
+      // Pass variant ID if provided (e.g. from SKU lookup)
+      if (item.variantEntityId) {
+        lineItem.variantEntityId = item.variantEntityId;
+      }
+
+      // Pass selected options if provided (for products with required options)
+      if (item.selectedOptions) {
+        lineItem.selectedOptions = item.selectedOptions;
+      }
+
+      return lineItem;
+    });
 
     // Use Catalyst's existing cart utility
-    await addToOrCreateCart({ lineItems });
+    await addToOrCreateCart({ lineItems } as any);
 
-    console.log('🛒 [Cart Service] Successfully added items to cart');
     return { success: true };
   } catch (error) {
-    console.error('🛒 [Cart Service] Error adding items to cart:', error);
-    return { 
-      success: false, 
-      errors: [error instanceof Error ? error.message : 'Unknown error'] 
+    console.error('[Cart Service] Error adding items to cart:', error);
+    return {
+      success: false,
+      errors: [error instanceof Error ? error.message : 'Unknown error'],
     };
   }
 }
 
 /**
- * Get current cart - this will be handled by server actions
+ * Reorder from an existing order -- carries variant selections from original line items
  */
-export async function getCart(): Promise<{ success: boolean; cart?: Cart; errors?: string[] }> {
+export async function reorderFromOrder(
+  lineItems: Array<{
+    productEntityId: number;
+    quantity: number;
+    variantEntityId?: number;
+    selectedOptions?: CartItem['selectedOptions'];
+  }>,
+): Promise<{ success: boolean; errors?: string[] }> {
   try {
-    console.log('🛒 [Cart Service] Getting cart...');
-    
-    // This will be handled by server actions instead
-    return { success: false, errors: ['Cart retrieval should be handled by server actions'] };
+    const cartItems: CartItem[] = lineItems.map((item) => ({
+      productEntityId: item.productEntityId,
+      quantity: item.quantity,
+      variantEntityId: item.variantEntityId,
+      selectedOptions: item.selectedOptions,
+    }));
+
+    return addToCart(cartItems);
   } catch (error) {
-    console.error('🛒 [Cart Service] Error getting cart:', error);
-    return { 
-      success: false, 
-      errors: [error instanceof Error ? error.message : 'Unknown error'] 
+    console.error('[Cart Service] Error reordering:', error);
+    return {
+      success: false,
+      errors: [error instanceof Error ? error.message : 'Unknown error'],
     };
   }
 }
-
-/**
- * Reorder from an existing order
- */
-export async function reorderFromOrder(orderId: number): Promise<{ success: boolean; cart?: Cart; errors?: string[] }> {
-  try {
-    console.log('🛒 [Cart Service] Reordering from order:', orderId);
-    
-    // This will be handled by server actions
-    return { success: false, errors: ['Reorder should be handled by server actions'] };
-  } catch (error) {
-    console.error('🛒 [Cart Service] Error reordering from order:', error);
-    return { 
-      success: false, 
-      errors: [error instanceof Error ? error.message : 'Unknown error'] 
-    };
-  }
-}
-
-/**
- * Clear the current cart
- */
-export async function clearCart(): Promise<{ success: boolean; errors?: string[] }> {
-  try {
-    console.log('🛒 [Cart Service] Clearing cart...');
-    
-    // This will be handled by server actions
-    return { success: false, errors: ['Clear cart should be handled by server actions'] };
-  } catch (error) {
-    console.error('🛒 [Cart Service] Error clearing cart:', error);
-    return { 
-      success: false, 
-      errors: [error instanceof Error ? error.message : 'Unknown error'] 
-    };
-  }
-} 

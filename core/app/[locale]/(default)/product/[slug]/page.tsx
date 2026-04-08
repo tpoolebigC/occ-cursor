@@ -13,7 +13,11 @@ import { productCardTransformer } from '~/data-transformers/product-card-transfo
 import { productOptionsTransformer } from '~/data-transformers/product-options-transformer';
 import { getPreferredCurrencyCode } from '~/lib/currency';
 
+import { parseFlooringConfig } from '@/vibes/soul/sections/product-detail/flooring-config';
+
 import { addToCart } from './_actions/add-to-cart';
+import { B2BPdpActions } from './_components/b2b-pdp-actions';
+import { FlooringCalculatorWrapper } from './_components/flooring-calculator-wrapper';
 import { ProductAnalyticsProvider } from './_components/product-analytics-provider';
 import { ProductSchema } from './_components/product-schema';
 import { ProductViewed } from './_components/product-viewed';
@@ -332,6 +336,76 @@ export default async function Product({ params, searchParams }: Props) {
           thumbnailLabel={t('ProductDetails.thumbnail')}
         />
       </ProductAnalyticsProvider>
+
+      {/* B2B Actions: Add to Quote / Add to Shopping List */}
+      <Stream
+        fallback={null}
+        value={Streamable.from(async () => {
+          const [product, pricingProduct] = await Streamable.all([
+            streamableProduct,
+            streamableProductPricingAndRelatedProducts,
+          ]);
+          return {
+            productId: product.entityId,
+            productName: product.name,
+            sku: product.sku,
+            basePrice: pricingProduct?.prices?.price?.value ?? 0,
+            imageUrl: product.defaultImage?.url,
+          };
+        })}
+      >
+        {(productData) =>
+          productData ? (
+            <div className="mx-auto max-w-screen-2xl px-4 -mt-4 pb-4 @xl:px-6 @4xl:px-8">
+              <div className="mx-auto max-w-md">
+                <B2BPdpActions
+                  productId={productData.productId}
+                  productName={productData.productName}
+                  sku={productData.sku}
+                  basePrice={productData.basePrice}
+                  imageUrl={productData.imageUrl}
+                />
+              </div>
+            </div>
+          ) : null
+        }
+      </Stream>
+
+      {/* Flooring Calculator -- only renders for products with unit_of_measure=sqft */}
+      <Stream
+        fallback={null}
+        value={Streamable.from(async () => {
+          const product = await streamableProduct;
+          const customFields = removeEdgesAndNodes(product.customFields);
+
+          // Check for modifier (Square Footage text field) from baseProduct's productOptions
+          const allOptions = removeEdgesAndNodes(baseProduct.productOptions);
+          const sqftModifier = allOptions.find(
+            (opt) => opt.__typename === 'TextFieldOption' && opt.displayName === 'Square Footage',
+          );
+          const modifierOptionId = sqftModifier?.entityId ?? 0;
+
+          const flooringConfig = parseFlooringConfig(
+            customFields,
+            product.entityId,
+            0,
+            modifierOptionId,
+          );
+
+          return flooringConfig;
+        })}
+      >
+        {(flooringConfig) =>
+          flooringConfig ? (
+            <div className="mx-auto max-w-2xl px-4 pb-8">
+              <FlooringCalculatorWrapper
+                channelId={Number(process.env.BIGCOMMERCE_CHANNEL_ID) || undefined}
+                config={flooringConfig}
+              />
+            </div>
+          ) : null
+        }
+      </Stream>
 
       <FeaturedProductCarousel
         cta={{ label: t('RelatedProducts.cta'), href: '/shop-all' }}

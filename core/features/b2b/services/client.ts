@@ -3,6 +3,11 @@ import { z } from 'zod';
 /**
  * B2B Client Service
  * Handles B2B API authentication and token management
+ * 
+ * Authentication updated per B2B Edition docs (Sept 2025):
+ * Server-to-server requests now use X-Auth-Token + X-Store-Hash
+ * instead of the deprecated authToken header.
+ * See: https://developer.bigcommerce.com/b2b-edition/docs/authentication
  */
 
 interface LoginWithB2BParams {
@@ -13,11 +18,12 @@ interface LoginWithB2BParams {
   };
 }
 
-// Environment validation schema
+// Environment validation schema - updated for new auth
 const ENV = z
   .object({
     env: z.object({
-      B2B_API_TOKEN: z.string(),
+      B2B_X_AUTH_TOKEN: z.string(),
+      BIGCOMMERCE_STORE_HASH: z.string(),
       BIGCOMMERCE_CHANNEL_ID: z.string(),
       B2B_API_HOST: z.string().default('https://api-b2b.bigcommerce.com'),
     }),
@@ -37,10 +43,11 @@ const B2BTokenResponseSchema = z.object({
 
 /**
  * Login with B2B API
- * Authenticates a customer with the B2B API and returns a B2B token
+ * Authenticates a customer with the B2B API and returns a B2B storefront token.
+ * Uses the new X-Auth-Token + X-Store-Hash authentication headers.
  */
 export async function loginWithB2B({ customerId, customerAccessToken }: LoginWithB2BParams): Promise<string> {
-  const { B2B_API_HOST, B2B_API_TOKEN, BIGCOMMERCE_CHANNEL_ID } = ENV.parse(process);
+  const { B2B_API_HOST, B2B_X_AUTH_TOKEN, BIGCOMMERCE_STORE_HASH, BIGCOMMERCE_CHANNEL_ID } = ENV.parse(process);
 
   const apiUrl = `${B2B_API_HOST}/api/io/auth/customers/storefront`;
   
@@ -49,7 +56,8 @@ export async function loginWithB2B({ customerId, customerAccessToken }: LoginWit
     host: B2B_API_HOST,
     channelId: BIGCOMMERCE_CHANNEL_ID,
     customerId,
-    hasToken: !!B2B_API_TOKEN,
+    hasToken: !!B2B_X_AUTH_TOKEN,
+    hasStoreHash: !!BIGCOMMERCE_STORE_HASH,
   });
 
   try {
@@ -58,7 +66,8 @@ export async function loginWithB2B({ customerId, customerAccessToken }: LoginWit
       headers: {
         Accept: 'application/json',
         'Content-Type': 'application/json',
-        authToken: B2B_API_TOKEN,
+        'X-Auth-Token': B2B_X_AUTH_TOKEN,
+        'X-Store-Hash': BIGCOMMERCE_STORE_HASH,
       },
       body: JSON.stringify({
         channelId: parseInt(BIGCOMMERCE_CHANNEL_ID, 10),

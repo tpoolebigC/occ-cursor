@@ -2,19 +2,16 @@
 
 import { SubmissionResult } from '@conform-to/react';
 import { parseWithZod } from '@conform-to/zod';
-import { strict } from 'assert';
 import { getTranslations } from 'next-intl/server';
 import { z } from 'zod';
 
 import { SearchResult } from '@/vibes/soul/primitives/navigation';
 
-// Import required Algolia dependencies, including the transformer and client
-import {
-  AlgoliaHit,
-  algoliaResultsTransformer,
-} from '~/data-transformers/search-results-transformer';
-import algoliaClient from '~/features/algolia/services/client';
-
+/**
+ * Header search action -- uses the unified SearchProvider (configured via SEARCH_PROVIDER env var).
+ * This is provider-agnostic: works with BigCommerce GraphQL, Algolia, SearchSpring, or any custom provider.
+ * No direct Algolia imports -- the provider factory handles that.
+ */
 export async function search(
   prevState: {
     lastResult: SubmissionResult | null;
@@ -55,28 +52,42 @@ export async function search(
   }
 
   try {
-    // Ensure the Algolia index name is set
-    strict(process.env.ALGOLIA_INDEX_NAME);
+    // Use the unified search provider (BigCommerce, Algolia, SearchSpring, etc.)
+    const { getSearchProvider } = await import('~/lib/search/provider-factory');
+    const provider = await getSearchProvider();
 
-    // Send the search term from the form submission to Algolia instead of BigCommerce
-    const algoliaResults = await algoliaClient.searchSingleIndex<AlgoliaHit>({
-      indexName: process.env.ALGOLIA_INDEX_NAME,
-      searchParams: {
-        query: submission.value.term,
-        // Add any filters you want to apply to the search results
-        filters: 'is_visible:true',
-      },
+    const response = await provider.search({
+      query: submission.value.term,
+      pageSize: 10,
     });
+
+    // Transform unified search results into the navigation SearchResult format
+    const searchResults: SearchResult[] = [];
+
+    if (response.products.length > 0) {
+      searchResults.push({
+        type: 'products',
+        title: 'Products',
+        products: response.products.map((p) => ({
+          id: p.id,
+          title: p.name,
+          href: p.path || `/product/${p.id}`,
+          price: p.price
+            ? { type: 'sale' as const, currentValue: `$${p.price.toFixed(2)}`, previousValue: p.basePrice && p.basePrice > p.price ? `$${p.basePrice.toFixed(2)}` : '' }
+            : undefined,
+          image: p.imageUrl ? { src: p.imageUrl, alt: p.name } : undefined,
+        })),
+      });
+    }
 
     return {
       lastResult: submission.reply(),
-      // Transform the Algolia hits into SearchResult objects
-      searchResults: await algoliaResultsTransformer(algoliaResults.hits),
+      searchResults: searchResults.length > 0 ? searchResults : [],
       emptyStateTitle,
       emptyStateSubtitle,
     };
   } catch (error) {
-    console.error('Algolia search error:', error);
+    console.error('Search error:', error);
 
     return {
       lastResult: submission.reply({

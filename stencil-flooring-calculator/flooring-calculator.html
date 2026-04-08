@@ -1,0 +1,138 @@
+{{!--
+  Flooring Calculator - Stencil Handlebars Snippet
+
+  Drop this into your product page template (e.g., templates/pages/product.html)
+  or a partial that renders below the add-to-cart form.
+
+  This reads the same custom fields as the Catalyst version:
+    - unit_of_measure: "sqft"
+    - unit_label: "Square Feet"
+    - price_per_sqft: "5.99"
+    - box_coverage_sqft: "20"
+    - box_price: "119.80"
+    - min_order_sqft: "10"
+
+  The product must also have a "Square Footage" text modifier.
+
+  Requirements:
+    - Include flooring-calculator.js in your theme's assets/js directory
+    - Add the CSS below to your theme's stylesheet (or inline it)
+--}}
+
+{{#each product.custom_fields}}
+  {{#if (eq name "unit_of_measure")}}
+    {{#if (eq value "sqft")}}
+
+      <div id="flooring-calculator"
+           class="flooring-calculator"
+           data-product-id="{{../../product.id}}"
+           data-variant-id="{{../../product.variants.[0].id}}"
+           data-price-per-sqft="{{#each ../../product.custom_fields}}{{#if (eq name 'price_per_sqft')}}{{value}}{{/if}}{{/each}}"
+           data-box-coverage="{{#each ../../product.custom_fields}}{{#if (eq name 'box_coverage_sqft')}}{{value}}{{/if}}{{/each}}"
+           data-box-price="{{#each ../../product.custom_fields}}{{#if (eq name 'box_price')}}{{value}}{{/if}}{{/each}}"
+           data-min-order-sqft="{{#each ../../product.custom_fields}}{{#if (eq name 'min_order_sqft')}}{{value}}{{/if}}{{/each}}"
+           data-unit-label="{{#each ../../product.custom_fields}}{{#if (eq name 'unit_label')}}{{value}}{{/if}}{{/each}}"
+           data-modifier-name="Square Footage"
+           style="display:none;">
+
+        <h3 class="flooring-calculator__title">How would you like to order?</h3>
+
+        <!-- Mode Toggle -->
+        <div class="flooring-calculator__toggle">
+          <button class="flooring-calculator__toggle-btn flooring-calculator__toggle-btn--active"
+                  data-mode="sqft" type="button">
+            By <span class="flooring-calculator__unit-label">Square Feet</span>
+          </button>
+          <button class="flooring-calculator__toggle-btn"
+                  data-mode="boxes" type="button">
+            By Box
+          </button>
+        </div>
+
+        <!-- Sqft Mode -->
+        <div class="flooring-calculator__panel flooring-calculator__panel--sqft flooring-calculator__panel--active">
+          <label class="flooring-calculator__label" for="flooring-sqft-input">
+            <span class="flooring-calculator__unit-label">Square Feet</span>
+          </label>
+          <div class="flooring-calculator__input-wrap">
+            <input class="flooring-calculator__input"
+                   id="flooring-sqft-input"
+                   type="number"
+                   step="0.01"
+                   inputmode="decimal"
+                   placeholder="Enter square feet" />
+            <span class="flooring-calculator__suffix">sqft</span>
+          </div>
+          <p class="flooring-calculator__min-msg" style="display:none;"></p>
+
+          <!-- Price Summary -->
+          <div class="flooring-calculator__summary" style="display:none;">
+            <span class="flooring-calculator__breakdown"></span>
+            <span class="flooring-calculator__total"></span>
+          </div>
+
+          <!-- Box Estimate -->
+          <div class="flooring-calculator__box-estimate" style="display:none;">
+            <h4 class="flooring-calculator__box-estimate-title">Box Estimate</h4>
+            <div class="flooring-calculator__grid">
+              <span>Boxes needed:</span>
+              <span class="flooring-calculator__boxes-needed"></span>
+              <span>Coverage per box:</span>
+              <span class="flooring-calculator__coverage-per-box"></span>
+              <span>Total coverage:</span>
+              <span class="flooring-calculator__total-coverage-sqft"></span>
+            </div>
+            <div class="flooring-calculator__overage" style="display:none;">
+              <span>Overage:</span>
+              <span class="flooring-calculator__overage-value"></span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Box Mode -->
+        <div class="flooring-calculator__panel flooring-calculator__panel--boxes">
+          <label class="flooring-calculator__label" for="flooring-box-input">
+            Number of Boxes
+          </label>
+          <div class="flooring-calculator__input-wrap">
+            <input class="flooring-calculator__input"
+                   id="flooring-box-input"
+                   type="number"
+                   step="1"
+                   min="1"
+                   inputmode="numeric"
+                   placeholder="Enter number of boxes" />
+            <span class="flooring-calculator__suffix">boxes</span>
+          </div>
+          <p class="flooring-calculator__box-coverage-hint"></p>
+
+          <!-- Price Summary -->
+          <div class="flooring-calculator__summary flooring-calculator__summary--boxes" style="display:none;">
+            <span class="flooring-calculator__breakdown--boxes"></span>
+            <span class="flooring-calculator__total--boxes"></span>
+          </div>
+
+          <!-- Coverage Info -->
+          <div class="flooring-calculator__coverage-info" style="display:none;">
+            <h4 class="flooring-calculator__coverage-info-title">Coverage</h4>
+            <div class="flooring-calculator__grid">
+              <span>Total coverage:</span>
+              <span class="flooring-calculator__total-coverage-boxes"></span>
+              <span>Effective price/sqft:</span>
+              <span class="flooring-calculator__effective-price"></span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Status Messages -->
+        <div class="flooring-calculator__status" style="display:none;"></div>
+
+        <!-- Add to Cart Button -->
+        <button class="flooring-calculator__add-btn button button--primary" type="button" disabled>
+          Enter quantity to continue
+        </button>
+      </div>
+
+    {{/if}}
+  {{/if}}
+{{/each}}

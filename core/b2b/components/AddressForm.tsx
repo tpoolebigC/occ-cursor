@@ -1,22 +1,24 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { createAddress, updateAddress } from '~/b2b/server-actions';
+import { createAddress, updateAddress, getCountries } from '~/b2b/server-actions';
 
 interface Address {
-  entityId: number;
+  id: number;
+  label?: string;
   firstName: string;
   lastName: string;
   company: string;
-  address1: string;
-  address2?: string;
+  addressLine1: string;
+  addressLine2?: string;
   city: string;
-  stateOrProvince: string;
+  state: string;
+  country?: string;
   countryCode: string;
-  postalCode: string;
-  phone?: string;
-  addressType?: string;
-  isDefault?: boolean;
+  zipCode: string;
+  isDefaultShipping?: boolean;
+  isDefaultBilling?: boolean;
+  extraFields?: Array<{ fieldName: string; fieldValue: string }>;
 }
 
 interface AddressFormProps {
@@ -30,18 +32,23 @@ export function AddressForm({ address, onSave, onCancel }: AddressFormProps) {
     firstName: '',
     lastName: '',
     company: '',
-    address1: '',
-    address2: '',
+    addressLine1: '',
+    addressLine2: '',
     city: '',
-    stateOrProvince: '',
+    state: '',
     countryCode: 'US',
-    postalCode: '',
-    phone: ''
-    // Note: addressType and isDefault may not be supported in BigCommerce GraphQL schema
+    zipCode: '',
   });
   
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [countries, setCountries] = useState<Array<{ countryCode: string; countryName: string; states: Array<{ stateName: string; stateCode: string }> }>>([]);
+
+  useEffect(() => {
+    getCountries().then((result) => {
+      if (result.countries) setCountries(result.countries);
+    });
+  }, []);
 
   useEffect(() => {
     if (address) {
@@ -49,14 +56,12 @@ export function AddressForm({ address, onSave, onCancel }: AddressFormProps) {
         firstName: address.firstName || '',
         lastName: address.lastName || '',
         company: address.company || '',
-        address1: address.address1 || '',
-        address2: address.address2 || '',
+        addressLine1: address.addressLine1 || '',
+        addressLine2: address.addressLine2 || '',
         city: address.city || '',
-        stateOrProvince: address.stateOrProvince || '',
+        state: address.state || '',
         countryCode: address.countryCode || 'US',
-        postalCode: address.postalCode || '',
-        phone: address.phone || ''
-        // Note: addressType and isDefault may not be supported in BigCommerce GraphQL schema
+        zipCode: address.zipCode || '',
       });
     }
   }, [address]);
@@ -72,20 +77,20 @@ export function AddressForm({ address, onSave, onCancel }: AddressFormProps) {
       newErrors.lastName = 'Last name is required';
     }
 
-    if (!formData.address1.trim()) {
-      newErrors.address1 = 'Address is required';
+    if (!formData.addressLine1.trim()) {
+      newErrors.addressLine1 = 'Address is required';
     }
 
     if (!formData.city.trim()) {
       newErrors.city = 'City is required';
     }
 
-    if (!formData.stateOrProvince.trim()) {
-      newErrors.stateOrProvince = 'State/Province is required';
+    if (!formData.state.trim()) {
+      newErrors.state = 'State/Province is required';
     }
 
-    if (!formData.postalCode.trim()) {
-      newErrors.postalCode = 'Postal code is required';
+    if (!formData.zipCode.trim()) {
+      newErrors.zipCode = 'Postal code is required';
     }
 
     if (!formData.countryCode.trim()) {
@@ -109,19 +114,17 @@ export function AddressForm({ address, onSave, onCancel }: AddressFormProps) {
         firstName: formData.firstName.trim(),
         lastName: formData.lastName.trim(),
         company: formData.company.trim(),
-        address1: formData.address1.trim(),
-        address2: formData.address2.trim(),
+        addressLine1: formData.addressLine1.trim(),
+        addressLine2: formData.addressLine2.trim(),
         city: formData.city.trim(),
-        stateOrProvince: formData.stateOrProvince.trim(),
+        state: formData.state.trim(),
         countryCode: formData.countryCode,
-        postalCode: formData.postalCode.trim(),
-        phone: formData.phone.trim()
-        // Note: addressType and isDefault may not be supported in BigCommerce GraphQL schema
+        zipCode: formData.zipCode.trim(),
       };
 
       let result;
       if (address) {
-        result = await updateAddress(address.entityId, addressData);
+        result = await updateAddress(address.id, addressData);
       } else {
         result = await createAddress(addressData);
       }
@@ -148,9 +151,6 @@ export function AddressForm({ address, onSave, onCancel }: AddressFormProps) {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
-      {/* Note: Address Type selection may not be supported in BigCommerce GraphQL schema */}
-
-      {/* Name Fields */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -187,7 +187,6 @@ export function AddressForm({ address, onSave, onCancel }: AddressFormProps) {
         </div>
       </div>
 
-      {/* Company */}
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-1">
           Company
@@ -200,21 +199,20 @@ export function AddressForm({ address, onSave, onCancel }: AddressFormProps) {
         />
       </div>
 
-      {/* Address Fields */}
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-1">
           Address Line 1 *
         </label>
         <input
           type="text"
-          value={formData.address1}
-          onChange={(e) => handleInputChange('address1', e.target.value)}
+          value={formData.addressLine1}
+          onChange={(e) => handleInputChange('addressLine1', e.target.value)}
           className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 ${
-            errors.address1 ? 'border-red-500' : 'border-gray-300'
+            errors.addressLine1 ? 'border-red-500' : 'border-gray-300'
           }`}
         />
-        {errors.address1 && (
-          <p className="mt-1 text-sm text-red-600">{errors.address1}</p>
+        {errors.addressLine1 && (
+          <p className="mt-1 text-sm text-red-600">{errors.addressLine1}</p>
         )}
       </div>
 
@@ -224,13 +222,12 @@ export function AddressForm({ address, onSave, onCancel }: AddressFormProps) {
         </label>
         <input
           type="text"
-          value={formData.address2}
-          onChange={(e) => handleInputChange('address2', e.target.value)}
+          value={formData.addressLine2}
+          onChange={(e) => handleInputChange('addressLine2', e.target.value)}
           className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
         />
       </div>
 
-      {/* City, State, Postal Code */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -255,14 +252,14 @@ export function AddressForm({ address, onSave, onCancel }: AddressFormProps) {
           </label>
           <input
             type="text"
-            value={formData.stateOrProvince}
-            onChange={(e) => handleInputChange('stateOrProvince', e.target.value)}
+            value={formData.state}
+            onChange={(e) => handleInputChange('state', e.target.value)}
             className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 ${
-              errors.stateOrProvince ? 'border-red-500' : 'border-gray-300'
+              errors.state ? 'border-red-500' : 'border-gray-300'
             }`}
           />
-          {errors.stateOrProvince && (
-            <p className="mt-1 text-sm text-red-600">{errors.stateOrProvince}</p>
+          {errors.state && (
+            <p className="mt-1 text-sm text-red-600">{errors.state}</p>
           )}
         </div>
 
@@ -272,60 +269,50 @@ export function AddressForm({ address, onSave, onCancel }: AddressFormProps) {
           </label>
           <input
             type="text"
-            value={formData.postalCode}
-            onChange={(e) => handleInputChange('postalCode', e.target.value)}
+            value={formData.zipCode}
+            onChange={(e) => handleInputChange('zipCode', e.target.value)}
             className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 ${
-              errors.postalCode ? 'border-red-500' : 'border-gray-300'
+              errors.zipCode ? 'border-red-500' : 'border-gray-300'
             }`}
           />
-          {errors.postalCode && (
-            <p className="mt-1 text-sm text-red-600">{errors.postalCode}</p>
+          {errors.zipCode && (
+            <p className="mt-1 text-sm text-red-600">{errors.zipCode}</p>
           )}
         </div>
       </div>
 
-      {/* Country and Phone */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Country *
-          </label>
-          <select
-            value={formData.countryCode}
-            onChange={(e) => handleInputChange('countryCode', e.target.value)}
-            className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 ${
-              errors.countryCode ? 'border-red-500' : 'border-gray-300'
-            }`}
-          >
-            <option value="US">United States</option>
-            <option value="CA">Canada</option>
-            <option value="MX">Mexico</option>
-            <option value="GB">United Kingdom</option>
-            <option value="DE">Germany</option>
-            <option value="FR">France</option>
-            <option value="AU">Australia</option>
-          </select>
-          {errors.countryCode && (
-            <p className="mt-1 text-sm text-red-600">{errors.countryCode}</p>
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-1">
+          Country *
+        </label>
+        <select
+          value={formData.countryCode}
+          onChange={(e) => handleInputChange('countryCode', e.target.value)}
+          className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 ${
+            errors.countryCode ? 'border-red-500' : 'border-gray-300'
+          }`}
+        >
+          {countries.length > 0 ? (
+            countries.map((c) => (
+              <option key={c.countryCode} value={c.countryCode}>{c.countryName}</option>
+            ))
+          ) : (
+            <>
+              <option value="US">United States</option>
+              <option value="CA">Canada</option>
+              <option value="MX">Mexico</option>
+              <option value="GB">United Kingdom</option>
+              <option value="DE">Germany</option>
+              <option value="FR">France</option>
+              <option value="AU">Australia</option>
+            </>
           )}
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Phone Number
-          </label>
-          <input
-            type="tel"
-            value={formData.phone}
-            onChange={(e) => handleInputChange('phone', e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
-          />
-        </div>
+        </select>
+        {errors.countryCode && (
+          <p className="mt-1 text-sm text-red-600">{errors.countryCode}</p>
+        )}
       </div>
 
-      {/* Note: Default Address checkbox may not be supported in BigCommerce GraphQL schema */}
-
-      {/* Form Actions */}
       <div className="flex justify-end space-x-3 pt-4">
         <button
           type="button"
@@ -345,4 +332,4 @@ export function AddressForm({ address, onSave, onCancel }: AddressFormProps) {
       </div>
     </form>
   );
-} 
+}

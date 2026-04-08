@@ -54,13 +54,25 @@ export const getAnonymousSession = async () => {
     throw new Error('AUTH_SECRET is not set');
   }
 
-  const session = await decode({
-    secret,
-    salt: `${cookiePrefix}${anonymousCookieName}`,
-    token: jwt.value,
-  });
+  try {
+    const session = await decode({
+      secret,
+      salt: `${cookiePrefix}${anonymousCookieName}`,
+      token: jwt.value,
+    });
 
-  return session;
+    return session;
+  } catch (error) {
+    // If the session cookie is corrupt, clear it rather than crashing the entire site
+    console.error('[getAnonymousSession] Failed to decode session, clearing corrupt cookie:', error);
+    cookieJar.delete({
+      name: `${cookiePrefix}${anonymousCookieName}`,
+      secure: useSecureCookies,
+      sameSite: 'lax',
+      httpOnly: true,
+    });
+    return null;
+  }
 };
 
 export const clearAnonymousSession = async () => {

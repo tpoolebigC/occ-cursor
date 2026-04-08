@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { createShoppingList, updateShoppingList } from '~/b2b/server-actions';
 
 interface ShoppingList {
-  entityId: number;
+  id: number;
   name: string;
   description?: string;
 }
@@ -62,7 +62,7 @@ export function ShoppingListForm({ shoppingList, onClose, onSuccess }: ShoppingL
 
       let result;
       if (isEditing && shoppingList) {
-        result = await updateShoppingList(shoppingList.entityId, input);
+        result = await updateShoppingList(shoppingList.id, input);
       } else {
         result = await createShoppingList(input);
       }

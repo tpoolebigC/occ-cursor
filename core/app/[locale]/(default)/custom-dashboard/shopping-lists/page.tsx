@@ -18,9 +18,7 @@ export default function ShoppingListsPage() {
       if (result.error) {
         setError(result.error);
       } else {
-        // Handle the case where shoppingLists might be null or undefined
-        const lists = result.shoppingLists?.edges?.map((edge: any) => edge.node) || [];
-        setShoppingLists(lists);
+        setShoppingLists(result.shoppingLists || []);
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load shopping lists');

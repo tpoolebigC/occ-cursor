@@ -4,20 +4,21 @@ import { useState } from 'react';
 import { deleteAddress, setDefaultAddress } from '~/b2b/server-actions';
 
 interface Address {
-  entityId: number;
+  id: number;
+  label?: string;
   firstName: string;
   lastName: string;
   company: string;
-  address1: string;
-  address2?: string;
+  addressLine1: string;
+  addressLine2?: string;
   city: string;
-  stateOrProvince: string;
+  state: string;
+  country?: string;
   countryCode: string;
-  postalCode: string;
-  phone?: string;
-  // Note: addressType and isDefault may not be available in BigCommerce GraphQL schema
-  addressType?: string;
-  isDefault?: boolean;
+  zipCode: string;
+  isDefaultShipping?: boolean;
+  isDefaultBilling?: boolean;
+  extraFields?: Array<{ fieldName: string; fieldValue: string }>;
 }
 
 interface AddressCardProps {
@@ -37,7 +38,7 @@ export function AddressCard({ address, onEdit, onUpdate }: AddressCardProps) {
 
     setIsDeleting(true);
     try {
-      const result = await deleteAddress(address.entityId);
+      const result = await deleteAddress(address.id);
       if (result.success) {
         onUpdate();
       } else {
@@ -54,8 +55,8 @@ export function AddressCard({ address, onEdit, onUpdate }: AddressCardProps) {
   const handleSetDefault = async () => {
     setIsSettingDefault(true);
     try {
-      const addressType = address.addressType || 'shipping';
-      const result = await setDefaultAddress(address.entityId, addressType);
+      const addressType = address.isDefaultBilling ? 'billing' : 'shipping';
+      const result = await setDefaultAddress(address.id, addressType);
       if (result.success) {
         onUpdate();
       } else {
@@ -69,15 +70,16 @@ export function AddressCard({ address, onEdit, onUpdate }: AddressCardProps) {
     }
   };
 
+  const isDefault = address.isDefaultShipping || address.isDefaultBilling;
+
   const getAddressTypeLabel = () => {
-    // Note: addressType may not be available in BigCommerce GraphQL schema
-    if (address.addressType === 'billing') return 'Billing';
+    if (address.isDefaultBilling) return 'Billing';
+    if (address.isDefaultShipping) return 'Shipping';
     return 'Address';
   };
 
   const getAddressTypeColor = () => {
-    // Note: addressType may not be available in BigCommerce GraphQL schema
-    if (address.addressType === 'billing') return 'bg-blue-100 text-blue-800';
+    if (address.isDefaultBilling) return 'bg-blue-100 text-blue-800';
     return 'bg-green-100 text-green-800';
   };
 
@@ -89,8 +91,7 @@ export function AddressCard({ address, onEdit, onUpdate }: AddressCardProps) {
           <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getAddressTypeColor()}`}>
             {getAddressTypeLabel()}
           </span>
-          {/* Note: isDefault may not be available in BigCommerce GraphQL schema */}
-          {address.isDefault && (
+          {isDefault && (
             <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-yellow-100 text-yellow-800">
               Default
             </span>
@@ -126,36 +127,50 @@ export function AddressCard({ address, onEdit, onUpdate }: AddressCardProps) {
         )}
         
         <div className="text-gray-600">
-          {address.address1}
+          {address.addressLine1}
         </div>
         
-        {address.address2 && (
-          <div className="text-gray-600">{address.address2}</div>
+        {address.addressLine2 && (
+          <div className="text-gray-600">{address.addressLine2}</div>
         )}
         
         <div className="text-gray-600">
-          {address.city}, {address.stateOrProvince} {address.postalCode}
+          {address.city}, {address.state} {address.zipCode}
         </div>
         
         <div className="text-gray-600">
-          {address.countryCode}
+          {address.country || address.countryCode}
         </div>
-        
-        {address.phone && (
-          <div className="text-gray-600">{address.phone}</div>
-        )}
       </div>
 
       {/* Actions */}
-      <div className="mt-4 pt-3 border-t border-gray-200">
-        {/* Note: Set as default functionality may not be available in BigCommerce GraphQL schema */}
-        {!address.isDefault && (
+      <div className="mt-4 pt-3 border-t border-gray-200 flex gap-3">
+        {!address.isDefaultShipping && (
           <button
-            onClick={handleSetDefault}
+            onClick={() => {
+              setIsSettingDefault(true);
+              setDefaultAddress(address.id, 'shipping')
+                .then((r) => r.success ? onUpdate() : alert(r.error))
+                .finally(() => setIsSettingDefault(false));
+            }}
             className="text-sm text-indigo-600 hover:text-indigo-900 font-medium"
             disabled={isDeleting || isSettingDefault}
           >
-            {isSettingDefault ? 'Setting...' : 'Set as Default'}
+            {isSettingDefault ? 'Setting...' : 'Default Shipping'}
+          </button>
+        )}
+        {!address.isDefaultBilling && (
+          <button
+            onClick={() => {
+              setIsSettingDefault(true);
+              setDefaultAddress(address.id, 'billing')
+                .then((r) => r.success ? onUpdate() : alert(r.error))
+                .finally(() => setIsSettingDefault(false));
+            }}
+            className="text-sm text-indigo-600 hover:text-indigo-900 font-medium"
+            disabled={isDeleting || isSettingDefault}
+          >
+            {isSettingDefault ? 'Setting...' : 'Default Billing'}
           </button>
         )}
       </div>

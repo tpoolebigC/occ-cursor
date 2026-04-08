@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { searchAlgoliaProducts } from '~/b2b/server-actions';
+import { searchProducts } from '~/b2b/server-actions';
 
 interface QuickOrderProduct {
   objectID: string;
@@ -43,7 +43,7 @@ export default function QuickOrderTable({ onAddToCart, showPreviouslyOrdered = t
 
     setSearching(true);
     try {
-      const results = await searchAlgoliaProducts(query);
+      const results = await searchProducts(query);
       setSearchResults(results);
     } catch (err) {
       console.error('Search error:', err);
@@ -56,31 +56,29 @@ export default function QuickOrderTable({ onAddToCart, showPreviouslyOrdered = t
   const loadPreviouslyOrdered = async () => {
     setLoadingPreviouslyOrdered(true);
     try {
-      // In a real implementation, this would fetch from order history
-      // For now, we'll simulate with some sample data
-      const samplePreviouslyOrdered: QuickOrderProduct[] = [
-        {
-          objectID: '1',
-          name: 'Snake Plant',
-          sku: 'SNAKE-001',
-          price: 109.99,
-          imageUrl: 'https://cdn11.bigcommerce.com/s-7qgtlochx0/images/stencil/150x150/products/140/442/snake-plant-1__26586__58982.1736974327.jpg',
-          productId: 140,
-          lastOrdered: '2024-01-15',
-          orderCount: 3
-        },
-        {
-          objectID: '2',
-          name: 'Spray Bottle',
-          sku: 'SPRAY-001',
-          price: 15.00,
-          imageUrl: 'https://cdn11.bigcommerce.com/s-7qgtlochx0/images/stencil/150x150/products/141/443/spray-bottle-1__66563__31663.1736974328.jpg',
-          productId: 141,
-          lastOrdered: '2024-01-10',
-          orderCount: 2
+      const { getEnrichedOrders } = await import('~/b2b/server-actions');
+      const result = await getEnrichedOrders({ limit: 5 });
+      const products: QuickOrderProduct[] = [];
+      const seen = new Set<number>();
+
+      for (const order of result.orders) {
+        const orderProducts = order.products ?? [];
+        for (const p of orderProducts) {
+          const pid = p.productId ?? (p as any).product_id ?? 0;
+          if (pid && !seen.has(pid)) {
+            seen.add(pid);
+            products.push({
+              objectID: String(pid),
+              name: p.productName ?? (p as any).name ?? '',
+              sku: p.sku ?? '',
+              price: parseFloat(p.basePrice ?? p.offeredPrice ?? '0'),
+              imageUrl: p.imageUrl ?? '',
+              productId: pid,
+            });
+          }
         }
-      ];
-      setPreviouslyOrdered(samplePreviouslyOrdered);
+      }
+      setPreviouslyOrdered(products);
     } catch (err) {
       console.error('Error loading previously ordered:', err);
       setPreviouslyOrdered([]);

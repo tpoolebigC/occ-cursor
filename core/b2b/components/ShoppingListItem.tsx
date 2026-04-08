@@ -4,9 +4,15 @@ import { useState } from 'react';
 
 interface ShoppingListItemProps {
   item: {
-    entityId: number;
-    productEntityId: number;
+    id: number;
+    productId?: number;
+    variantId?: number;
     quantity: number;
+    productName?: string;
+    sku?: string;
+    imageUrl?: string;
+    basePrice?: string;
+    sortOrder?: number;
     product?: {
       name?: string;
       sku?: string;
@@ -15,6 +21,8 @@ interface ShoppingListItemProps {
         value?: number;
         currencyCode?: string;
       };
+      salePrice?: { value?: number };
+      brand?: string;
     };
   };
   onRemove: () => void;
@@ -64,11 +72,11 @@ export function ShoppingListItem({ item, onRemove, onUpdateQuantity }: ShoppingL
     }
   };
 
-  const productName = item.product?.name || `Product ${item.productEntityId}`;
-  const productSku = item.product?.sku || 'N/A';
-  const productPrice = item.product?.price?.value;
+  const productName = item.productName || item.product?.name || `Product ${item.productId || item.id}`;
+  const productSku = item.sku || item.product?.sku || 'N/A';
+  const productPrice = item.basePrice ? parseFloat(item.basePrice) : item.product?.price?.value;
   const productSalePrice = item.product?.salePrice?.value;
-  const productImage = item.product?.imageUrl;
+  const productImage = item.imageUrl || item.product?.imageUrl;
   const productBrand = item.product?.brand;
 
   return (

@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import { Button, Card, Input } from '~/vibes';
+import { Button, Input } from '~/vibes';
 import {
   Building2,
   ChevronDown,
@@ -35,7 +35,7 @@ export interface CompanyNode {
   updatedAt: string;
 }
 
-export function CompanyHierarchy({ companyId }: { companyId?: number }) {
+export function CompanyHierarchy({ companyId }: { companyId?: string | number }) {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | CompanyStatus>('all');
@@ -43,66 +43,34 @@ export function CompanyHierarchy({ companyId }: { companyId?: number }) {
   const [companies, setCompanies] = useState<CompanyNode[]>([]);
 
   useEffect(() => {
-    // TODO: Replace with real data from BigCommerce (companies + subsidiaries)
-    const mock: CompanyNode[] = [
-      {
-        id: 1,
-        name: 'Acme Corporation',
-        status: 'active',
-        type: 'parent',
-        address: '123 Business St, City, ST 12345',
-        phone: '+1 (555) 123-4567',
-        email: 'info@acme.com',
-        website: 'www.acme.com',
-        userCount: 25,
-        createdAt: '2024-01-15',
-        updatedAt: '2025-01-01',
-        children: [
-          {
-            id: 2,
-            name: 'Acme Manufacturing',
+    async function loadCompany() {
+      try {
+        const { getCompanyInfo } = await import('~/b2b/server-actions');
+        const result = await getCompanyInfo();
+        if (result.company) {
+          const c = result.company;
+          const root: CompanyNode = {
+            id: Number(c.id) || 1,
+            name: c.companyName || 'My Company',
             status: 'active',
-            type: 'subsidiary',
-            address: '456 Factory Ave, City, ST 23456',
-            phone: '+1 (555) 234-5678',
-            email: 'manufacturing@acme.com',
-            userCount: 12,
-            parentId: 1,
-            createdAt: '2024-02-01',
-            updatedAt: '2025-01-01',
-          },
-          {
-            id: 3,
-            name: 'Acme Distribution',
-            status: 'inactive',
-            type: 'subsidiary',
-            address: '789 Warehouse Blvd, City, ST 34567',
-            phone: '+1 (555) 345-6789',
-            email: 'distribution@acme.com',
-            userCount: 8,
-            parentId: 1,
-            createdAt: '2024-02-15',
-            updatedAt: '2025-01-01',
-            children: [
-              {
-                id: 4,
-                name: 'West Coast Branch',
-                status: 'pending',
-                type: 'branch',
-                address: '100 Pacific Rd, City, CA 90000',
-                userCount: 4,
-                parentId: 3,
-                createdAt: '2024-03-10',
-                updatedAt: '2025-01-01',
-              },
-            ],
-          },
-        ],
-      },
-    ];
-
-    setCompanies(mock);
-    setLoading(false);
+            type: 'parent',
+            address: [c.addressLine1, c.city, c.state, c.zipCode].filter(Boolean).join(', '),
+            phone: c.phoneNumber || undefined,
+            email: c.adminEmail || undefined,
+            userCount: 0,
+            createdAt: c.createdAt || '',
+            updatedAt: c.updatedAt || '',
+            children: [],
+          };
+          setCompanies([root]);
+        }
+      } catch (err) {
+        console.error('Error loading company hierarchy:', err);
+      } finally {
+        setLoading(false);
+      }
+    }
+    loadCompany();
   }, []);
 
   const toggle = (id: number) => {
@@ -263,7 +231,7 @@ export function CompanyHierarchy({ companyId }: { companyId?: number }) {
         </Button>
       </div>
 
-      <Card className="p-4">
+      <div className="p-4 bg-white rounded-lg border border-gray-200">
         <div className="flex flex-col md:flex-row gap-3">
           <div className="flex-1 relative">
             <Input
@@ -287,7 +255,7 @@ export function CompanyHierarchy({ companyId }: { companyId?: number }) {
             </select>
           </div>
         </div>
-      </Card>
+      </div>
 
       <div className="space-y-3">
         {filtered.length === 0 ? (
@@ -303,5 +271,21 @@ export function CompanyHierarchy({ companyId }: { companyId?: number }) {
     </div>
   );
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 

@@ -1,13 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { getCustomerInfo, getOrders, getQuotes, getInvoices, searchAlgoliaProducts } from '~/b2b/server-actions';
-import { AlgoliaProduct } from '~/b2b/server-actions';
-import { ApiDebugger } from './ApiDebugger';
+import { getCustomerInfo, getOrders, getQuotes, getB2BInvoices } from '~/b2b/server-actions';
 import { B2BNavigation } from './B2BNavigation';
-// Debug components for development
-// import { AuthDebugger } from './AuthDebugger';
-// import { B2BLoginTrigger } from './B2BLoginTrigger';
 
 interface DashboardData {
   customer: any;
@@ -34,10 +29,6 @@ export function CustomB2BDashboard() {
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [showQuickOrder, setShowQuickOrder] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [searchResults, setSearchResults] = useState<AlgoliaProduct[]>([]);
-  const [searching, setSearching] = useState(false);
 
   useEffect(() => {
     loadDashboardData();
@@ -61,11 +52,11 @@ export function CustomB2BDashboard() {
         }),
         getQuotes().catch(err => {
           console.error('❌ [Dashboard] Quotes error:', err);
-          return { quotes: { edges: [] }, error: err.message };
+          return { quotes: [], error: err.message };
         }),
-        getInvoices(50).catch(err => {
+        getB2BInvoices().catch(err => {
           console.error('❌ [Dashboard] Invoices error:', err);
-          return { customer: null, error: err.message };
+          return { invoices: [], pagination: { totalCount: 0, offset: 0, limit: 25 }, error: err.message };
         }),
       ]);
 
@@ -78,8 +69,8 @@ export function CustomB2BDashboard() {
 
       const customer = customerResult.customer;
       const orders = ordersResult.customer?.orders?.edges || [];
-      const quotes = quotesResult.quotes?.edges || [];
-      const invoices = invoicesResult.customer?.orders?.edges || []; // Using orders as invoices for now
+      const quotes = quotesResult.quotes || [];
+      const invoices = invoicesResult.invoices || [];
 
       setDashboardData({
         customer,
@@ -106,32 +97,6 @@ export function CustomB2BDashboard() {
     }
   };
 
-  const handleSearch = async (query: string) => {
-    if (!query.trim()) {
-      setSearchResults([]);
-      return;
-    }
-
-    setSearching(true);
-    try {
-      const results = await searchAlgoliaProducts(query);
-      setSearchResults(results);
-    } catch (err) {
-      console.error('Search error:', err);
-      setSearchResults([]);
-    } finally {
-      setSearching(false);
-    }
-  };
-
-  const handleQuickOrder = async () => {
-    setShowQuickOrder(true);
-  };
-
-  const handleCloseQuickOrder = () => {
-    setShowQuickOrder(false);
-  };
-
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
@@ -139,21 +104,35 @@ export function CustomB2BDashboard() {
     }).format(price);
   };
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
+  const formatDate = (dateValue: string | number | undefined | null) => {
+    if (dateValue == null) return '--';
+    let d: Date;
+    if (typeof dateValue === 'number') {
+      d = new Date(dateValue > 1e12 ? dateValue : dateValue * 1000);
+    } else {
+      if (!dateValue) return '--';
+      d = new Date(dateValue);
+    }
+    if (isNaN(d.getTime())) return '--';
+    return d.toLocaleDateString('en-US', {
       year: 'numeric',
       month: 'short',
       day: 'numeric',
     });
   };
 
-  const getStatusBadgeColor = (status: string) => {
-    switch (status.toLowerCase()) {
+  const getStatusBadgeColor = (status: string | number | undefined) => {
+    const s = String(status ?? '').toLowerCase();
+    switch (s) {
       case 'completed':
+      case 'paid':
+      case 'approved':
         return 'bg-green-100 text-green-800';
       case 'pending':
+      case 'awaiting_payment':
         return 'bg-yellow-100 text-yellow-800';
       case 'cancelled':
+      case 'declined':
         return 'bg-red-100 text-red-800';
       default:
         return 'bg-gray-100 text-gray-800';
@@ -323,13 +302,13 @@ export function CustomB2BDashboard() {
             {activeTab === 'quotes' && (
               <div>
                 <h3 className="text-lg font-medium text-gray-900 mb-4">Recent Quotes</h3>
-                {dashboardData.quotesData?.quotes?.edges?.length > 0 ? (
+                {(dashboardData.quotesData?.quotes?.length ?? 0) > 0 ? (
                   <div className="overflow-x-auto">
                     <table className="min-w-full divide-y divide-gray-200">
                       <thead className="bg-gray-50">
                         <tr>
                           <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Quote ID
+                            Quote #
                           </th>
                           <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                             Date
@@ -343,27 +322,24 @@ export function CustomB2BDashboard() {
                         </tr>
                       </thead>
                       <tbody className="bg-white divide-y divide-gray-200">
-                        {dashboardData.quotesData.quotes.edges.map((edge: any) => {
-                          const quote = edge.node;
-                          return (
+                        {dashboardData.quotesData.quotes.map((quote: any) => (
                             <tr key={quote.id} className="hover:bg-gray-50">
                               <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                                #{quote.id}
+                                #{quote.quoteNumber || quote.id}
                               </td>
                               <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                 {formatDate(quote.createdAt)}
                               </td>
                               <td className="px-6 py-4 whitespace-nowrap">
-                                <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusBadgeColor(quote.status)}`}>
-                                  {quote.status}
+                                <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusBadgeColor(quote.statusLabel || quote.status)}`}>
+                                  {quote.statusLabel || String(quote.status)}
                                 </span>
                               </td>
                               <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                {formatPrice(quote.total)}
+                                {formatPrice(quote.grandTotal ?? quote.subtotal ?? 0)}
                               </td>
                             </tr>
-                          );
-                        })}
+                          ))}
                       </tbody>
                     </table>
                   </div>
@@ -376,13 +352,13 @@ export function CustomB2BDashboard() {
             {activeTab === 'invoices' && (
               <div>
                 <h3 className="text-lg font-medium text-gray-900 mb-4">Recent Invoices</h3>
-                {dashboardData.invoicesData?.customer?.orders?.edges?.length > 0 ? (
+                {(dashboardData.invoicesData?.invoices?.length ?? 0) > 0 ? (
                   <div className="overflow-x-auto">
                     <table className="min-w-full divide-y divide-gray-200">
                       <thead className="bg-gray-50">
                         <tr>
                           <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Invoice ID
+                            Invoice #
                           </th>
                           <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                             Date
@@ -394,37 +370,37 @@ export function CustomB2BDashboard() {
                             Total
                           </th>
                           <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Items
+                            Due Date
                           </th>
                         </tr>
                       </thead>
                       <tbody className="bg-white divide-y divide-gray-200">
-                        {dashboardData.invoicesData.customer.orders.edges.map((edge: any) => {
-                          const invoice = edge.node;
-                          const lineItems = invoice.consignments?.shipping?.edges?.[0]?.node?.lineItems?.edges || [];
+                        {dashboardData.invoicesData.invoices.map((invoice: any) => {
+                          const invoiceStatusMap: Record<string, string> = {
+                            '0': 'Open', '1': 'Partial', '2': 'Paid', '3': 'Overdue',
+                          };
+                          const statusDisplay = invoiceStatusMap[String(invoice.status)] || String(invoice.status);
+                          const balanceValue = typeof invoice.originalBalance === 'object'
+                            ? invoice.originalBalance?.value ?? 0
+                            : Number(invoice.originalBalance) || 0;
                           return (
-                            <tr key={invoice.entityId} className="hover:bg-gray-50">
+                            <tr key={invoice.id} className="hover:bg-gray-50">
                               <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                                <a 
-                                  href={`/custom-dashboard/invoices/${invoice.entityId}`}
-                                  className="text-indigo-600 hover:text-indigo-900 hover:underline"
-                                >
-                                  #{invoice.entityId}
-                                </a>
+                                {invoice.invoiceNumber || `#${invoice.id}`}
                               </td>
                               <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                {formatDate(invoice.orderedAt.utc)}
+                                {formatDate(invoice.createdAt)}
                               </td>
                               <td className="px-6 py-4 whitespace-nowrap">
-                                <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusBadgeColor(invoice.status.value)}`}>
-                                  {invoice.status.value.replace('_', ' ')}
+                                <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusBadgeColor(statusDisplay)}`}>
+                                  {statusDisplay}
                                 </span>
                               </td>
                               <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                {formatPrice(invoice.totalIncTax.value)}
+                                {formatPrice(balanceValue)}
                               </td>
                               <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                {lineItems.length} item{lineItems.length !== 1 ? 's' : ''}
+                                {invoice.dueDate ? formatDate(invoice.dueDate) : '--'}
                               </td>
                             </tr>
                           );
@@ -440,10 +416,6 @@ export function CustomB2BDashboard() {
           </div>
         </div>
 
-        {/* Debug Components - Removed B3 debugger components */}
-        <div className="mt-6 space-y-4">
-          <ApiDebugger />
-        </div>
       </div>
     </div>
   );

@@ -24,7 +24,7 @@ export default function AddressesPage() {
       if (result.error) {
         setError(result.error);
       } else {
-        setAddresses(result.addresses?.edges?.map((edge: any) => edge.node) || []);
+        setAddresses(result.addresses || []);
       }
     } catch (err) {
       console.error('Error loading addresses:', err);

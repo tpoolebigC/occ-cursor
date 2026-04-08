@@ -1,17 +1,19 @@
 'use client';
 
-import { useState } from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useParams } from 'next/navigation';
 
 interface B2BNavigationProps {
   activeTab?: string;
-  onTabChange?: (tab: string) => void;
 }
 
-export function B2BNavigation({ activeTab = 'dashboard', onTabChange }: B2BNavigationProps) {
+export function B2BNavigation({ activeTab = 'dashboard' }: B2BNavigationProps) {
   const pathname = usePathname();
-  const [showQuickOrder, setShowQuickOrder] = useState(false);
+  const params = useParams();
+  const locale = (params.locale as string) || 'en';
+
+  // Helper to prefix links with the current locale
+  const localePath = (path: string) => `/${locale}${path}`;
 
   // Determine active tab based on current path
   const getActiveTab = () => {
@@ -28,7 +30,7 @@ export function B2BNavigation({ activeTab = 'dashboard', onTabChange }: B2BNavig
     if (pathname.includes('/addresses')) return 'addresses';
     if (pathname.includes('/shopping-lists')) return 'shopping-lists';
     if (pathname.includes('/users')) return 'users';
-    if (pathname === '/custom-dashboard') return 'dashboard';
+    if (pathname.endsWith('/custom-dashboard')) return 'dashboard';
     return activeTab;
   };
 
@@ -38,7 +40,7 @@ export function B2BNavigation({ activeTab = 'dashboard', onTabChange }: B2BNavig
     {
       id: 'dashboard',
       name: 'Dashboard',
-      href: '/custom-dashboard',
+      href: localePath('/custom-dashboard'),
       icon: (
         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2H5a2 2 0 00-2-2z" />
@@ -49,7 +51,7 @@ export function B2BNavigation({ activeTab = 'dashboard', onTabChange }: B2BNavig
     {
       id: 'orders',
       name: 'Orders',
-      href: '/custom-dashboard/orders',
+      href: localePath('/custom-dashboard/orders'),
       icon: (
         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
@@ -59,7 +61,7 @@ export function B2BNavigation({ activeTab = 'dashboard', onTabChange }: B2BNavig
     {
       id: 'quotes',
       name: 'Quotes',
-      href: '/custom-dashboard/quotes',
+      href: localePath('/custom-dashboard/quotes'),
       icon: (
         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
@@ -69,7 +71,7 @@ export function B2BNavigation({ activeTab = 'dashboard', onTabChange }: B2BNavig
     {
       id: 'invoices',
       name: 'Invoices',
-      href: '/custom-dashboard/invoices',
+      href: localePath('/custom-dashboard/invoices'),
       icon: (
         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
@@ -79,7 +81,7 @@ export function B2BNavigation({ activeTab = 'dashboard', onTabChange }: B2BNavig
           {
         id: 'addresses',
         name: 'Address Book',
-        href: '/custom-dashboard/addresses',
+        href: localePath('/custom-dashboard/addresses'),
         icon: (
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
@@ -90,7 +92,7 @@ export function B2BNavigation({ activeTab = 'dashboard', onTabChange }: B2BNavig
       {
         id: 'shopping-lists',
         name: 'Shopping Lists',
-        href: '/custom-dashboard/shopping-lists',
+        href: localePath('/custom-dashboard/shopping-lists'),
         icon: (
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
@@ -100,7 +102,7 @@ export function B2BNavigation({ activeTab = 'dashboard', onTabChange }: B2BNavig
       {
         id: 'users',
         name: 'Users',
-        href: '/custom-dashboard/users',
+        href: localePath('/custom-dashboard/users'),
         icon: (
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z" />
@@ -116,7 +118,7 @@ export function B2BNavigation({ activeTab = 'dashboard', onTabChange }: B2BNavig
           {/* Logo and Navigation */}
           <div className="flex">
             <div className="flex-shrink-0 flex items-center">
-              <Link href="/custom-dashboard" className="text-xl font-bold text-gray-900">
+              <Link href={localePath('/custom-dashboard')} className="text-xl font-bold text-gray-900">
                 BigBiz
               </Link>
             </div>
@@ -147,7 +149,7 @@ export function B2BNavigation({ activeTab = 'dashboard', onTabChange }: B2BNavig
           <div className="flex items-center space-x-4">
             {/* Quick Order Button */}
             <Link
-              href="/custom-dashboard/quick-order"
+              href={localePath('/custom-dashboard/quick-order')}
               className="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700 text-sm font-medium inline-flex items-center"
             >
               <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
