@@ -39,33 +39,24 @@ export function CustomB2BDashboard() {
       setLoading(true);
       setError(null);
 
-      console.log('🔄 [Dashboard] Starting to load dashboard data...');
-
       const [customerResult, ordersResult, quotesResult, invoicesResult] = await Promise.all([
         getCustomerInfo().catch(err => {
-          console.error('❌ [Dashboard] Customer info error:', err);
+          console.error('[Dashboard] Customer info error:', err);
           return { customer: null, error: err.message };
         }),
         getOrders(50).catch(err => {
-          console.error('❌ [Dashboard] Orders error:', err);
+          console.error('[Dashboard] Orders error:', err);
           return { customer: null, error: err.message };
         }),
         getQuotes().catch(err => {
-          console.error('❌ [Dashboard] Quotes error:', err);
+          console.error('[Dashboard] Quotes error:', err);
           return { quotes: [], error: err.message };
         }),
         getB2BInvoices().catch(err => {
-          console.error('❌ [Dashboard] Invoices error:', err);
+          console.error('[Dashboard] Invoices error:', err);
           return { invoices: [], pagination: { totalCount: 0, offset: 0, limit: 25 }, error: err.message };
         }),
       ]);
-
-      console.log('📊 [Dashboard] API Results:', {
-        customer: customerResult,
-        orders: ordersResult,
-        quotes: quotesResult,
-        invoices: invoicesResult,
-      });
 
       const customer = customerResult.customer;
       const orders = ordersResult.customer?.orders?.edges || [];
@@ -83,14 +74,8 @@ export function CustomB2BDashboard() {
         invoicesData: invoicesResult,
       });
 
-      console.log('✅ [Dashboard] Dashboard data loaded successfully:', {
-        customer: customer?.firstName,
-        orders: orders.length,
-        quotes: quotes.length,
-        invoices: invoices.length,
-      });
     } catch (err) {
-      console.error('❌ [Dashboard] Error loading dashboard data:', err);
+      console.error('[Dashboard] Error loading dashboard data:', err);
       setError(err instanceof Error ? err.message : 'An error occurred while loading data');
     } finally {
       setLoading(false);
@@ -134,6 +119,9 @@ export function CustomB2BDashboard() {
       case 'cancelled':
       case 'declined':
         return 'bg-red-100 text-red-800';
+      case 'processing':
+      case 'shipped':
+        return 'bg-blue-100 text-blue-800';
       default:
         return 'bg-gray-100 text-gray-800';
     }
@@ -143,8 +131,8 @@ export function CustomB2BDashboard() {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading B2B Dashboard...</p>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading your dashboard...</p>
         </div>
       </div>
     );
@@ -158,7 +146,7 @@ export function CustomB2BDashboard() {
           <p className="text-gray-600 mb-4">{error}</p>
           <button
             onClick={loadDashboardData}
-            className="bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700"
+            className="bg-primary text-white px-4 py-2 rounded-md hover:bg-primary-shadow transition-colors"
           >
             Try Again
           </button>
@@ -167,44 +155,88 @@ export function CustomB2BDashboard() {
     );
   }
 
+  const customerName = [dashboardData.customer?.firstName, dashboardData.customer?.lastName]
+    .filter(Boolean)
+    .join(' ');
+  const companyName = dashboardData.customer?.company;
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Navigation */}
       <B2BNavigation />
 
       {/* Main Content */}
-      <div className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
-        {/* Account Summary */}
-        <div className="mb-6 bg-white shadow rounded-lg p-4">
-          <h2 className="text-lg font-medium text-gray-900 mb-4">Account Summary</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            <div className="bg-gray-50 p-3 rounded">
-              <h3 className="text-sm font-medium text-gray-500">Customer</h3>
-              <p className="text-lg font-semibold text-gray-900">
-                {dashboardData.customer?.firstName || 'Not loaded'}
-              </p>
-              <p className="text-sm text-gray-600">{dashboardData.customer?.company}</p>
-            </div>
-            <div className="bg-gray-50 p-3 rounded">
-              <h3 className="text-sm font-medium text-gray-500">Orders</h3>
-              <p className="text-lg font-semibold text-gray-900">{dashboardData.orders}</p>
-              <p className="text-sm text-gray-600">Total orders</p>
-            </div>
-            <div className="bg-gray-50 p-3 rounded">
-              <h3 className="text-sm font-medium text-gray-500">Quotes</h3>
-              <p className="text-lg font-semibold text-gray-900">{dashboardData.quotes}</p>
-              <p className="text-sm text-gray-600">Active quotes</p>
-            </div>
-            <div className="bg-gray-50 p-3 rounded">
-              <h3 className="text-sm font-medium text-gray-500">Invoices</h3>
-              <p className="text-lg font-semibold text-gray-900">{dashboardData.invoices}</p>
-              <p className="text-sm text-gray-600">Total invoices</p>
-            </div>
-          </div>
+      <div className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
+
+        {/* Welcome Header */}
+        <div className="mb-8">
+          <h1 className="text-2xl font-bold text-gray-900 tracking-tight">
+            Welcome back{customerName ? `, ${customerName}` : ''}
+          </h1>
+          {companyName && (
+            <p className="mt-1 text-sm text-gray-500">{companyName}</p>
+          )}
         </div>
 
-        {/* Tab Navigation */}
-        <div className="bg-white shadow rounded-lg">
+        {/* Summary Cards */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+          <button
+            onClick={() => setActiveTab('orders')}
+            className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 text-left hover:shadow-md hover:border-primary/30 transition-all"
+          >
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-500 uppercase tracking-wide">Orders</p>
+                <p className="mt-2 text-3xl font-semibold text-gray-900">{dashboardData.orders}</p>
+              </div>
+              <div className="p-3 rounded-lg bg-primary-highlight">
+                <svg className="w-6 h-6 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+              </div>
+            </div>
+            <p className="mt-2 text-sm text-gray-500">Total orders placed</p>
+          </button>
+
+          <button
+            onClick={() => setActiveTab('quotes')}
+            className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 text-left hover:shadow-md hover:border-primary/30 transition-all"
+          >
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-500 uppercase tracking-wide">Quotes</p>
+                <p className="mt-2 text-3xl font-semibold text-gray-900">{dashboardData.quotes}</p>
+              </div>
+              <div className="p-3 rounded-lg bg-primary-highlight">
+                <svg className="w-6 h-6 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                </svg>
+              </div>
+            </div>
+            <p className="mt-2 text-sm text-gray-500">Active quotes</p>
+          </button>
+
+          <button
+            onClick={() => setActiveTab('invoices')}
+            className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 text-left hover:shadow-md hover:border-primary/30 transition-all"
+          >
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-500 uppercase tracking-wide">Invoices</p>
+                <p className="mt-2 text-3xl font-semibold text-gray-900">{dashboardData.invoices}</p>
+              </div>
+              <div className="p-3 rounded-lg bg-primary-highlight">
+                <svg className="w-6 h-6 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
+                </svg>
+              </div>
+            </div>
+            <p className="mt-2 text-sm text-gray-500">Total invoices</p>
+          </button>
+        </div>
+
+        {/* Tab Navigation + Content */}
+        <div className="bg-white shadow-sm rounded-lg border border-gray-200">
           <div className="border-b border-gray-200">
             <nav className="-mb-px flex space-x-8 px-6">
               {[
@@ -215,15 +247,19 @@ export function CustomB2BDashboard() {
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
-                  className={`py-4 px-1 border-b-2 font-medium text-sm ${
+                  className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
                     activeTab === tab.id
-                      ? 'border-indigo-500 text-indigo-600'
+                      ? 'border-primary text-primary'
                       : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                   }`}
                 >
                   {tab.name}
                   {tab.count > 0 && (
-                    <span className="ml-2 bg-gray-100 text-gray-900 py-0.5 px-2.5 rounded-full text-xs">
+                    <span className={`ml-2 py-0.5 px-2.5 rounded-full text-xs ${
+                      activeTab === tab.id
+                        ? 'bg-primary-highlight text-primary'
+                        : 'bg-gray-100 text-gray-600'
+                    }`}>
                       {tab.count}
                     </span>
                   )}
@@ -266,9 +302,9 @@ export function CustomB2BDashboard() {
                           return (
                             <tr key={order.entityId} className="hover:bg-gray-50">
                               <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                                <a 
+                                <a
                                   href={`/custom-dashboard/orders/${order.entityId}`}
-                                  className="text-indigo-600 hover:text-indigo-900 hover:underline"
+                                  className="text-primary hover:text-primary-shadow hover:underline"
                                 >
                                   #{order.entityId}
                                 </a>
@@ -419,4 +455,4 @@ export function CustomB2BDashboard() {
       </div>
     </div>
   );
-} 
+}

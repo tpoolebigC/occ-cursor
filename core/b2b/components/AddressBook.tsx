@@ -66,7 +66,7 @@ export function AddressBook({ addresses, onAddressUpdate }: AddressBookProps) {
         </div>
         <button
           onClick={handleAddAddress}
-          className="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700 text-sm font-medium inline-flex items-center"
+          className="bg-primary text-white px-4 py-2 rounded-md hover:bg-primary-shadow text-sm font-medium inline-flex items-center"
         >
           <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
@@ -122,7 +122,7 @@ export function AddressBook({ addresses, onAddressUpdate }: AddressBookProps) {
             <p className="mt-2 text-sm text-gray-500">No addresses found</p>
             <button
               onClick={handleAddAddress}
-              className="mt-2 text-indigo-600 hover:text-indigo-900 text-sm font-medium"
+              className="mt-2 text-primary hover:text-primary-shadow text-sm font-medium"
             >
               Add your first address
             </button>

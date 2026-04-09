@@ -116,7 +116,7 @@ export function CompanyHierarchy({ companyId }: { companyId?: string | number })
           ? 'bg-blue-100 text-blue-800'
           : type === 'subsidiary'
           ? 'bg-purple-100 text-purple-800'
-          : 'bg-indigo-100 text-indigo-800')
+          : 'bg-sky-100 text-sky-800')
       }
     >
       {type}

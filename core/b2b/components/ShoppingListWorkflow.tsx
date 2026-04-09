@@ -87,7 +87,7 @@ export function ShoppingListWorkflow({ shoppingList, onUpdate }: ShoppingListWor
         <div className="flex space-x-2">
           <button
             onClick={() => setShowShareModal(true)}
-            className="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+            className="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary"
           >
             <Share className="w-4 h-4 mr-2" />
             Share
@@ -96,7 +96,7 @@ export function ShoppingListWorkflow({ shoppingList, onUpdate }: ShoppingListWor
           {shoppingList.status === 30 && ( // Only show for draft status
             <button
               onClick={() => setShowApprovalModal(true)}
-              className="inline-flex items-center px-3 py-2 border border-transparent shadow-sm text-sm leading-4 font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+              className="inline-flex items-center px-3 py-2 border border-transparent shadow-sm text-sm leading-4 font-medium rounded-md text-white bg-primary hover:bg-primary-shadow focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary"
             >
               <Send className="w-4 h-4 mr-2" />
               Submit for Approval
@@ -146,7 +146,7 @@ export function ShoppingListWorkflow({ shoppingList, onUpdate }: ShoppingListWor
                               setSelectedUsers(selectedUsers.filter(id => id !== user.id));
                             }
                           }}
-                          className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
+                          className="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded"
                         />
                         <div>
                           <div className="text-sm font-medium text-gray-900">{user.name}</div>
@@ -166,7 +166,7 @@ export function ShoppingListWorkflow({ shoppingList, onUpdate }: ShoppingListWor
                   </button>
                   <button
                     onClick={handleShare}
-                    className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 border border-transparent rounded-md hover:bg-indigo-700"
+                    className="px-4 py-2 text-sm font-medium text-white bg-primary border border-transparent rounded-md hover:bg-primary-shadow"
                   >
                     Share
                   </button>
@@ -205,7 +205,7 @@ export function ShoppingListWorkflow({ shoppingList, onUpdate }: ShoppingListWor
                     value={approvalMessage}
                     onChange={(e) => setApprovalMessage(e.target.value)}
                     rows={3}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary"
                     placeholder="Add a message for the approver..."
                   />
                 </div>
@@ -239,7 +239,7 @@ export function ShoppingListWorkflow({ shoppingList, onUpdate }: ShoppingListWor
                   </button>
                   <button
                     onClick={handleSubmitForApproval}
-                    className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 border border-transparent rounded-md hover:bg-indigo-700"
+                    className="px-4 py-2 text-sm font-medium text-white bg-primary border border-transparent rounded-md hover:bg-primary-shadow"
                   >
                     Submit for Approval
                   </button>

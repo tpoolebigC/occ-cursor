@@ -415,7 +415,10 @@ export async function createQuoteWithProducts(lineItems: QuoteLineItemInput[], q
       [session?.user?.name?.split(' ')[0], session?.user?.name?.split(' ').slice(1).join(' ')]
         .filter(Boolean)
         .join(' ') || 'Customer';
-    const customerEmail = (session?.user?.email as string)?.trim() || 'customer@example.com';
+    const customerEmail = (session?.user?.email as string)?.trim();
+    if (!customerEmail) {
+      return { quote: null, error: 'You must be logged in to create a quote.' };
+    }
 
     const productList = lineItems.map((item) => ({
       productId: item.productId,

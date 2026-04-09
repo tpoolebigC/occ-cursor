@@ -179,7 +179,7 @@ export function ShoppingListDetails({ shoppingList, onUpdate }: ShoppingListDeta
                 <h2 className="text-lg font-medium text-gray-900">Items ({itemCount})</h2>
                 <button
                   onClick={() => setShowAddProduct(true)}
-                  className="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700 transition-colors flex items-center"
+                  className="bg-primary text-white px-4 py-2 rounded-md hover:bg-primary-shadow transition-colors flex items-center"
                 >
                   <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -202,7 +202,7 @@ export function ShoppingListDetails({ shoppingList, onUpdate }: ShoppingListDeta
                 <div className="mt-6">
                   <button
                     onClick={() => setShowAddProduct(true)}
-                    className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                    className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-primary hover:bg-primary-shadow focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary"
                   >
                     <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -276,7 +276,7 @@ export function ShoppingListDetails({ shoppingList, onUpdate }: ShoppingListDeta
             <button
               onClick={handleAddAllToCart}
               disabled={isAddingToCart || itemCount === 0}
-              className="w-full bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+              className="w-full bg-primary text-white px-4 py-2 rounded-md hover:bg-primary-shadow transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
             >
               {isAddingToCart ? (
                 <>
@@ -299,7 +299,7 @@ export function ShoppingListDetails({ shoppingList, onUpdate }: ShoppingListDeta
             <button
               onClick={handleCreateQuote}
               disabled={isCreatingQuote || itemCount === 0}
-              className="w-full bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+              className="w-full bg-white text-primary border border-primary px-4 py-2 rounded-md hover:bg-primary-highlight transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
             >
               {isCreatingQuote ? (
                 <>

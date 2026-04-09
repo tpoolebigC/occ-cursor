@@ -74,7 +74,7 @@ export function B2BNavigation({ activeTab = 'dashboard' }: B2BNavigationProps) {
       href: localePath('/custom-dashboard/invoices'),
       icon: (
         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
         </svg>
       ),
     },
@@ -133,7 +133,7 @@ export function B2BNavigation({ activeTab = 'dashboard' }: B2BNavigationProps) {
                     href={item.href}
                     className={`inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium ${
                       isActive
-                        ? 'border-indigo-500 text-gray-900'
+                        ? 'border-primary text-gray-900'
                         : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
                     }`}
                   >
@@ -150,7 +150,7 @@ export function B2BNavigation({ activeTab = 'dashboard' }: B2BNavigationProps) {
             {/* Quick Order Button */}
             <Link
               href={localePath('/custom-dashboard/quick-order')}
-              className="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700 text-sm font-medium inline-flex items-center"
+              className="bg-primary text-white px-4 py-2 rounded-md hover:bg-primary-shadow text-sm font-medium inline-flex items-center"
             >
               <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
@@ -171,7 +171,7 @@ export function B2BNavigation({ activeTab = 'dashboard' }: B2BNavigationProps) {
                   href={item.href}
                   className={`block pl-3 pr-4 py-2 border-l-4 text-base font-medium ${
                     isActive
-                      ? 'bg-indigo-50 border-indigo-500 text-indigo-700'
+                      ? 'bg-primary-highlight border-primary text-primary-shadow'
                       : 'border-transparent text-gray-600 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-800'
                   }`}
                 >

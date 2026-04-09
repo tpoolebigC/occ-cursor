@@ -160,7 +160,7 @@ export function AddressForm({ address, onSave, onCancel }: AddressFormProps) {
             type="text"
             value={formData.firstName}
             onChange={(e) => handleInputChange('firstName', e.target.value)}
-            className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 ${
+            className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary ${
               errors.firstName ? 'border-red-500' : 'border-gray-300'
             }`}
           />
@@ -177,7 +177,7 @@ export function AddressForm({ address, onSave, onCancel }: AddressFormProps) {
             type="text"
             value={formData.lastName}
             onChange={(e) => handleInputChange('lastName', e.target.value)}
-            className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 ${
+            className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary ${
               errors.lastName ? 'border-red-500' : 'border-gray-300'
             }`}
           />
@@ -195,7 +195,7 @@ export function AddressForm({ address, onSave, onCancel }: AddressFormProps) {
           type="text"
           value={formData.company}
           onChange={(e) => handleInputChange('company', e.target.value)}
-          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
         />
       </div>
 
@@ -207,7 +207,7 @@ export function AddressForm({ address, onSave, onCancel }: AddressFormProps) {
           type="text"
           value={formData.addressLine1}
           onChange={(e) => handleInputChange('addressLine1', e.target.value)}
-          className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 ${
+          className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary ${
             errors.addressLine1 ? 'border-red-500' : 'border-gray-300'
           }`}
         />
@@ -224,7 +224,7 @@ export function AddressForm({ address, onSave, onCancel }: AddressFormProps) {
           type="text"
           value={formData.addressLine2}
           onChange={(e) => handleInputChange('addressLine2', e.target.value)}
-          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
         />
       </div>
 
@@ -237,7 +237,7 @@ export function AddressForm({ address, onSave, onCancel }: AddressFormProps) {
             type="text"
             value={formData.city}
             onChange={(e) => handleInputChange('city', e.target.value)}
-            className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 ${
+            className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary ${
               errors.city ? 'border-red-500' : 'border-gray-300'
             }`}
           />
@@ -254,7 +254,7 @@ export function AddressForm({ address, onSave, onCancel }: AddressFormProps) {
             type="text"
             value={formData.state}
             onChange={(e) => handleInputChange('state', e.target.value)}
-            className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 ${
+            className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary ${
               errors.state ? 'border-red-500' : 'border-gray-300'
             }`}
           />
@@ -271,7 +271,7 @@ export function AddressForm({ address, onSave, onCancel }: AddressFormProps) {
             type="text"
             value={formData.zipCode}
             onChange={(e) => handleInputChange('zipCode', e.target.value)}
-            className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 ${
+            className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary ${
               errors.zipCode ? 'border-red-500' : 'border-gray-300'
             }`}
           />
@@ -288,7 +288,7 @@ export function AddressForm({ address, onSave, onCancel }: AddressFormProps) {
         <select
           value={formData.countryCode}
           onChange={(e) => handleInputChange('countryCode', e.target.value)}
-          className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 ${
+          className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary ${
             errors.countryCode ? 'border-red-500' : 'border-gray-300'
           }`}
         >
@@ -317,14 +317,14 @@ export function AddressForm({ address, onSave, onCancel }: AddressFormProps) {
         <button
           type="button"
           onClick={onCancel}
-          className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+          className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary"
           disabled={isSubmitting}
         >
           Cancel
         </button>
         <button
           type="submit"
-          className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 border border-transparent rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50"
+          className="px-4 py-2 text-sm font-medium text-white bg-primary border border-transparent rounded-md hover:bg-primary-shadow focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary disabled:opacity-50"
           disabled={isSubmitting}
         >
           {isSubmitting ? 'Saving...' : (address ? 'Update Address' : 'Add Address')}

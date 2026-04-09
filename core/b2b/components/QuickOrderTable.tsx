@@ -147,7 +147,7 @@ export default function QuickOrderTable({ onAddToCart, showPreviouslyOrdered = t
           />
           <button
             onClick={() => onAddToCart(product, 1)}
-            className="bg-indigo-600 text-white px-3 py-1 rounded text-sm hover:bg-indigo-700"
+            className="bg-primary text-white px-3 py-1 rounded text-sm hover:bg-primary-shadow"
           >
             Add
           </button>
@@ -165,11 +165,11 @@ export default function QuickOrderTable({ onAddToCart, showPreviouslyOrdered = t
           placeholder="Search for products by name, SKU, or ID..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          className="w-full px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+          className="w-full px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary"
         />
         {searching && (
           <div className="absolute right-3 top-3">
-            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-indigo-600"></div>
+            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
           </div>
         )}
       </div>
@@ -182,7 +182,7 @@ export default function QuickOrderTable({ onAddToCart, showPreviouslyOrdered = t
           </div>
           {loadingPreviouslyOrdered ? (
             <div className="px-6 py-8 text-center">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600 mx-auto"></div>
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
               <p className="mt-2 text-sm text-gray-500">Loading previously ordered products...</p>
             </div>
           ) : previouslyOrdered.length > 0 ? (

@@ -51,7 +51,7 @@ function getRoleColor(role: string | number): string {
     case 'senior buyer': return 'bg-blue-100 text-blue-800';
     case '3':
     case 'junior_buyer':
-    case 'junior buyer': return 'bg-green-100 text-green-800';
+    case 'junior buyer': return 'bg-teal-100 text-teal-800';
     default: return 'bg-gray-100 text-gray-800';
   }
 }
@@ -276,7 +276,7 @@ export function UserManagement({ companyId }: UserManagementProps) {
             <select
               value={roleFilter}
               onChange={(e) => setRoleFilter(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary"
             >
               <option value="all">All Roles</option>
               <option value="admin">Admin</option>
@@ -288,7 +288,7 @@ export function UserManagement({ companyId }: UserManagementProps) {
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary"
             >
               <option value="all">All Status</option>
               <option value="active">Active</option>
@@ -302,7 +302,7 @@ export function UserManagement({ companyId }: UserManagementProps) {
             </span>
             <button
               onClick={() => loadUsers()}
-              className="text-sm text-indigo-600 hover:text-indigo-800"
+              className="text-sm text-primary hover:text-primary-shadow"
               title="Refresh"
             >
               Refresh
@@ -315,7 +315,7 @@ export function UserManagement({ companyId }: UserManagementProps) {
       <div className="bg-white shadow-sm border border-gray-200 rounded-lg">
         {loading ? (
           <div className="p-6 text-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600 mx-auto"></div>
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
             <p className="text-gray-600 mt-2">Loading users...</p>
           </div>
         ) : (
@@ -346,8 +346,8 @@ export function UserManagement({ companyId }: UserManagementProps) {
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center">
                         <div className="flex-shrink-0 h-10 w-10">
-                          <div className="h-10 w-10 rounded-full bg-indigo-100 flex items-center justify-center">
-                            <span className="text-sm font-medium text-indigo-600">
+                          <div className="h-10 w-10 rounded-full bg-primary-highlight flex items-center justify-center">
+                            <span className="text-sm font-medium text-primary">
                               {user.firstName?.charAt(0) || '?'}{user.lastName?.charAt(0) || '?'}
                             </span>
                           </div>
@@ -388,7 +388,7 @@ export function UserManagement({ companyId }: UserManagementProps) {
                           onClick={() => setShowEditUser(user)}
                           variant="ghost"
                           size="small"
-                          className="text-indigo-600 hover:text-indigo-900"
+                          className="text-primary hover:text-primary-shadow"
                         >
                           <Edit className="w-4 h-4" />
                         </Button>
@@ -517,7 +517,7 @@ function AddUserModal({ onClose, onSuccess, loading }: {
               <select
                 value={formData.role}
                 onChange={(e) => setFormData({...formData, role: e.target.value})}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary"
               >
                 <option value="junior_buyer">Junior Buyer</option>
                 <option value="senior_buyer">Senior Buyer</option>
@@ -612,7 +612,7 @@ function EditUserModal({ user, onClose, onSuccess, loading }: {
               <select
                 value={formData.role}
                 onChange={(e) => setFormData({...formData, role: e.target.value})}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary"
               >
                 <option value="junior_buyer">Junior Buyer</option>
                 <option value="senior_buyer">Senior Buyer</option>
@@ -625,7 +625,7 @@ function EditUserModal({ user, onClose, onSuccess, loading }: {
               <select
                 value={formData.status}
                 onChange={(e) => setFormData({...formData, status: e.target.value})}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary"
               >
                 <option value="active">Active</option>
                 <option value="inactive">Inactive</option>

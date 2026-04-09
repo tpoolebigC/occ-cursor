@@ -122,11 +122,11 @@ export function ProductSearch({ onProductSelect }: ProductSearchProps) {
             }}
             onFocus={() => searchResults.length > 0 && setShowResults(true)}
             placeholder="Search by name or SKU..."
-            className="w-full px-4 py-2 pr-20 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+            className="w-full px-4 py-2 pr-20 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary"
           />
           <div className="absolute right-2 top-1/2 transform -translate-y-1/2 flex items-center gap-1">
             {searching && (
-              <svg className="animate-spin h-4 w-4 text-indigo-600" fill="none" viewBox="0 0 24 24">
+              <svg className="animate-spin h-4 w-4 text-primary" fill="none" viewBox="0 0 24 24">
                 <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                 <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
               </svg>
@@ -182,7 +182,7 @@ export function ProductSearch({ onProductSelect }: ProductSearchProps) {
 
       {/* Selected Product + Quantity + Add Button */}
       {selectedProduct && (
-        <div className="bg-indigo-50 border border-indigo-200 rounded-lg p-4">
+        <div className="bg-primary-highlight border border-primary/20 rounded-lg p-4">
           <div className="flex items-center gap-3 mb-3">
             {selectedProduct.imageUrl && (
               <img src={selectedProduct.imageUrl} alt={selectedProduct.name} className="w-12 h-12 object-cover rounded" />
@@ -205,11 +205,11 @@ export function ProductSearch({ onProductSelect }: ProductSearchProps) {
               min="1"
               value={quantity}
               onChange={(e) => { const v = parseInt(e.target.value); if (!isNaN(v) && v > 0) setQuantity(v); }}
-              className="w-20 px-3 py-1.5 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="w-20 px-3 py-1.5 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-primary"
             />
             <button
               onClick={handleAddToShoppingList}
-              className="flex-1 bg-indigo-600 text-white px-4 py-1.5 rounded-md hover:bg-indigo-700 transition-colors text-sm font-medium flex items-center justify-center gap-1"
+              className="flex-1 bg-primary text-white px-4 py-1.5 rounded-md hover:bg-primary-shadow transition-colors text-sm font-medium flex items-center justify-center gap-1"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />

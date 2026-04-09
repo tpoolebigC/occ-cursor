@@ -61,7 +61,7 @@ export default function ReorderButton({ orderId, lineItems }: ReorderButtonProps
     <button 
       onClick={handleReorder}
       disabled={isProcessing}
-      className="w-full bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-sm font-medium"
+      className="w-full bg-primary text-white px-4 py-2 rounded-md hover:bg-primary-shadow disabled:bg-gray-400 disabled:cursor-not-allowed text-sm font-medium"
     >
       {isProcessing ? 'Adding to Cart...' : 'Reorder'}
     </button>

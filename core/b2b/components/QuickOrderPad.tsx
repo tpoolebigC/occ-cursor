@@ -51,7 +51,7 @@ export default function QuickOrderPad({ onAddBySku }: QuickOrderPadProps) {
             onChange={(e) => setSkuInput(e.target.value)}
             onKeyPress={handleKeyPress}
             placeholder="Enter product SKU..."
-            className="w-full px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+            className="w-full px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary"
             disabled={isProcessing}
           />
         </div>
@@ -67,7 +67,7 @@ export default function QuickOrderPad({ onAddBySku }: QuickOrderPadProps) {
             value={quantityInput}
             onChange={(e) => setQuantityInput(e.target.value)}
             onKeyPress={handleKeyPress}
-            className="w-full px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+            className="w-full px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary"
             disabled={isProcessing}
           />
         </div>
@@ -75,7 +75,7 @@ export default function QuickOrderPad({ onAddBySku }: QuickOrderPadProps) {
         <button
           onClick={handleAdd}
           disabled={!skuInput.trim() || isProcessing}
-          className="w-full bg-indigo-600 text-white px-4 py-3 rounded-md hover:bg-indigo-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-sm font-medium"
+          className="w-full bg-primary text-white px-4 py-3 rounded-md hover:bg-primary-shadow disabled:bg-gray-400 disabled:cursor-not-allowed text-sm font-medium"
         >
           {isProcessing ? 'Adding...' : 'Add to Cart'}
         </button>

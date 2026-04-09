@@ -80,7 +80,7 @@ export function AddressCard({ address, onEdit, onUpdate }: AddressCardProps) {
 
   const getAddressTypeColor = () => {
     if (address.isDefaultBilling) return 'bg-blue-100 text-blue-800';
-    return 'bg-green-100 text-green-800';
+    return 'bg-primary-highlight text-primary';
   };
 
   return (
@@ -101,7 +101,7 @@ export function AddressCard({ address, onEdit, onUpdate }: AddressCardProps) {
         <div className="flex space-x-2">
           <button
             onClick={onEdit}
-            className="text-indigo-600 hover:text-indigo-900 text-sm font-medium"
+            className="text-primary hover:text-primary-shadow text-sm font-medium"
             disabled={isDeleting || isSettingDefault}
           >
             Edit
@@ -153,7 +153,7 @@ export function AddressCard({ address, onEdit, onUpdate }: AddressCardProps) {
                 .then((r) => r.success ? onUpdate() : alert(r.error))
                 .finally(() => setIsSettingDefault(false));
             }}
-            className="text-sm text-indigo-600 hover:text-indigo-900 font-medium"
+            className="text-sm text-primary hover:text-primary-shadow font-medium"
             disabled={isDeleting || isSettingDefault}
           >
             {isSettingDefault ? 'Setting...' : 'Default Shipping'}
@@ -167,7 +167,7 @@ export function AddressCard({ address, onEdit, onUpdate }: AddressCardProps) {
                 .then((r) => r.success ? onUpdate() : alert(r.error))
                 .finally(() => setIsSettingDefault(false));
             }}
-            className="text-sm text-indigo-600 hover:text-indigo-900 font-medium"
+            className="text-sm text-primary hover:text-primary-shadow font-medium"
             disabled={isDeleting || isSettingDefault}
           >
             {isSettingDefault ? 'Setting...' : 'Default Billing'}

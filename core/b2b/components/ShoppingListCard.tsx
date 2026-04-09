@@ -87,7 +87,7 @@ export function ShoppingListCard({ shoppingList, onEdit, onUpdate }: ShoppingLis
         <div className="flex space-x-2">
           <Link
             href={`/custom-dashboard/shopping-lists/${shoppingList.id}`}
-            className="flex-1 bg-indigo-600 text-white text-center py-2 px-3 rounded-md hover:bg-indigo-700 transition-colors text-sm font-medium"
+            className="flex-1 bg-primary text-white text-center py-2 px-3 rounded-md hover:bg-primary-shadow transition-colors text-sm font-medium"
           >
             View List
           </Link>
