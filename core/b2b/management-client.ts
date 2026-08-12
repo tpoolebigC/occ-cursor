@@ -80,7 +80,8 @@ export async function managementGet(
   path: string,
   params?: Record<string, string | number | undefined>,
 ): Promise<VerboseExchange[]> {
-  const storeToken = process.env.BIGCOMMERCE_ACCESS_TOKEN;
+  // Prefer a dedicated token so the app-wide BIGCOMMERCE_ACCESS_TOKEN is untouched.
+  const storeToken = process.env.B2B_MANAGEMENT_TOKEN || process.env.BIGCOMMERCE_ACCESS_TOKEN;
   const legacyToken = process.env.B2B_API_TOKEN;
   const storeHash = process.env.BIGCOMMERCE_STORE_HASH;
 
