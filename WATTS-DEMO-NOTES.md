@@ -16,6 +16,22 @@ Uses existing env vars: `B2B_API_TOKEN` (must be a store-level V3 token with B2B
 4. **Env naming drift**: this repo uses `B2B_API_TOKEN`/`B2B_API_HOST` (2025-era guide); the official Catalyst B2B integration (`@bigcommerce/catalyst-b2b-makeswift`, current at 1.10.0) uses `BIGCOMMERCE_ACCESS_TOKEN` + `B2B_API_HOST` + `LOCAL_BUYER_PORTAL_HOST`/`PROD_BUYER_PORTAL_BASE_URL`. Align when rebasing onto the official scaffold — which is now the recommended starting point (the old "official branches are incomplete" advice is obsolete; the integration was updated to Catalyst 1.10 in late July 2026 after the unified-GraphQL breakage was fixed).
 5. **Quote status enum** for any UI filtering: 0 New, 2 In Process, 3 Updated by customer, 4 Ordered, 5 Expired, 6 Archived, 7 Draft (staff-side). (The old stats route filters on invented string statuses like `pending`/`approved`.)
 
+## Live smoke-test findings (sandbox 7qgtlochx0, 2026-08-12)
+
+| Case | Result |
+|---|---|
+| Book of Business — quotes (GET /rfq) | ✅ 200, 10 quotes across companies |
+| Book of Business — orders (GET /orders) | ✅ 200, 5 orders |
+| Companies (GET /companies) | ✅ 200, 9 companies |
+| Super Admins (GET /companies/super-admins) | ✅ 200, 2 reps |
+| Quote detail (GET /rfq/{id}) | ✅ 200 |
+| Invoices (GET /invoices) | ⚠️ 404 — Invoice module not enabled on the sandbox; enable in B2B Edition settings before the demo (or use the 404 to explain the feature toggle) |
+
+**Auth findings (great live talking points):**
+- `BIGCOMMERCE_ACCESS_TOKEN` on this sandbox gets **403 "Invalid access token"** on the new scheme — the store-level token needs the **B2B Edition scope** added (create a store-level API account with B2B Edition = modify). Until then the bench transparently falls back to the legacy `authToken` header (labeled DEPRECATED in the panel) — the two attempts render side by side, which demonstrates the 2025-09-30 auth migration in one click.
+- API quirk vs spec: `orderBy` must be uppercase `DESC`/`ASC` at runtime even though the OpenAPI spec enum says lowercase.
+- There is no `GET /super-admins` (405) — the list endpoint is `GET /companies/super-admins`.
+
 ## References
 
 - OpenAPI specs index: https://docs.bigcommerce.com/developer/api-reference/openapi-specifications

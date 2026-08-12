@@ -35,49 +35,20 @@ function redact(token: string | undefined): string {
   return `${token.slice(0, 4)}…${token.slice(-4)} (redacted)`;
 }
 
-export async function managementGet(
-  path: string,
-  params?: Record<string, string | number | undefined>,
+async function executeGet(
+  url: URL,
+  headers: Record<string, string>,
+  displayHeaders: Record<string, string>,
 ): Promise<VerboseExchange> {
-  const token = process.env.B2B_API_TOKEN;
-  const storeHash = process.env.BIGCOMMERCE_STORE_HASH;
-
-  const url = new URL(`${BASE_URL}${path}`);
-
-  if (params) {
-    for (const [key, value] of Object.entries(params)) {
-      if (value !== undefined && value !== '') url.searchParams.set(key, String(value));
-    }
-  }
-
-  const displayHeaders = {
-    'X-Auth-Token': redact(token),
-    'X-Store-Hash': storeHash || '(not configured)',
-    Accept: 'application/json',
-  };
-
   const exchange: VerboseExchange = {
     request: { method: 'GET', url: url.toString(), headers: displayHeaders },
     response: { status: 0, statusText: '', durationMs: 0, body: null },
   };
 
-  if (!token || !storeHash) {
-    exchange.error =
-      'Missing B2B_API_TOKEN or BIGCOMMERCE_STORE_HASH in the environment — configure both in .env.local.';
-    return exchange;
-  }
-
   const started = Date.now();
 
   try {
-    const response = await fetch(url, {
-      headers: {
-        'X-Auth-Token': token,
-        'X-Store-Hash': storeHash,
-        Accept: 'application/json',
-      },
-      cache: 'no-store',
-    });
+    const response = await fetch(url, { headers, cache: 'no-store' });
 
     exchange.response.durationMs = Date.now() - started;
     exchange.response.status = response.status;
@@ -96,4 +67,72 @@ export async function managementGet(
   }
 
   return exchange;
+}
+
+/**
+ * Runs the call with the current auth scheme (X-Auth-Token + X-Store-Hash,
+ * store-level V3 token with B2B Edition scope). If that is rejected and a
+ * legacy JWT-style B2B token is configured, retries ONCE with the deprecated
+ * `authToken` header (never combined with X-Store-Hash) so the bench also
+ * demonstrates the auth-migration story live. Returns one exchange per attempt.
+ */
+export async function managementGet(
+  path: string,
+  params?: Record<string, string | number | undefined>,
+): Promise<VerboseExchange[]> {
+  const storeToken = process.env.BIGCOMMERCE_ACCESS_TOKEN;
+  const legacyToken = process.env.B2B_API_TOKEN;
+  const storeHash = process.env.BIGCOMMERCE_STORE_HASH;
+
+  const url = new URL(`${BASE_URL}${path}`);
+
+  if (params) {
+    for (const [key, value] of Object.entries(params)) {
+      if (value !== undefined && value !== '') url.searchParams.set(key, String(value));
+    }
+  }
+
+  const exchanges: VerboseExchange[] = [];
+
+  if (storeToken && storeHash) {
+    exchanges.push(
+      await executeGet(
+        url,
+        { 'X-Auth-Token': storeToken, 'X-Store-Hash': storeHash, Accept: 'application/json' },
+        {
+          'X-Auth-Token': `${redact(storeToken)} — store-level V3 token (current scheme)`,
+          'X-Store-Hash': storeHash,
+          Accept: 'application/json',
+        },
+      ),
+    );
+
+    const status = exchanges[0]?.response.status ?? 0;
+
+    if (status !== 401 && status !== 403) return exchanges;
+  }
+
+  if (legacyToken) {
+    const legacy = await executeGet(
+      url,
+      { authToken: legacyToken, Accept: 'application/json' },
+      {
+        authToken: `${redact(legacyToken)} — LEGACY header (deprecated 2025-09-30; shown as fallback)`,
+        Accept: 'application/json',
+      },
+    );
+
+    exchanges.push(legacy);
+  }
+
+  if (exchanges.length === 0) {
+    exchanges.push({
+      request: { method: 'GET', url: url.toString(), headers: {} },
+      response: { status: 0, statusText: '', durationMs: 0, body: null },
+      error:
+        'No credentials configured — set BIGCOMMERCE_ACCESS_TOKEN (+ BIGCOMMERCE_STORE_HASH) or B2B_API_TOKEN in .env.local.',
+    });
+  }
+
+  return exchanges;
 }

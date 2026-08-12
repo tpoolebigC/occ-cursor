@@ -26,13 +26,13 @@ export async function GET(request: NextRequest) {
 
   switch (testCase) {
     case 'book-quotes': {
-      const exchange = await managementGet('/rfq', {
+      const exchanges = await managementGet('/rfq', {
         limit: 10,
         offset: 0,
         status,
         companyName,
         sortBy: 'updatedAt',
-        orderBy: 'desc',
+        orderBy: 'DESC',
       });
 
       result = {
@@ -43,13 +43,13 @@ export async function GET(request: NextRequest) {
           'Backend statuses: 0 New, 2 In Process, 3 Updated by customer, 4 Ordered, 5 Expired, 6 Archived, 7 Draft (staff-side).',
           'Watts scale note: at ~350K quotes, replicate via webhooks into your data layer; this API seeds and reconciles it.',
         ],
-        exchanges: [exchange],
+        exchanges,
       };
       break;
     }
 
     case 'book-orders': {
-      const exchange = await managementGet('/orders', { limit: 10, offset: 0 });
+      const exchanges = await managementGet('/orders', { limit: 10, offset: 0 });
 
       result = {
         title: 'Book of Business — Orders across ALL companies (GET /orders)',
@@ -58,30 +58,31 @@ export async function GET(request: NextRequest) {
           'Watts already aggregates orders from 18 ERPs via their own APIs — BigCommerce feeds that layer via this API + webhooks.',
           'B2B order records link to BigCommerce order IDs (bcOrderId) for drill-down to core order detail.',
         ],
-        exchanges: [exchange],
+        exchanges,
       };
       break;
     }
 
     case 'invoices': {
-      const exchange = await managementGet('/invoices', { limit: 10, offset: 0 });
+      const exchanges = await managementGet('/invoices', { limit: 10, offset: 0 });
 
       result = {
         title: 'Book of Business — Invoices (GET /invoices)',
         facts: [
           'Invoice Management API: invoices, payments, receipts — same cross-company server-side access.',
           'Buyer-facing invoice portal is a B2B Edition feature toggle; Watts is undecided on it ("deferred to us") — this API works either way.',
+          'A 404 here means the Invoice module is not enabled on this sandbox — enable it in B2B Edition settings to return live data.',
         ],
-        exchanges: [exchange],
+        exchanges,
       };
       break;
     }
 
     case 'super-admins': {
-      const exchanges = [await managementGet('/super-admins', { limit: 10, offset: 0 })];
+      const exchanges = await managementGet('/companies/super-admins', { limit: 10, offset: 0 });
 
       if (id) {
-        exchanges.push(await managementGet(`/super-admins/${id}/companies`, { limit: 10 }));
+        exchanges.push(...(await managementGet(`/super-admins/${id}/companies`, { limit: 10 })));
       }
 
       result = {
@@ -98,7 +99,7 @@ export async function GET(request: NextRequest) {
     }
 
     case 'companies': {
-      const exchange = await managementGet('/companies', { limit: 10, offset: 0 });
+      const exchanges = await managementGet('/companies', { limit: 10, offset: 0 });
 
       result = {
         title: 'Companies (GET /companies) — the account master',
@@ -106,7 +107,7 @@ export async function GET(request: NextRequest) {
           'Each Company carries customerGroupId — the pivot to price lists (contract "ceiling") and catalog visibility.',
           'Company Hierarchy endpoints (/companies/{id}/hierarchy, /subsidiaries, /parent) model OWNERSHIP structures — Ferguson + branches. Caps: 5 levels, 500 companies per hierarchy — which is why rep books use Super Admin assignments instead.',
         ],
-        exchanges: [exchange],
+        exchanges,
       };
       break;
     }
@@ -115,9 +116,9 @@ export async function GET(request: NextRequest) {
       const exchanges: VerboseExchange[] = [];
 
       if (id) {
-        exchanges.push(await managementGet(`/rfq/${id}`));
+        exchanges.push(...(await managementGet(`/rfq/${id}`)));
       } else {
-        exchanges.push(await managementGet('/rfq', { limit: 1, sortBy: 'updatedAt', orderBy: 'desc' }));
+        exchanges.push(...(await managementGet('/rfq', { limit: 1, sortBy: 'updatedAt', orderBy: 'DESC' })));
       }
 
       result = {
