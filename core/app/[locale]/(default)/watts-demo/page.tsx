@@ -150,6 +150,7 @@ export default function WattsDemoPage() {
   const [running, setRunning] = useState<string | null>(null);
   const [recordId, setRecordId] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
+  const [compareLegacy, setCompareLegacy] = useState(false);
 
   async function runCase(caseId: string) {
     setRunning(caseId);
@@ -159,6 +160,7 @@ export default function WattsDemoPage() {
 
       if (recordId) params.set('id', recordId);
       if (statusFilter) params.set('status', statusFilter);
+      if (compareLegacy) params.set('compare', '1');
 
       const response = await fetch(`/api/watts-demo?${params.toString()}`);
       const data: CaseResult = await response.json();
@@ -239,6 +241,14 @@ export default function WattsDemoPage() {
             placeholder="optional"
             value={statusFilter}
           />
+        </label>
+        <label className="flex items-center gap-2 text-xs font-semibold text-gray-700">
+          <input
+            checked={compareLegacy}
+            onChange={(event) => setCompareLegacy(event.target.checked)}
+            type="checkbox"
+          />
+          Also run legacy `authToken` header (deprecated 2025-09-30) for side-by-side comparison
         </label>
         <button
           className="rounded border border-gray-400 px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-200"

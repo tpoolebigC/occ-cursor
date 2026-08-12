@@ -79,6 +79,7 @@ async function executeGet(
 export async function managementGet(
   path: string,
   params?: Record<string, string | number | undefined>,
+  compareLegacy = false,
 ): Promise<VerboseExchange[]> {
   // Prefer a dedicated token so the app-wide BIGCOMMERCE_ACCESS_TOKEN is untouched.
   const storeToken = process.env.B2B_MANAGEMENT_TOKEN || process.env.BIGCOMMERCE_ACCESS_TOKEN;
@@ -110,7 +111,7 @@ export async function managementGet(
 
     const status = exchanges[0]?.response.status ?? 0;
 
-    if (status !== 401 && status !== 403) return exchanges;
+    if (!compareLegacy && status !== 401 && status !== 403) return exchanges;
   }
 
   if (legacyToken) {

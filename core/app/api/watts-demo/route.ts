@@ -21,19 +21,17 @@ export async function GET(request: NextRequest) {
   const status = searchParams.get('status') ?? undefined;
   const companyName = searchParams.get('companyName') ?? undefined;
   const id = searchParams.get('id') ?? undefined;
+  const compare = searchParams.get('compare') === '1';
 
   let result: CaseResult;
 
   switch (testCase) {
     case 'book-quotes': {
-      const exchanges = await managementGet('/rfq', {
-        limit: 10,
-        offset: 0,
-        status,
-        companyName,
-        sortBy: 'updatedAt',
-        orderBy: 'DESC',
-      });
+      const exchanges = await managementGet(
+        '/rfq',
+        { limit: 10, offset: 0, status, companyName, sortBy: 'updatedAt', orderBy: 'DESC' },
+        compare,
+      );
 
       result = {
         title: 'Book of Business — Quotes across ALL companies (GET /rfq)',
@@ -49,7 +47,7 @@ export async function GET(request: NextRequest) {
     }
 
     case 'book-orders': {
-      const exchanges = await managementGet('/orders', { limit: 10, offset: 0 });
+      const exchanges = await managementGet('/orders', { limit: 10, offset: 0 }, compare);
 
       result = {
         title: 'Book of Business — Orders across ALL companies (GET /orders)',
@@ -64,7 +62,7 @@ export async function GET(request: NextRequest) {
     }
 
     case 'invoices': {
-      const exchanges = await managementGet('/invoices', { limit: 10, offset: 0 });
+      const exchanges = await managementGet('/invoices', { limit: 10, offset: 0 }, compare);
 
       result = {
         title: 'Book of Business — Invoices (GET /invoices)',
@@ -79,10 +77,10 @@ export async function GET(request: NextRequest) {
     }
 
     case 'super-admins': {
-      const exchanges = await managementGet('/companies/super-admins', { limit: 10, offset: 0 });
+      const exchanges = await managementGet('/companies/super-admins', { limit: 10, offset: 0 }, compare);
 
       if (id) {
-        exchanges.push(...(await managementGet(`/super-admins/${id}/companies`, { limit: 10 })));
+        exchanges.push(...(await managementGet(`/super-admins/${id}/companies`, { limit: 10 }, compare)));
       }
 
       result = {
@@ -99,7 +97,7 @@ export async function GET(request: NextRequest) {
     }
 
     case 'companies': {
-      const exchanges = await managementGet('/companies', { limit: 10, offset: 0 });
+      const exchanges = await managementGet('/companies', { limit: 10, offset: 0 }, compare);
 
       result = {
         title: 'Companies (GET /companies) — the account master',
@@ -116,9 +114,9 @@ export async function GET(request: NextRequest) {
       const exchanges: VerboseExchange[] = [];
 
       if (id) {
-        exchanges.push(...(await managementGet(`/rfq/${id}`)));
+        exchanges.push(...(await managementGet(`/rfq/${id}`, undefined, compare)));
       } else {
-        exchanges.push(...(await managementGet('/rfq', { limit: 1, sortBy: 'updatedAt', orderBy: 'DESC' })));
+        exchanges.push(...(await managementGet('/rfq', { limit: 1, sortBy: 'updatedAt', orderBy: 'DESC' }, compare)));
       }
 
       result = {
