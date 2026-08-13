@@ -54,13 +54,20 @@ export const getAnonymousSession = async () => {
     throw new Error('AUTH_SECRET is not set');
   }
 
-  const session = await decode({
-    secret,
-    salt: `${cookiePrefix}${anonymousCookieName}`,
-    token: jwt.value,
-  });
+  try {
+    const session = await decode({
+      secret,
+      salt: `${cookiePrefix}${anonymousCookieName}`,
+      token: jwt.value,
+    });
 
-  return session;
+    return session;
+  } catch {
+    // A cookie signed with a different AUTH_SECRET (another local app on the
+    // same host, or a rotated secret) is not our session — treat as anonymous
+    // rather than crashing the request.
+    return null;
+  }
 };
 
 export const clearAnonymousSession = async () => {
