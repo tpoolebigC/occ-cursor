@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 /**
  * Watts Water — API Test Bench
@@ -145,12 +145,68 @@ function ExchangePanel({ exchange }: { exchange: Exchange }) {
   );
 }
 
+interface WebhookEvent {
+  receivedAt: string;
+  headers?: Record<string, string | null>;
+  event?: { scope?: string; producer?: string; created_at?: number; data?: unknown };
+}
+
 export default function WattsDemoPage() {
   const [log, setLog] = useState<LogEntry[]>([]);
   const [running, setRunning] = useState<string | null>(null);
   const [recordId, setRecordId] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
   const [compareLegacy, setCompareLegacy] = useState(false);
+  const [webhookEvents, setWebhookEvents] = useState<WebhookEvent[]>([]);
+  const [firing, setFiring] = useState(false);
+
+  // Poll the inbound webhook log — the "platform → integration" half of verbose logging.
+  useEffect(() => {
+    let active = true;
+
+    const poll = async () => {
+      try {
+        const response = await fetch('/api/watts-demo/webhooks');
+        const data = await response.json();
+
+        if (active) setWebhookEvents(data.events ?? []);
+      } catch {
+        // tunnel/receiver not up yet — keep polling quietly
+      }
+    };
+
+    void poll();
+    const interval = setInterval(poll, 3000);
+
+    return () => {
+      active = false;
+      clearInterval(interval);
+    };
+  }, []);
+
+  async function fireTestEvent() {
+    setFiring(true);
+
+    try {
+      const response = await fetch('/api/watts-demo/trigger', { method: 'POST' });
+      const exchange = await response.json();
+
+      setLog((previous) => [
+        {
+          title: 'Fire test event — PUT /v3/catalog/products/{id} (core platform)',
+          facts: [
+            'A real catalog write: BigCommerce will emit store/product/updated to every registered webhook.',
+            'Watch the inbound panel below — the event arrives via the public tunnel within a few seconds.',
+          ],
+          exchanges: [exchange],
+          ranAt: new Date().toLocaleTimeString(),
+        },
+        ...previous,
+      ]);
+    } finally {
+      setFiring(false);
+    }
+  }
 
   async function runCase(caseId: string) {
     setRunning(caseId);
@@ -257,6 +313,52 @@ export default function WattsDemoPage() {
         >
           Clear log
         </button>
+        <button
+          className="rounded bg-emerald-600 px-3 py-1.5 text-sm font-semibold text-white hover:bg-emerald-700 disabled:opacity-50"
+          disabled={firing}
+          onClick={() => void fireTestEvent()}
+          type="button"
+        >
+          {firing ? 'Firing…' : '⚡ Fire test event (webhook demo)'}
+        </button>
+      </div>
+
+      {/* Inbound webhook event log */}
+      <div className="mb-6 rounded-lg border border-emerald-300 bg-emerald-50/50 p-4">
+        <div className="mb-1 flex items-baseline justify-between">
+          <h3 className="text-sm font-bold uppercase tracking-wide text-emerald-900">
+            Inbound event log — webhooks from BigCommerce ({webhookEvents.length})
+          </h3>
+          <span className="text-xs text-emerald-800">polling every 3s</span>
+        </div>
+        <p className="mb-3 text-xs text-emerald-900/80">
+          The platform pushes events to this app over a public tunnel. This is the
+          platform→integration half of verbose logging; the panels below are the
+          integration→platform half. At Watts, both streams land in SAP-BTP.
+        </p>
+        {webhookEvents.length === 0 ? (
+          <div className="rounded border border-dashed border-emerald-300 p-4 text-center text-xs text-emerald-800">
+            No events captured yet — fire a test event, or change anything in the store control
+            panel.
+          </div>
+        ) : (
+          webhookEvents.map((entry, index) => (
+            <div className="mb-2 rounded border border-emerald-200 bg-white" key={`${entry.receivedAt}-${index}`}>
+              <div className="flex items-center gap-3 border-b border-emerald-100 px-3 py-1.5">
+                <span className="rounded bg-emerald-100 px-2 py-0.5 font-mono text-xs font-bold text-emerald-800">
+                  {entry.event?.scope ?? 'event'}
+                </span>
+                <span className="font-mono text-xs text-gray-500">received {entry.receivedAt}</span>
+                <span className="font-mono text-xs text-gray-400">
+                  producer {entry.event?.producer ?? '—'}
+                </span>
+              </div>
+              <pre className="max-h-40 overflow-auto p-2 font-mono text-xs text-gray-800">
+                {JSON.stringify(entry.event, null, 2)}
+              </pre>
+            </div>
+          ))
+        )}
       </div>
 
       {log.length === 0 && (
